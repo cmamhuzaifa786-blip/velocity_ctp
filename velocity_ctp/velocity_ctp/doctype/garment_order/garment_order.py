@@ -55,6 +55,71 @@ class GarmentOrder(Document):
 				self.ship_date,
 				update_modified=False,
 			)
+			self.sync_sales_order_delivery_date()
+
+	def sync_sales_order_delivery_date(self) -> None:
+		"""Move a draft Sales Order's delivery dates to the new ship date; never touch a submitted one.
+
+		The user has already passed the ship date permission checks on this Garment Order, so the
+		draft Sales Order is updated on their behalf (ignore_permissions).
+		"""
+		if not self.sales_order or not frappe.db.exists("Sales Order", self.sales_order):
+			return
+
+		sales_order = frappe.get_doc("Sales Order", self.sales_order)
+		if sales_order.docstatus == 1:
+			frappe.msgprint(
+				_("The linked Sales Order {0} is already submitted. Please review its delivery date.").format(
+					frappe.bold(sales_order.name)
+				),
+				title=_("Sales Order Not Updated"),
+				indicator="orange",
+			)
+			return
+		if sales_order.docstatus != 0:
+			return
+
+		new_date = getdate(self.ship_date)
+		if new_date < getdate(sales_order.transaction_date):
+			frappe.throw(
+				_(
+					"The new ship date {0} is before the date of the linked draft Sales Order {1} ({2}). "
+					"Please choose a later ship date, or change the Sales Order date first."
+				).format(
+					frappe.format(new_date, "Date"),
+					frappe.bold(sales_order.name),
+					frappe.format(sales_order.transaction_date, "Date"),
+				),
+				title=_("Ship Date Before Sales Order Date"),
+			)
+
+		old_date = sales_order.delivery_date
+		sales_order.delivery_date = new_date
+		for item in sales_order.items:
+			item.delivery_date = new_date
+		sales_order.flags.ignore_permissions = True
+		try:
+			sales_order.save()
+		except frappe.PermissionError:
+			# ERPNext's Sales Order validation reads Item and other records with permission checks.
+			if frappe.message_log:
+				frappe.message_log.pop()  # drop the raw permission message
+			frappe.throw(
+				_(
+					"The linked draft Sales Order {0} could not be updated to the new ship date because "
+					"you do not have access to the records it uses (such as Item). The ship date was not "
+					"changed. Please ask your administrator to give you a standard ERPNext role such as "
+					"Sales User, or ask a sales user to change the ship date."
+				).format(frappe.bold(sales_order.name)),
+				frappe.PermissionError,
+				title=_("Sales Order Not Updated"),
+			)
+		sales_order.add_comment(
+			"Comment",
+			_(
+				"Delivery date changed from {0} to {1} because the ship date changed on Garment Order {2}."
+			).format(frappe.format(old_date, "Date"), frappe.format(new_date, "Date"), self.name),
+		)
 
 	def on_submit(self) -> None:
 		self.db_set("status", "Open")
