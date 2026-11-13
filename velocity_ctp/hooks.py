@@ -8,7 +8,7 @@ app_license = "mit"
 # Apps
 # ------------------
 
-# required_apps = []
+required_apps = ["erpnext"]
 
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
@@ -85,8 +85,12 @@ app_license = "mit"
 # Installation
 # ------------
 
-# before_install = "velocity_ctp.install.before_install"
+before_install = "velocity_ctp.setup.install.prepare_custom_permissions"
 after_install = "velocity_ctp.setup.install.after_install"
+
+# Item permissions are shipped as Custom DocPerm fixtures. Copy the standard Item permissions
+# into Custom DocPerm before fixtures sync, so other roles keep their access to Item.
+before_migrate = "velocity_ctp.setup.install.prepare_custom_permissions"
 
 # Uninstallation
 # ------------
@@ -141,6 +145,20 @@ after_install = "velocity_ctp.setup.install.after_install"
 # }
 
 # Document Events
+doc_events = {
+	"Sales Order": {
+		"on_cancel": "velocity_ctp.velocity_ctp.doctype.garment_order.garment_order.clear_sales_order_link",
+		"on_trash": "velocity_ctp.velocity_ctp.doctype.garment_order.garment_order.clear_sales_order_link",
+	}
+}
+
+# Fixtures (Velocity records only)
+fixtures = [
+	{"dt": "Role", "filters": [["name", "=", "Velocity Merchandiser"]]},
+	{"dt": "Custom DocPerm", "filters": [["role", "=", "Velocity Merchandiser"]]},
+	{"dt": "Custom Field", "filters": [["name", "in", ["Sales Order-garment_order"]]]},
+]
+
 # ---------------
 # Hook on document methods and events
 

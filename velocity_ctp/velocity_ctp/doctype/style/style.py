@@ -65,8 +65,11 @@ class Style(Document):
 		sizes = self.get_sizes()
 		return [(row.colour, size) for row in self.colours for size in sizes]
 
-	def get_existing_combinations(self, template: str) -> set[tuple[str, str]]:
-		"""Colour/size pairs (lower case) that already have a variant of the template."""
+	def get_variant_map(self, template: str | None = None) -> dict[tuple[str, str], str]:
+		"""Map of (colour, size) in lower case to the variant Item code of the template."""
+		template = template or self.template_item
+		if not template:
+			return {}
 		rows = frappe.db.sql(
 			"""
 			select va.parent, va.attribute, va.attribute_value
@@ -82,10 +85,14 @@ class Style(Document):
 			by_item.setdefault(row.parent, {})[row.attribute] = (row.attribute_value or "").lower()
 
 		return {
-			(attrs[COLOUR_ATTRIBUTE], attrs[SIZE_ATTRIBUTE])
-			for attrs in by_item.values()
+			(attrs[COLOUR_ATTRIBUTE], attrs[SIZE_ATTRIBUTE]): item
+			for item, attrs in by_item.items()
 			if COLOUR_ATTRIBUTE in attrs and SIZE_ATTRIBUTE in attrs
 		}
+
+	def get_existing_combinations(self, template: str) -> set[tuple[str, str]]:
+		"""Colour/size pairs (lower case) that already have a variant of the template."""
+		return set(self.get_variant_map(template))
 
 	def get_missing_combinations(self) -> list[tuple[str, str]]:
 		if not self.template_item or not self.size_set:
@@ -207,3 +214,15 @@ def create_item_variants(style: str) -> dict:
 	doc = frappe.get_doc("Style", style)
 	doc.check_permission("write")
 	return doc.create_item_variants()
+
+
+@frappe.whitelist()
+def get_matrix_layout(style: str) -> dict:
+	"""Colours and sizes (in sequence order) used to draw the quantity matrix for a Style."""
+	doc = frappe.get_doc("Style", style)
+	doc.check_permission("read")
+	return {
+		"colours": [row.colour for row in doc.colours],
+		"sizes": doc.get_sizes() if doc.size_set else [],
+		"customer": doc.customer,
+	}

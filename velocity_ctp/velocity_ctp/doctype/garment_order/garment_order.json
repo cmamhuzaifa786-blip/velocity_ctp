@@ -1,0 +1,313 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-11-14 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "order_type",
+  "customer",
+  "style",
+  "style_name",
+  "size_set",
+  "column_break_dates",
+  "order_date",
+  "ship_date",
+  "buyer_po_no",
+  "season",
+  "column_break_other",
+  "company",
+  "destination",
+  "currency",
+  "merchandiser",
+  "excess_percent",
+  "section_quantities",
+  "quantity_matrix",
+  "items",
+  "section_totals",
+  "total_order_qty",
+  "total_excess_qty",
+  "column_break_totals",
+  "total_cutting_qty",
+  "total_amount",
+  "section_status",
+  "status",
+  "sales_order",
+  "column_break_status",
+  "remarks",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "default": "STJ-.####./.YY.",
+   "description": "Order number series. Options can be changed in Document Naming Settings.",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "no_copy": 1,
+   "options": "STJ-.####./.YY.\nSC-.####./.YY.",
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "default": "Bulk",
+   "fieldname": "order_type",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Order Type",
+   "options": "Bulk\nSample",
+   "reqd": 1
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Customer",
+   "options": "Customer",
+   "reqd": 1
+  },
+  {
+   "fieldname": "style",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Style",
+   "options": "Style",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "style.style_name",
+   "fieldname": "style_name",
+   "fieldtype": "Data",
+   "label": "Style Name",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "style.size_set",
+   "fieldname": "size_set",
+   "fieldtype": "Link",
+   "label": "Size Set",
+   "options": "Size Set",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_dates",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "default": "Today",
+   "fieldname": "order_date",
+   "fieldtype": "Date",
+   "label": "Order Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "ship_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Ship Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "buyer_po_no",
+   "fieldtype": "Data",
+   "label": "Buyer PO No"
+  },
+  {
+   "fetch_from": "style.season",
+   "fetch_if_empty": 1,
+   "fieldname": "season",
+   "fieldtype": "Data",
+   "label": "Season"
+  },
+  {
+   "fieldname": "column_break_other",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "remember_last_selected_value": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "destination",
+   "fieldtype": "Link",
+   "label": "Destination",
+   "options": "Country"
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency",
+   "reqd": 1
+  },
+  {
+   "default": "__user",
+   "fieldname": "merchandiser",
+   "fieldtype": "Link",
+   "label": "Merchandiser",
+   "options": "User"
+  },
+  {
+   "default": "0",
+   "description": "Extra pieces cut per size, as a percentage of the order quantity.",
+   "fieldname": "excess_percent",
+   "fieldtype": "Percent",
+   "label": "Excess %"
+  },
+  {
+   "fieldname": "section_quantities",
+   "fieldtype": "Section Break",
+   "label": "Quantities"
+  },
+  {
+   "fieldname": "quantity_matrix",
+   "fieldtype": "HTML",
+   "label": "Quantity Matrix"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Order Lines",
+   "options": "Garment Order Item"
+  },
+  {
+   "fieldname": "section_totals",
+   "fieldtype": "Section Break",
+   "label": "Totals"
+  },
+  {
+   "fieldname": "total_order_qty",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Total Order Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_excess_qty",
+   "fieldtype": "Int",
+   "label": "Total Excess Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_totals",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "total_cutting_qty",
+   "fieldtype": "Int",
+   "label": "Total Cutting Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_amount",
+   "fieldtype": "Currency",
+   "label": "Total Amount",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_status",
+   "fieldtype": "Section Break",
+   "label": "Status"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "no_copy": 1,
+   "options": "Draft\nOpen\nOn Hold\nIn Production\nCompleted\nCancelled",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "sales_order",
+   "fieldtype": "Link",
+   "label": "Sales Order",
+   "no_copy": 1,
+   "options": "Sales Order",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_status",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Garment Order",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-11-14 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Velocity CTP",
+ "name": "Garment Order",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Velocity Merchandiser",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "search_fields": "customer,style,buyer_po_no,ship_date",
+ "show_title_field_in_link": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "customer",
+ "track_changes": 1
+}

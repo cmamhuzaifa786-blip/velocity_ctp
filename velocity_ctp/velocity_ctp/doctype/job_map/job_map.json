@@ -1,0 +1,333 @@
+{
+ "actions": [],
+ "autoname": "JMFM-.#####",
+ "creation": "2026-11-14 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "merchandiser",
+  "fabric_type",
+  "column_break_head",
+  "priority",
+  "status",
+  "section_orders",
+  "jobs",
+  "section_planned",
+  "trims_start_date",
+  "trims_closing_date",
+  "column_break_planned",
+  "cutting_start_date",
+  "cutting_closing_date",
+  "section_approvals",
+  "approval_tracker",
+  "section_approval_checks",
+  "fit_sample_approved",
+  "size_set_sample_approved",
+  "photo_sample_approved",
+  "column_break_approvals",
+  "pp_sample_approved",
+  "ok_to_cut",
+  "section_approval_details",
+  "fit_sample_date",
+  "size_set_sample_date",
+  "photo_sample_date",
+  "pp_sample_date",
+  "ok_to_cut_date",
+  "column_break_approval_details",
+  "fit_sample_by",
+  "size_set_sample_by",
+  "photo_sample_by",
+  "pp_sample_by",
+  "ok_to_cut_by",
+  "section_closing",
+  "on_hold",
+  "job_closed",
+  "column_break_closing",
+  "closing_remarks"
+ ],
+ "fields": [
+  {
+   "default": "__user",
+   "fieldname": "merchandiser",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Merchandiser",
+   "options": "User"
+  },
+  {
+   "fieldname": "fabric_type",
+   "fieldtype": "Select",
+   "label": "Fabric Type",
+   "options": "\nGrey\nDyed\nFinished"
+  },
+  {
+   "fieldname": "column_break_head",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "default": "Normal",
+   "fieldname": "priority",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Priority",
+   "options": "Normal\nHigh\nUrgent"
+  },
+  {
+   "default": "Pending Approvals",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "no_copy": 1,
+   "options": "Pending Approvals\nReady to Cut\nOn Hold\nClosed",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_orders",
+   "fieldtype": "Section Break",
+   "label": "Garment Orders"
+  },
+  {
+   "fieldname": "jobs",
+   "fieldtype": "Table",
+   "label": "Garment Orders",
+   "options": "Job Map Order",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_planned",
+   "fieldtype": "Section Break",
+   "label": "Planned Dates"
+  },
+  {
+   "fieldname": "trims_start_date",
+   "fieldtype": "Date",
+   "label": "Trims Start Date"
+  },
+  {
+   "fieldname": "trims_closing_date",
+   "fieldtype": "Date",
+   "label": "Trims Closing Date"
+  },
+  {
+   "fieldname": "column_break_planned",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "cutting_start_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Cutting Start Date"
+  },
+  {
+   "fieldname": "cutting_closing_date",
+   "fieldtype": "Date",
+   "label": "Cutting Closing Date"
+  },
+  {
+   "fieldname": "section_approvals",
+   "fieldtype": "Section Break",
+   "label": "Approvals"
+  },
+  {
+   "fieldname": "approval_tracker",
+   "fieldtype": "HTML",
+   "label": "Approval Tracker"
+  },
+  {
+   "fieldname": "section_approval_checks",
+   "fieldtype": "Section Break",
+   "label": ""
+  },
+  {
+   "default": "0",
+   "fieldname": "fit_sample_approved",
+   "fieldtype": "Check",
+   "label": "Fit Sample Approved"
+  },
+  {
+   "default": "0",
+   "fieldname": "size_set_sample_approved",
+   "fieldtype": "Check",
+   "label": "Size Set Sample Approved"
+  },
+  {
+   "default": "0",
+   "fieldname": "photo_sample_approved",
+   "fieldtype": "Check",
+   "label": "Photo Sample Approved"
+  },
+  {
+   "fieldname": "column_break_approvals",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "default": "0",
+   "fieldname": "pp_sample_approved",
+   "fieldtype": "Check",
+   "label": "PP Sample Approved"
+  },
+  {
+   "default": "0",
+   "description": "Requires PP Sample Approved.",
+   "fieldname": "ok_to_cut",
+   "fieldtype": "Check",
+   "label": "OK to Cut"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_approval_details",
+   "fieldtype": "Section Break",
+   "label": "Approval Details"
+  },
+  {
+   "fieldname": "fit_sample_date",
+   "fieldtype": "Date",
+   "label": "Fit Sample Date",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "size_set_sample_date",
+   "fieldtype": "Date",
+   "label": "Size Set Sample Date",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "photo_sample_date",
+   "fieldtype": "Date",
+   "label": "Photo Sample Date",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "pp_sample_date",
+   "fieldtype": "Date",
+   "label": "PP Sample Date",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "ok_to_cut_date",
+   "fieldtype": "Date",
+   "label": "OK to Cut Date",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_approval_details",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "fit_sample_by",
+   "fieldtype": "Link",
+   "label": "Fit Sample By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "size_set_sample_by",
+   "fieldtype": "Link",
+   "label": "Size Set Sample By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "photo_sample_by",
+   "fieldtype": "Link",
+   "label": "Photo Sample By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "pp_sample_by",
+   "fieldtype": "Link",
+   "label": "PP Sample By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ok_to_cut_by",
+   "fieldtype": "Link",
+   "label": "OK to Cut By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_closing",
+   "fieldtype": "Section Break",
+   "label": "Hold and Closing"
+  },
+  {
+   "default": "0",
+   "fieldname": "on_hold",
+   "fieldtype": "Check",
+   "label": "On Hold"
+  },
+  {
+   "default": "0",
+   "fieldname": "job_closed",
+   "fieldtype": "Check",
+   "label": "Job Closed"
+  },
+  {
+   "fieldname": "column_break_closing",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "closing_remarks",
+   "fieldtype": "Small Text",
+   "label": "Closing Remarks"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-11-14 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Velocity CTP",
+ "name": "Job Map",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Velocity Merchandiser",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

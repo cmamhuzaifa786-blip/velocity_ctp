@@ -1,0 +1,85 @@
+{
+ "actions": [],
+ "creation": "2026-11-14 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "garment_order",
+  "style",
+  "customer",
+  "ship_date",
+  "total_order_qty",
+  "total_cutting_qty"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "garment_order",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Garment Order",
+   "options": "Garment Order",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "fetch_from": "garment_order.style",
+   "fieldname": "style",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Style",
+   "options": "Style",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fetch_from": "garment_order.customer",
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Customer",
+   "options": "Customer",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fetch_from": "garment_order.ship_date",
+   "fieldname": "ship_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Ship Date",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fetch_from": "garment_order.total_order_qty",
+   "fieldname": "total_order_qty",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Order Qty",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fetch_from": "garment_order.total_cutting_qty",
+   "fieldname": "total_cutting_qty",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Cutting Qty",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-11-14 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Velocity CTP",
+ "name": "Job Map Order",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

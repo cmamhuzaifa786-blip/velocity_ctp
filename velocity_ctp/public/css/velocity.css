@@ -1,0 +1,410 @@
+/*
+ * Velocity CTP - shared styles for Velocity pages and the Garment Order / Job Map forms.
+ * Every class uses the "vt-" prefix. Colours come from Frappe CSS variables so that
+ * light and dark themes both work. Loaded on demand with frappe.require (not globally).
+ */
+
+.vt-page {
+	--vt-gap: 16px;
+	--vt-radius: var(--border-radius-lg, 12px);
+	--vt-ok: var(--green-500);
+	--vt-warn: var(--orange-500);
+	--vt-bad: var(--red-500);
+	--vt-info: var(--blue-500);
+	--vt-idle: var(--gray-400);
+	padding: 8px 0 32px;
+	color: var(--text-color);
+}
+
+/* ---------- Header ---------- */
+.vt-header {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: var(--vt-gap);
+	flex-wrap: wrap;
+	margin-bottom: 20px;
+}
+.vt-header__eyebrow {
+	font-size: var(--text-xs, 11px);
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+.vt-header__title {
+	margin: 2px 0 0;
+	font-size: 22px;
+	font-weight: 600;
+	color: var(--heading-color, var(--text-color));
+}
+.vt-header__meta {
+	color: var(--text-muted);
+	font-size: var(--text-sm, 13px);
+}
+.vt-actions {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+/* ---------- Cards ---------- */
+.vt-card {
+	background: var(--card-bg);
+	border: 1px solid var(--border-color);
+	border-radius: var(--vt-radius);
+	padding: 16px 18px;
+	box-shadow: var(--shadow-sm, none);
+}
+.vt-card__title {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	margin: 0 0 12px;
+	font-size: var(--text-base, 14px);
+	font-weight: 600;
+	color: var(--heading-color, var(--text-color));
+}
+.vt-card__hint {
+	font-weight: 400;
+	font-size: var(--text-sm, 13px);
+	color: var(--text-muted);
+}
+.vt-grid-2 {
+	display: grid;
+	grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+	gap: var(--vt-gap);
+	margin-top: var(--vt-gap);
+}
+.vt-stack > * + * {
+	margin-top: var(--vt-gap);
+}
+
+/* ---------- KPI cards ---------- */
+.vt-kpis {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+	gap: 12px;
+}
+.vt-kpi {
+	position: relative;
+	display: block;
+	background: var(--card-bg);
+	border: 1px solid var(--border-color);
+	border-radius: var(--vt-radius);
+	padding: 14px 16px 14px 18px;
+	cursor: pointer;
+	text-align: left;
+	width: 100%;
+	color: inherit;
+	transition: border-color 0.15s ease, transform 0.15s ease;
+	overflow: hidden;
+}
+.vt-kpi::before {
+	content: "";
+	position: absolute;
+	inset: 0 auto 0 0;
+	width: 4px;
+	background: var(--vt-accent, var(--vt-info));
+}
+.vt-kpi:hover,
+.vt-kpi:focus-visible {
+	border-color: var(--vt-accent, var(--vt-info));
+	transform: translateY(-1px);
+	outline: none;
+}
+.vt-kpi__label {
+	font-size: var(--text-sm, 13px);
+	color: var(--text-muted);
+}
+.vt-kpi__value {
+	margin-top: 4px;
+	font-size: 26px;
+	font-weight: 600;
+	line-height: 1.2;
+	font-variant-numeric: tabular-nums;
+	color: var(--heading-color, var(--text-color));
+}
+.vt-kpi__sub {
+	margin-top: 2px;
+	font-size: var(--text-xs, 11px);
+	color: var(--text-muted);
+}
+.vt-kpi--ok { --vt-accent: var(--vt-ok); }
+.vt-kpi--warn { --vt-accent: var(--vt-warn); }
+.vt-kpi--bad { --vt-accent: var(--vt-bad); }
+.vt-kpi--info { --vt-accent: var(--vt-info); }
+.vt-kpi--idle { --vt-accent: var(--vt-idle); }
+
+/* ---------- Badges ---------- */
+.vt-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 8px;
+	border-radius: 999px;
+	font-size: var(--text-xs, 11px);
+	font-weight: 500;
+	white-space: nowrap;
+	background: var(--bg-gray, var(--subtle-fg));
+	color: var(--text-on-gray, var(--text-color));
+}
+.vt-badge--ok { background: var(--bg-green); color: var(--text-on-green); }
+.vt-badge--warn { background: var(--bg-orange); color: var(--text-on-orange); }
+.vt-badge--bad { background: var(--bg-red); color: var(--text-on-red); }
+.vt-badge--info { background: var(--bg-blue); color: var(--text-on-blue); }
+
+/* ---------- Tables ---------- */
+.vt-table-wrap {
+	overflow-x: auto;
+	margin: 0 -18px -16px;
+	border-top: 1px solid var(--border-color);
+}
+.vt-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: var(--text-sm, 13px);
+}
+.vt-table th,
+.vt-table td {
+	padding: 9px 12px;
+	border-bottom: 1px solid var(--border-color);
+	text-align: left;
+	white-space: nowrap;
+}
+.vt-table th {
+	font-weight: 500;
+	color: var(--text-muted);
+	background: var(--subtle-fg);
+	font-size: var(--text-xs, 11px);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+.vt-table th:first-child,
+.vt-table td:first-child { padding-left: 18px; }
+.vt-table th:last-child,
+.vt-table td:last-child { padding-right: 18px; }
+.vt-table .vt-num { text-align: right; font-variant-numeric: tabular-nums; }
+.vt-table tbody tr { cursor: pointer; }
+.vt-table tbody tr:hover { background: var(--subtle-fg); }
+.vt-table tbody tr:last-child td { border-bottom: none; }
+.vt-row--overdue td:first-child { box-shadow: inset 3px 0 0 var(--vt-bad); }
+.vt-row--overdue .vt-days { color: var(--vt-bad); font-weight: 600; }
+.vt-row--risk td:first-child { box-shadow: inset 3px 0 0 var(--vt-warn); }
+.vt-row--risk .vt-days { color: var(--vt-warn); font-weight: 600; }
+.vt-empty {
+	padding: 28px 12px;
+	text-align: center;
+	color: var(--text-muted);
+	font-size: var(--text-sm, 13px);
+}
+.vt-link { color: var(--text-color); font-weight: 500; }
+.vt-muted { color: var(--text-muted); }
+
+/* ---------- Approval stage bar (Velocity Home) ---------- */
+.vt-stagebar {
+	display: flex;
+	height: 12px;
+	border-radius: 999px;
+	overflow: hidden;
+	background: var(--subtle-fg);
+	margin-bottom: 14px;
+}
+.vt-stagebar__seg { height: 100%; min-width: 0; transition: flex-grow 0.3s ease; }
+.vt-stage-list { list-style: none; margin: 0; padding: 0; }
+.vt-stage-list li {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 7px 0;
+	border-bottom: 1px dashed var(--border-color);
+	font-size: var(--text-sm, 13px);
+	cursor: pointer;
+}
+.vt-stage-list li:last-child { border-bottom: none; }
+.vt-stage-list li:hover .vt-stage-list__label { color: var(--heading-color, var(--text-color)); text-decoration: underline; }
+.vt-dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.vt-stage-list__label { flex: 1; color: var(--text-color); }
+.vt-stage-list__count { font-weight: 600; font-variant-numeric: tabular-nums; }
+.vt-stage-1 { background: var(--blue-300); }
+.vt-stage-2 { background: var(--blue-500); }
+.vt-stage-3 { background: var(--orange-400); }
+.vt-stage-4 { background: var(--orange-600); }
+.vt-stage-5 { background: var(--green-500); }
+
+/* ---------- Quick actions ---------- */
+.vt-quick {
+	display: grid;
+	gap: 8px;
+}
+.vt-quick .btn { text-align: left; }
+
+/* ---------- Filters (Order Tracker) ---------- */
+.vt-filters {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+	gap: 8px 12px;
+	align-items: end;
+	margin-bottom: var(--vt-gap);
+}
+.vt-filters .frappe-control { margin-bottom: 0; }
+.vt-filters .form-group { margin-bottom: 0; }
+.vt-legend {
+	display: flex;
+	gap: 12px;
+	flex-wrap: wrap;
+	align-items: center;
+	font-size: var(--text-sm, 13px);
+	color: var(--text-muted);
+}
+
+/* ---------- Stage pipeline (Order Tracker) ---------- */
+.vt-pipeline {
+	display: grid;
+	grid-template-columns: repeat(8, minmax(64px, 1fr));
+	gap: 4px;
+	min-width: 560px;
+}
+.vt-step {
+	position: relative;
+	padding: 6px 6px 5px;
+	border-radius: 6px;
+	background: var(--subtle-fg);
+	color: var(--text-muted);
+	font-size: var(--text-xs, 11px);
+	line-height: 1.25;
+	text-align: center;
+}
+.vt-step__name { display: block; font-weight: 600; }
+.vt-step__detail { display: block; opacity: 0.9; overflow: hidden; text-overflow: ellipsis; }
+.vt-step--done { background: var(--bg-green); color: var(--text-on-green); }
+.vt-step--active { background: var(--bg-blue); color: var(--text-on-blue); }
+.vt-step--blocked { background: var(--bg-orange); color: var(--text-on-orange); }
+.vt-step--pending { background: var(--subtle-fg); color: var(--text-muted); }
+.vt-tracker td { vertical-align: middle; }
+.vt-tracker .vt-pipeline-cell { white-space: normal; min-width: 600px; }
+
+/* ---------- Quantity matrix (Garment Order) ---------- */
+.vt-matrix {
+	border: 1px solid var(--border-color);
+	border-radius: var(--vt-radius, 10px);
+	background: var(--card-bg);
+	margin-bottom: 12px;
+}
+.vt-matrix__bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	flex-wrap: wrap;
+	padding: 10px 12px;
+	border-bottom: 1px solid var(--border-color);
+	font-size: var(--text-sm, 13px);
+}
+.vt-matrix__summary { color: var(--text-muted); }
+.vt-matrix__summary b { color: var(--text-color); font-variant-numeric: tabular-nums; }
+.vt-matrix__scroll { overflow-x: auto; max-width: 100%; }
+.vt-matrix table {
+	border-collapse: separate;
+	border-spacing: 0;
+	font-size: var(--text-sm, 13px);
+	min-width: 100%;
+}
+.vt-matrix th,
+.vt-matrix td {
+	padding: 4px;
+	border-bottom: 1px solid var(--border-color);
+	text-align: center;
+	white-space: nowrap;
+}
+.vt-matrix thead th {
+	font-weight: 600;
+	color: var(--text-muted);
+	background: var(--subtle-fg);
+	padding: 8px 4px;
+	min-width: 64px;
+}
+.vt-matrix .vt-matrix__colour {
+	position: sticky;
+	left: 0;
+	z-index: 1;
+	background: var(--card-bg);
+	text-align: left;
+	padding-left: 12px;
+	min-width: 140px;
+	max-width: 220px;
+	font-weight: 500;
+	border-right: 1px solid var(--border-color);
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.vt-matrix thead .vt-matrix__colour { background: var(--subtle-fg); z-index: 2; }
+.vt-matrix .vt-matrix__total {
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	background: var(--subtle-fg);
+	min-width: 72px;
+}
+.vt-matrix tfoot td {
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	background: var(--subtle-fg);
+	border-bottom: none;
+	padding: 8px 4px;
+}
+.vt-matrix input {
+	width: 100%;
+	min-width: 56px;
+	max-width: 88px;
+	height: 30px;
+	padding: 2px 6px;
+	border: 1px solid transparent;
+	border-radius: 6px;
+	background: var(--control-bg);
+	color: var(--text-color);
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+	-moz-appearance: textfield;
+}
+.vt-matrix input::-webkit-outer-spin-button,
+.vt-matrix input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.vt-matrix input:focus {
+	outline: none;
+	border-color: var(--primary-color, var(--blue-500));
+	background: var(--card-bg);
+}
+.vt-matrix input.vt-has-value { font-weight: 600; }
+.vt-matrix__rate input { max-width: 100px; }
+.vt-matrix__empty { padding: 20px; text-align: center; color: var(--text-muted); }
+.vt-matrix__value { display: inline-block; min-width: 40px; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ---------- Approval tracker (Job Map) ---------- */
+.vt-approvals {
+	display: grid;
+	grid-template-columns: repeat(5, minmax(0, 1fr));
+	gap: 6px;
+	margin-bottom: 8px;
+}
+.vt-approval {
+	padding: 10px;
+	border-radius: 8px;
+	background: var(--subtle-fg);
+	font-size: var(--text-xs, 11px);
+	color: var(--text-muted);
+}
+.vt-approval__name { display: block; font-size: var(--text-sm, 13px); font-weight: 600; color: var(--text-color); }
+.vt-approval--done { background: var(--bg-green); color: var(--text-on-green); }
+.vt-approval--done .vt-approval__name { color: var(--text-on-green); }
+.vt-approval--next { box-shadow: inset 0 0 0 1px var(--vt-warn, var(--orange-500)); }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 991px) {
+	.vt-grid-2 { grid-template-columns: minmax(0, 1fr); }
+	.vt-approvals { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+	.vt-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.vt-approvals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.vt-header__title { font-size: 19px; }
+}
