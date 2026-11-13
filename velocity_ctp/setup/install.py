@@ -70,7 +70,6 @@ def setup_masters() -> None:
 	ensure_processes(warehouses, log)
 	ensure_simple_records("Wash Type", "wash_type", WASH_TYPES, {"washing_category": "Denim"}, log)
 	ensure_simple_records("Product Category", "category_name", PRODUCT_CATEGORIES, {}, log)
-	ensure_item_permissions(log)
 	ensure_sales_order_field(log)
 
 	frappe.db.commit()
@@ -215,54 +214,6 @@ def ensure_simple_records(
 			ignore_permissions=True
 		)
 		log.append(f"{doctype} {name}")
-
-
-# (doctype, permission types) granted to the Velocity Merchandiser role on standard ERPNext DocTypes.
-MERCHANDISER_STANDARD_PERMISSIONS: dict[str, tuple[str, ...]] = {
-	"Item": ("read", "write", "create", "report", "print", "export"),
-}
-
-
-def prepare_custom_permissions() -> None:
-	"""Copy standard permissions to Custom DocPerm for DocTypes we extend (no-op if already done).
-
-	Once a DocType has any Custom DocPerm row, Frappe ignores its standard permissions. Our
-	fixtures add one Custom DocPerm row for Item, so the standard rows must be copied first or
-	every other role would lose access to Item.
-	"""
-	from frappe.permissions import setup_custom_perms
-
-	for doctype in MERCHANDISER_STANDARD_PERMISSIONS:
-		if frappe.db.table_exists("Custom DocPerm") and frappe.db.exists("DocType", doctype):
-			setup_custom_perms(doctype)
-
-
-def ensure_item_permissions(log: list[str]) -> None:
-	ensure_role()
-	prepare_custom_permissions()
-	for doctype, ptypes in MERCHANDISER_STANDARD_PERMISSIONS.items():
-		name = frappe.db.get_value(
-			"Custom DocPerm", {"parent": doctype, "role": MERCHANDISER_ROLE, "permlevel": 0, "if_owner": 0}
-		)
-		perm = frappe.get_doc("Custom DocPerm", name) if name else frappe.new_doc("Custom DocPerm")
-		if not name:
-			perm.update(
-				{
-					"parent": doctype,
-					"parenttype": "DocType",
-					"parentfield": "permissions",
-					"role": MERCHANDISER_ROLE,
-					"permlevel": 0,
-				}
-			)
-		missing = [ptype for ptype in ptypes if not perm.get(ptype)]
-		if not missing:
-			continue
-		for ptype in missing:
-			perm.set(ptype, 1)
-		perm.save(ignore_permissions=True)
-		frappe.clear_cache(doctype=doctype)
-		log.append(f"Permission {MERCHANDISER_ROLE} on {doctype}: {', '.join(missing)}")
 
 
 def ensure_sales_order_field(log: list[str]) -> None:

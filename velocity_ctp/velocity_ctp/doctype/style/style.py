@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import frappe
-from erpnext.controllers.item_variant import create_variant
+from erpnext.controllers.item_variant import copy_attributes_to_variant, make_variant_item_code
 from frappe import _
 from frappe.model.document import Document
 
@@ -119,7 +119,7 @@ class Style(Document):
 			if missing:
 				for attribute in missing:
 					item.append("attributes", {"attribute": attribute})
-				item.save()
+				item.save(ignore_permissions=True)
 			return item.name
 
 		if not frappe.db.exists("Item Group", FINISHED_GOODS_GROUP):
@@ -148,17 +148,18 @@ class Style(Document):
 				"attributes": [{"attribute": COLOUR_ATTRIBUTE}, {"attribute": SIZE_ATTRIBUTE}],
 			}
 		)
-		item.insert()
+		item.insert(ignore_permissions=True)
 		return item.name
 
 	def create_item_variants(self) -> dict:
+		"""Create the template Item and every colour x size variant (safe to run again).
+
+		Access is governed by write permission on the Style, not by Item permissions: the
+		Items are created on the user's behalf with ignore_permissions=True.
+		"""
 		if self.is_new():
 			frappe.throw(_("Please save the Style before creating item variants."))
-		if not frappe.has_permission("Item", "create"):
-			frappe.throw(
-				_("You do not have permission to create Items, so item variants cannot be created."),
-				frappe.PermissionError,
-			)
+		check_style_write_permission(self)
 		self.validate_colours()
 		self.validate_active_masters()
 
@@ -172,6 +173,7 @@ class Style(Document):
 		size_values = ensure_attribute_values(SIZE_ATTRIBUTE, sizes, size_abbreviation)
 
 		template = self.get_or_create_template_item()
+		template_doc = frappe.get_doc("Item", template)
 		existing = self.get_existing_combinations(template)
 
 		created: list[str] = []
@@ -180,14 +182,14 @@ class Style(Document):
 				key = (row.colour.lower(), size.lower())
 				if key in existing:
 					continue
-				variant = create_variant(
-					template,
+				variant = build_variant(
+					template_doc,
 					{
 						COLOUR_ATTRIBUTE: colour_values[row.colour.lower()],
 						SIZE_ATTRIBUTE: size_values[size.lower()],
 					},
 				)
-				variant.insert()
+				variant.insert(ignore_permissions=True)
 				existing.add(key)
 				created.append(variant.name)
 
@@ -208,12 +210,58 @@ class Style(Document):
 		return {"template_item": template, "created": created, "total": total}
 
 
+def check_style_write_permission(style: Style) -> None:
+	"""Variant creation is allowed by write permission on the Style.
+
+	Items are then created with ignore_permissions=True, so no Item create permission is
+	needed. ERPNext's own Item validation still checks that the user can read Item (it looks
+	up existing variants), so a standard ERPNext role with Item read, such as Sales User or
+	Stock User, is required; this is checked here to give a clear message.
+	"""
+	if not frappe.has_permission("Style", "write", style):
+		frappe.throw(
+			_("You need write permission on Style {0} to create its item variants.").format(
+				frappe.bold(style.name)
+			),
+			frappe.PermissionError,
+		)
+	if not frappe.has_permission("Item", "read"):
+		frappe.throw(
+			_(
+				"Creating item variants needs read access to Item. Please ask your administrator "
+				"to give you a standard ERPNext role with Item access, such as Sales User or Stock User."
+			),
+			frappe.PermissionError,
+		)
+
+
+def build_variant(template: Document, attributes: dict[str, str]) -> Document:
+	"""Build (not insert) a variant Item the same way ERPNext's create_variant does.
+
+	erpnext.controllers.item_variant.create_variant checks Item create permission itself, so
+	the same steps are done here with its helper functions; the caller inserts with
+	ignore_permissions=True after checking Style write permission.
+	"""
+	variant = frappe.new_doc("Item")
+	variant.variant_based_on = "Item Attribute"
+	variant.set(
+		"attributes",
+		[
+			{"attribute": row.attribute, "attribute_value": attributes[row.attribute]}
+			for row in template.attributes
+			if attributes.get(row.attribute)
+		],
+	)
+	copy_attributes_to_variant(template, variant)
+	make_variant_item_code(template.item_code, template.item_name, variant)
+	return variant
+
+
 @frappe.whitelist(methods=["POST"])
 def create_item_variants(style: str) -> dict:
 	"""Create the template Item and all colour x size variants for a Style (safe to run again)."""
 	doc = frappe.get_doc("Style", style)
-	doc.check_permission("write")
-	return doc.create_item_variants()
+	return doc.create_item_variants()  # checks Style write permission first
 
 
 @frappe.whitelist()

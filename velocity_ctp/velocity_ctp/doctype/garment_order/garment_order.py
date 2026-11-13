@@ -130,6 +130,15 @@ class GarmentOrder(Document):
 		keys = [(row.colour.lower(), row.size.lower()) for row in self.items]
 
 		if any(key not in variant_map for key in keys):
+			if not frappe.has_permission("Style", "write", style):
+				frappe.throw(
+					_(
+						"Some colour and size combinations of Style {0} have no item variant yet. "
+						"Creating them needs write permission on the Style; please ask a merchandiser "
+						"to run Create Item Variants on the Style."
+					).format(frappe.bold(style.name)),
+					frappe.PermissionError,
+				)
 			style.create_item_variants()
 			style.reload()
 			variant_map = style.get_variant_map()

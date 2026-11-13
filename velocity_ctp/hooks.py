@@ -85,12 +85,8 @@ required_apps = ["erpnext"]
 # Installation
 # ------------
 
-before_install = "velocity_ctp.setup.install.prepare_custom_permissions"
+# before_install = "velocity_ctp.install.before_install"
 after_install = "velocity_ctp.setup.install.after_install"
-
-# Item permissions are shipped as Custom DocPerm fixtures. Copy the standard Item permissions
-# into Custom DocPerm before fixtures sync, so other roles keep their access to Item.
-before_migrate = "velocity_ctp.setup.install.prepare_custom_permissions"
 
 # Uninstallation
 # ------------
@@ -155,7 +151,6 @@ doc_events = {
 # Fixtures (Velocity records only)
 fixtures = [
 	{"dt": "Role", "filters": [["name", "=", "Velocity Merchandiser"]]},
-	{"dt": "Custom DocPerm", "filters": [["role", "=", "Velocity Merchandiser"]]},
 	{"dt": "Custom Field", "filters": [["name", "in", ["Sales Order-garment_order"]]]},
 ]
 
