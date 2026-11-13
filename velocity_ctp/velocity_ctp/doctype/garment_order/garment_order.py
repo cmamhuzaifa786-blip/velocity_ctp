@@ -32,6 +32,30 @@ class GarmentOrder(Document):
 		if self.docstatus == 0:
 			self.status = "Draft"
 
+	def validate_ship_date(self) -> None:
+		if self.ship_date and self.order_date and getdate(self.ship_date) < getdate(self.order_date):
+			frappe.throw(_("Ship Date cannot be before the Order Date."))
+
+	def before_update_after_submit(self) -> None:
+		before = self.get_doc_before_save()
+		if before and getdate(before.ship_date) != getdate(self.ship_date):
+			check_hold_role(_("Only a System Manager or Velocity Merchandiser can change the ship date."))
+			if self.status == "Cancelled":
+				frappe.throw(_("The ship date of a cancelled Garment Order cannot be changed."))
+			self.validate_ship_date()
+
+	def on_update_after_submit(self) -> None:
+		before = self.get_doc_before_save()
+		if before and getdate(before.ship_date) != getdate(self.ship_date):
+			# Keep the ship date shown on Job Maps in step with the order.
+			frappe.db.set_value(
+				"Job Map Order",
+				{"garment_order": self.name},
+				"ship_date",
+				self.ship_date,
+				update_modified=False,
+			)
+
 	def on_submit(self) -> None:
 		self.db_set("status", "Open")
 
@@ -62,8 +86,7 @@ class GarmentOrder(Document):
 			self.merchandiser = frappe.session.user
 
 	def validate_dates(self) -> None:
-		if self.ship_date and self.order_date and getdate(self.ship_date) < getdate(self.order_date):
-			frappe.throw(_("Ship Date cannot be before the Order Date."))
+		self.validate_ship_date()
 		if flt(self.excess_percent) < 0 or flt(self.excess_percent) > 100:
 			frappe.throw(_("Excess % must be between 0 and 100."))
 
@@ -202,7 +225,15 @@ class GarmentOrder(Document):
 		if not frappe.has_permission("Sales Order", "create"):
 			frappe.throw(_("You do not have permission to create a Sales Order."), frappe.PermissionError)
 
-		ship_date = max(getdate(self.ship_date), getdate(nowdate()))
+		if getdate(self.ship_date) < getdate(nowdate()):
+			frappe.throw(
+				_(
+					"The ship date has passed. Please update the ship date on this Garment Order "
+					"before creating a Sales Order."
+				),
+				title=_("Ship Date Has Passed"),
+			)
+		ship_date = self.ship_date
 		sales_order = frappe.get_doc(
 			{
 				"doctype": "Sales Order",
@@ -229,12 +260,41 @@ class GarmentOrder(Document):
 		return sales_order.name
 
 
-def check_hold_role() -> None:
+def check_hold_role(message: str | None = None) -> None:
 	if not set(HOLD_ROLES) & set(frappe.get_roles()):
 		frappe.throw(
-			_("Only a System Manager or Velocity Merchandiser can put orders on hold or resume them."),
+			message
+			or _("Only a System Manager or Velocity Merchandiser can put orders on hold or resume them."),
 			frappe.PermissionError,
 		)
+
+
+@frappe.whitelist(methods=["POST"])
+def update_ship_date(garment_order: str, ship_date: str, reason: str | None = None) -> str:
+	"""Change the ship date of a submitted Garment Order (recorded in the timeline)."""
+	check_hold_role(_("Only a System Manager or Velocity Merchandiser can change the ship date."))
+	doc = frappe.get_doc("Garment Order", garment_order)
+	doc.check_permission("write")
+	if doc.docstatus != 1:
+		frappe.throw(_("Use this option on submitted Garment Orders. Edit the Ship Date field on drafts."))
+	if not ship_date:
+		frappe.throw(_("Please enter the new ship date."))
+	if getdate(ship_date) == getdate(doc.ship_date):
+		frappe.throw(_("The new ship date is the same as the current one."))
+
+	old = doc.ship_date
+	doc.ship_date = ship_date
+	doc.save()
+	if reason and reason.strip():
+		doc.add_comment(
+			"Comment",
+			_("Ship date changed from {0} to {1}. Reason: {2}").format(
+				frappe.format(old, "Date"),
+				frappe.format(doc.ship_date, "Date"),
+				frappe.utils.escape_html(reason.strip()),
+			),
+		)
+	return str(doc.ship_date)
 
 
 @frappe.whitelist(methods=["POST"])

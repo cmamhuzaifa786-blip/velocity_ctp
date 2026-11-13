@@ -112,6 +112,10 @@ function add_action_buttons(frm) {
 	const can_hold = HOLD_ROLES.some((role) => frappe.user.has_role(role));
 	if (!can_hold) return;
 
+	if (!["Completed", "Cancelled"].includes(frm.doc.status)) {
+		frm.add_custom_button(__("Update Ship Date"), () => update_ship_date(frm), __("Status"));
+	}
+
 	const set_hold = (hold) =>
 		frappe.call({
 			method: "velocity_ctp.velocity_ctp.doctype.garment_order.garment_order.set_hold",
@@ -131,6 +135,43 @@ function add_action_buttons(frm) {
 			__("Status")
 		);
 	}
+}
+
+function update_ship_date(frm) {
+	const dialog = new frappe.ui.Dialog({
+		title: __("Update Ship Date"),
+		fields: [
+			{
+				fieldname: "current",
+				fieldtype: "Date",
+				label: __("Current Ship Date"),
+				default: frm.doc.ship_date,
+				read_only: 1,
+			},
+			{ fieldname: "ship_date", fieldtype: "Date", label: __("New Ship Date"), reqd: 1 },
+			{
+				fieldname: "reason",
+				fieldtype: "Small Text",
+				label: __("Reason"),
+				description: __("Optional. Added to the timeline with the change."),
+			},
+		],
+		primary_action_label: __("Update"),
+		primary_action(values) {
+			frappe.call({
+				method: "velocity_ctp.velocity_ctp.doctype.garment_order.garment_order.update_ship_date",
+				args: { garment_order: frm.doc.name, ship_date: values.ship_date, reason: values.reason },
+				freeze: true,
+				callback: (r) => {
+					if (r.exc) return;
+					dialog.hide();
+					frappe.show_alert({ message: __("Ship date updated"), indicator: "green" });
+					frm.reload_doc();
+				},
+			});
+		},
+	});
+	dialog.show();
 }
 
 /**
