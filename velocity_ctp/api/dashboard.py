@@ -90,6 +90,7 @@ def get_home_data() -> dict:
 			{
 				"key": "open_orders",
 				"label": _("Open Orders"),
+				"sub": _("Submitted, not completed"),
 				"value": open_count,
 				"tone": "info",
 				"doctype": "Garment Order",
@@ -107,6 +108,7 @@ def get_home_data() -> dict:
 			{
 				"key": "pending_approvals",
 				"label": _("Jobs Pending Approvals"),
+				"sub": _("Waiting for sample approvals"),
 				"value": job_counts.get("Pending Approvals", 0),
 				"tone": "warn",
 				"doctype": "Job Map",
@@ -116,6 +118,7 @@ def get_home_data() -> dict:
 			{
 				"key": "ready_to_cut",
 				"label": _("Ready to Cut"),
+				"sub": _("OK to Cut given"),
 				"value": job_counts.get("Ready to Cut", 0),
 				"tone": "ok",
 				"doctype": "Job Map",
@@ -125,6 +128,7 @@ def get_home_data() -> dict:
 			{
 				"key": "shipping_soon",
 				"label": _("Shipping in Next 14 Days"),
+				"sub": _("Due by {0}").format(frappe.format(in_14, "Date")),
 				"value": cint(shipping_soon),
 				"tone": "warn",
 				"doctype": "Garment Order",
@@ -137,6 +141,7 @@ def get_home_data() -> dict:
 			{
 				"key": "on_hold",
 				"label": _("On Hold"),
+				"sub": _("Paused orders"),
 				"value": on_hold,
 				"tone": "bad",
 				"doctype": "Garment Order",
@@ -144,8 +149,42 @@ def get_home_data() -> dict:
 			},
 		],
 		"shipments": shipments,
+		"customers": get_orders_by_customer(),
 		"pipeline": get_approval_pipeline() if can_read_job_map else None,
 	}
+
+
+def get_orders_by_customer(limit: int = 20) -> list[dict]:
+	"""Open orders (same definition as the Open Orders card) grouped by customer, most pieces first."""
+	rows = frappe.get_list(
+		"Garment Order",
+		filters={"docstatus": 1, "status": ("in", OPEN_STATUSES)},
+		fields=[
+			"customer",
+			_agg("name", "COUNT", "orders"),
+			_agg("total_order_qty", "SUM", "pieces"),
+			_agg("ship_date", "MIN", "next_ship_date"),
+		],
+		group_by="customer",
+	)
+	rows.sort(key=lambda r: (-cint(r.pieces), r.customer))
+	rows = rows[:limit]
+	names = dict(
+		frappe.get_all(
+			"Customer",
+			filters={"name": ("in", [r.customer for r in rows])},
+			fields=["name", "customer_name"],
+			as_list=True,
+		)
+	)
+	today = getdate(nowdate())
+	for row in rows:
+		row.customer_name = names.get(row.customer) or row.customer
+		row.orders = cint(row.orders)
+		row.pieces = cint(row.pieces)
+		row.overdue = bool(row.next_ship_date and getdate(row.next_ship_date) < today)
+		row.filters = {"docstatus": 1, "status": ["in", list(OPEN_STATUSES)], "customer": row.customer}
+	return rows
 
 
 def get_upcoming_shipments(today, until) -> list[dict]:

@@ -46,21 +46,30 @@ class VelocityHome {
 			</div>
 			<div class="vt-kpis">${this.kpis_html(data.kpis || [])}</div>
 			<div class="vt-grid-2">
-				<div class="vt-card">
-					<div class="vt-card__title">
-						<span>${__("Upcoming Shipments")}</span>
-						<span class="vt-card__hint">${__("Next 30 days, including overdue")}</span>
+				<div class="vt-stack">
+					<div class="vt-card">
+						<div class="vt-card__title">
+							<span>${__("Upcoming Shipments")}</span>
+							<span class="vt-card__hint">${__("Next 30 days, including overdue")}</span>
+						</div>
+						${this.shipments_html(data.shipments || [])}
 					</div>
-					${this.shipments_html(data.shipments || [])}
+					<div class="vt-card">
+						<div class="vt-card__title">
+							<span>${__("Orders by Customer")}</span>
+							<span class="vt-card__hint">${__("Open orders, most pieces first")}</span>
+						</div>
+						${this.customers_html(data.customers || [])}
+					</div>
 				</div>
 				<div class="vt-stack">
 					${data.pipeline ? this.pipeline_html(data.pipeline) : ""}
 					<div class="vt-card">
 						<div class="vt-card__title">${__("Quick Actions")}</div>
 						<div class="vt-quick">
-							<button class="btn btn-primary btn-sm" data-new="Garment Order">${__("New Garment Order")}</button>
-							<button class="btn btn-default btn-sm" data-new="Job Map">${__("New Job Map")}</button>
-							<button class="btn btn-default btn-sm" data-new="Style">${__("New Style")}</button>
+							${this.quick_action("Garment Order", __("New Garment Order"), "vt-quick__btn--primary")}
+							${this.quick_action("Job Map", __("New Job Map"))}
+							${this.quick_action("Style", __("New Style"))}
 						</div>
 					</div>
 				</div>
@@ -74,10 +83,11 @@ class VelocityHome {
 			.filter((k) => !k.hidden)
 			.map(
 				(k) => `
-				<button type="button" class="vt-kpi vt-kpi--${k.tone}" data-kpi="${k.key}">
-					<div class="vt-kpi__label">${k.label}</div>
-					<div class="vt-kpi__value">${format_number(k.value || 0, null, 0)}</div>
-					${k.sub ? `<div class="vt-kpi__sub">${k.sub}</div>` : ""}
+				<button type="button" class="vt-kpi vt-kpi--${k.tone}" data-kpi="${k.key}"
+					title="${frappe.utils.escape_html(k.label + (k.sub ? " · " + k.sub : ""))}">
+					<span class="vt-kpi__label">${k.label}</span>
+					<span class="vt-kpi__value">${format_number(k.value || 0, null, 0)}</span>
+					<span class="vt-kpi__sub">${k.sub || "&nbsp;"}</span>
 				</button>`
 			)
 			.join("");
@@ -121,19 +131,68 @@ class VelocityHome {
 			</tr></thead><tbody>${body}</tbody></table></div>`;
 	}
 
+	quick_action(doctype, label, modifier = "") {
+		return `<button type="button" class="btn vt-quick__btn ${modifier}" data-new="${doctype}">
+			<span class="vt-quick__plus" aria-hidden="true">+</span><span>${label}</span>
+		</button>`;
+	}
+
+	customers_html(rows) {
+		if (!rows.length) {
+			return `<div class="vt-empty">${__("No open orders.")}</div>`;
+		}
+		const esc = frappe.utils.escape_html;
+		const body = rows
+			.map(
+				(r, i) => `<tr data-customer="${i}" class="${r.overdue ? "vt-row--overdue" : ""}">
+					<td><span class="vt-link">${esc(r.customer_name)}</span>${
+					r.customer_name !== r.customer ? `<div class="vt-muted small">${esc(r.customer)}</div>` : ""
+				}</td>
+					<td class="vt-num">${format_number(r.orders, null, 0)}</td>
+					<td class="vt-num">${format_number(r.pieces, null, 0)}</td>
+					<td class="vt-num ${r.overdue ? "vt-days" : ""}">${
+					r.next_ship_date ? frappe.datetime.str_to_user(r.next_ship_date) : "–"
+				}</td>
+				</tr>`
+			)
+			.join("");
+		return `<div class="vt-table-wrap"><table class="vt-table">
+			<thead><tr>
+				<th>${__("Customer")}</th><th class="vt-num">${__("Open Orders")}</th>
+				<th class="vt-num">${__("Pieces on Order")}</th><th class="vt-num">${__("Next Ship Date")}</th>
+			</tr></thead><tbody>${body}</tbody></table></div>`;
+	}
+
 	pipeline_html(pipeline) {
 		const total = pipeline.stages.reduce((t, s) => t + s.count, 0);
-		const bar = total
-			? pipeline.stages
-					.filter((s) => s.count)
-					.map(
-						(s) =>
-							`<div class="vt-stagebar__seg vt-stage-${
-								pipeline.stages.indexOf(s) + 1
-							}" style="flex-grow:${s.count}" title="${s.label}: ${s.count}"></div>`
-					)
-					.join("")
-			: "";
+		const hint = [
+			pipeline.active === 1 ? __("1 active job") : __("{0} active jobs", [pipeline.active]),
+			__("{0} ready to cut", [pipeline.ready]),
+		].join(" · ");
+		if (!total) {
+			const message = pipeline.active
+				? __("All active jobs are ready to cut.")
+				: __("No active jobs.");
+			return `<div class="vt-card">
+				<div class="vt-card__title">
+					<span>${__("Approval Pipeline")}</span>
+					<span class="vt-card__hint">${hint}</span>
+				</div>
+				<div class="vt-empty vt-empty--compact">
+					${pipeline.active ? '<span class="vt-empty__icon" aria-hidden="true">✓</span>' : ""}
+					${message}
+				</div>
+			</div>`;
+		}
+		const bar = pipeline.stages
+			.filter((s) => s.count)
+			.map(
+				(s) =>
+					`<div class="vt-stagebar__seg vt-stage-${
+						pipeline.stages.indexOf(s) + 1
+					}" style="flex-grow:${s.count}" title="${s.label}: ${s.count}"></div>`
+			)
+			.join("");
 		const list = pipeline.stages
 			.map(
 				(s, i) => `<li data-stage="${i}">
@@ -146,10 +205,7 @@ class VelocityHome {
 		return `<div class="vt-card">
 			<div class="vt-card__title">
 				<span>${__("Approval Pipeline")}</span>
-				<span class="vt-card__hint">${__("{0} active jobs · {1} ready to cut", [
-					pipeline.active,
-					pipeline.ready,
-				])}</span>
+				<span class="vt-card__hint">${hint}</span>
 			</div>
 			<div class="vt-stagebar">${bar}</div>
 			<ul class="vt-stage-list">${list}</ul>
@@ -165,6 +221,11 @@ class VelocityHome {
 		});
 		this.$body.find("tr[data-order]").on("click", (e) => {
 			frappe.set_route("Form", "Garment Order", e.currentTarget.dataset.order);
+		});
+		this.$body.find("tr[data-customer]").on("click", (e) => {
+			const row = data.customers[cint(e.currentTarget.dataset.customer)];
+			frappe.route_options = row.filters;
+			frappe.set_route("List", "Garment Order");
 		});
 		this.$body.find("[data-stage]").on("click", (e) => {
 			const stage = data.pipeline.stages[cint(e.currentTarget.dataset.stage)];
