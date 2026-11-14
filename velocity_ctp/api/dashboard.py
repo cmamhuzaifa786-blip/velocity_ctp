@@ -83,6 +83,11 @@ def get_home_data() -> dict:
 
 	shipments = get_upcoming_shipments(today, in_30)
 	cut_today = None
+	wip_pieces = None
+	if frappe.has_permission("Bundle", "read"):
+		from velocity_ctp.api.production import pieces_in_wip
+
+		wip_pieces = pieces_in_wip()
 	if frappe.has_permission("Cut Receive", "read"):
 		cut_today = cint(
 			frappe.get_list(
@@ -146,6 +151,15 @@ def get_home_data() -> dict:
 					"status": ["in", list(ACTIVE_STATUSES)],
 					"ship_date": ["between", [str(today), str(in_14)]],
 				},
+			},
+			{
+				"key": "pieces_in_wip",
+				"label": _("Pieces in WIP"),
+				"sub": _("Cut, not yet packed"),
+				"value": wip_pieces,
+				"tone": "info",
+				"route": "production-control",
+				"hidden": wip_pieces is None,
 			},
 			{
 				"key": "pieces_cut_today",
@@ -357,9 +371,10 @@ def get_job_map_info(order_names: list[str]) -> dict[str, frappe._dict]:
 # ----------------------------------------------------------------------
 
 
-class StageState(TypedDict):
+class StageState(TypedDict, total=False):
 	state: str  # "done" | "active" | "blocked" | "pending"
 	detail: str
+	hint: str  # extra text for the tooltip (for example pieces in repair)
 
 
 StageProvider = Callable[[list[frappe._dict], dict], dict[str, StageState]]
@@ -430,23 +445,31 @@ def stage_cutting(orders: list[frappe._dict], context: dict) -> dict[str, StageS
 
 
 def stage_stitching(orders: list[frappe._dict], context: dict) -> dict[str, StageState]:
-	"""Stitching stage. Plug in stitching output against cutting quantity in a later phase."""
-	return _not_started(orders)
+	"""Stitching: pieces received (fresh + rejected) of pieces issued or still on their way; repair in the hint."""
+	from velocity_ctp.api.production import stage_for_process
+
+	return stage_for_process(orders, context, "Stitching")
 
 
 def stage_washing(orders: list[frappe._dict], context: dict) -> dict[str, StageState]:
-	"""Washing stage. Plug in washing issue/receipt progress in a later phase."""
-	return _not_started(orders)
+	"""Washing: pieces received (fresh + rejected) of pieces issued or still on their way; repair in the hint."""
+	from velocity_ctp.api.production import stage_for_process
+
+	return stage_for_process(orders, context, "Washing")
 
 
 def stage_finishing(orders: list[frappe._dict], context: dict) -> dict[str, StageState]:
-	"""Finishing stage. Plug in finishing output in a later phase."""
-	return _not_started(orders)
+	"""Finishing: pieces received (fresh + rejected) of pieces issued or still on their way; repair in the hint."""
+	from velocity_ctp.api.production import stage_for_process
+
+	return stage_for_process(orders, context, "Finishing")
 
 
 def stage_packing(orders: list[frappe._dict], context: dict) -> dict[str, StageState]:
-	"""Packing stage. Plug in packed quantity in a later phase."""
-	return _not_started(orders)
+	"""Packing: pieces on submitted Packing Lists of the order's good pieces."""
+	from velocity_ctp.api.production import stage_packing_progress
+
+	return stage_packing_progress(orders, context)
 
 
 def stage_shipped(orders: list[frappe._dict], context: dict) -> dict[str, StageState]:

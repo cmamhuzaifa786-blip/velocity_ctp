@@ -22,6 +22,7 @@ class VelocityHome {
 		this.$body = $('<div class="vt-page"></div>').appendTo(page.main);
 		page.set_secondary_action(__("Refresh"), () => this.refresh(), "refresh");
 		page.add_inner_button(__("Order Tracker"), () => frappe.set_route("order-tracker"));
+		page.add_inner_button(__("Control Tower"), () => frappe.set_route("production-control"));
 		this.refresh();
 	}
 
@@ -44,7 +45,8 @@ class VelocityHome {
 					<div class="vt-header__meta">${weekday}, ${today}</div>
 				</div>
 			</div>
-			<div class="vt-kpis" style="--vt-kpi-count:${(data.kpis || []).filter((k) => !k.hidden).length}">${this.kpis_html(
+			<div class="vt-kpis ${(data.kpis || []).filter((k) => !k.hidden).length > 7 ? "vt-kpis--many" : ""}"
+				style="--vt-kpi-count:${(data.kpis || []).filter((k) => !k.hidden).length}">${this.kpis_html(
 				data.kpis || []
 			)}</div>
 			<div class="vt-grid-2">
@@ -265,6 +267,10 @@ class VelocityHome {
 		const kpis = Object.fromEntries((data.kpis || []).map((k) => [k.key, k]));
 		this.$body.find("[data-kpi]").on("click", (e) => {
 			const k = kpis[e.currentTarget.dataset.kpi];
+			if (k.route) {
+				frappe.set_route(k.route);
+				return;
+			}
 			frappe.route_options = k.filters;
 			frappe.set_route("List", k.doctype);
 		});

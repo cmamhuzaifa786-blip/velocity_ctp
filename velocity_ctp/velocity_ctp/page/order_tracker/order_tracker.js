@@ -120,7 +120,7 @@ class OrderTracker {
 				const steps = r.stages
 					.map(
 						(s, i) => `<div class="vt-step vt-step--${s.state}" title="${esc(
-							data.stages[i].label + ": " + s.detail
+							data.stages[i].label + ": " + s.detail + (s.hint ? " · " + s.hint : "")
 						)}">
 							<span class="vt-step__name">${esc(data.stages[i].label)}</span>
 							<span class="vt-step__detail">${esc(s.detail)}</span>

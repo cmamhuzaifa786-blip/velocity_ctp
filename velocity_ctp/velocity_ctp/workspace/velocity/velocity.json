@@ -1,7 +1,7 @@
 {
  "app": "velocity_ctp",
  "charts": [],
- "content": "[{\"id\": \"vt-head-1\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Today</b></span>\", \"col\": 12}}, {\"id\": \"vt-sc-0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Open Garment Orders\", \"col\": 4}}, {\"id\": \"vt-sc-1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Jobs Pending Approvals\", \"col\": 4}}, {\"id\": \"vt-sc-2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Jobs Ready to Cut\", \"col\": 4}}, {\"id\": \"vt-spacer-1\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"vt-head-2\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Production &amp; Masters</b></span>\", \"col\": 12}}, {\"id\": \"vt-card-1\", \"type\": \"card\", \"data\": {\"card_name\": \"Production\", \"col\": 4}}, {\"id\": \"vt-card-2\", \"type\": \"card\", \"data\": {\"card_name\": \"Masters\", \"col\": 4}}, {\"id\": \"vt-card-3\", \"type\": \"card\", \"data\": {\"card_name\": \"Cutting\", \"col\": 4}}]",
+ "content": "[{\"id\": \"vt-head-1\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Today</b></span>\", \"col\": 12}}, {\"id\": \"vt-sc-0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Open Garment Orders\", \"col\": 4}}, {\"id\": \"vt-sc-1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Jobs Pending Approvals\", \"col\": 4}}, {\"id\": \"vt-sc-2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Jobs Ready to Cut\", \"col\": 4}}, {\"id\": \"vt-spacer-1\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"vt-head-2\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Production &amp; Masters</b></span>\", \"col\": 12}}, {\"id\": \"vt-card-1\", \"type\": \"card\", \"data\": {\"card_name\": \"Orders\", \"col\": 4}}, {\"id\": \"vt-card-2\", \"type\": \"card\", \"data\": {\"card_name\": \"Masters\", \"col\": 4}}, {\"id\": \"vt-card-3\", \"type\": \"card\", \"data\": {\"card_name\": \"Cutting\", \"col\": 4}}, {\"id\": \"vt-card-4\", \"type\": \"card\", \"data\": {\"card_name\": \"Production\", \"col\": 4}}]",
  "creation": "2026-11-14 04:20:46.543881",
  "custom_blocks": [],
  "docstatus": 0,
@@ -17,7 +17,7 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Production",
+   "label": "Orders",
    "link_count": 4,
    "link_type": "DocType",
    "onboard": 0,
@@ -210,9 +210,78 @@
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Production",
+   "link_count": 6,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Scan Station",
+   "link_count": 0,
+   "link_to": "scan-station",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Process Issue",
+   "link_count": 0,
+   "link_to": "Process Issue",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Process Receive",
+   "link_count": 0,
+   "link_to": "Process Receive",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Packing List",
+   "link_count": 0,
+   "link_to": "Packing List",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Production Control Tower",
+   "link_count": 0,
+   "link_to": "production-control",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Process Movement Report",
+   "link_count": 0,
+   "link_to": "Process Movement Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2026-11-14 06:15:02.666285",
+ "modified": "2026-11-14 16:48:25.593194",
  "modified_by": "Administrator",
  "module": "Velocity CTP",
  "name": "Velocity",
@@ -229,6 +298,9 @@
   },
   {
    "role": "Velocity Cutting"
+  },
+  {
+   "role": "Velocity Production"
   }
  ],
  "sequence_id": 0.0,
