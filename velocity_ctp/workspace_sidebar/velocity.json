@@ -69,6 +69,65 @@
   {
    "child": 0,
    "collapsible": 1,
+   "icon": "calculator",
+   "indent": 1,
+   "keep_closed": 0,
+   "label": "Costing & Planning",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Section Break"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "icon": "calculator",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Cost Sheet",
+   "link_to": "Cost Sheet",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "icon": "list",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Cost Head",
+   "link_to": "Cost Head",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "icon": "clipboard-list",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Material Plan",
+   "link_to": "Material Plan",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "icon": "chart-column",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Order Costing",
+   "link_to": "Order Costing",
+   "link_type": "Report",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
    "icon": "factory",
    "indent": 1,
    "keep_closed": 0,
@@ -328,7 +387,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-11-14 16:52:16.091489",
+ "modified": "2026-11-14 18:27:23.109481",
  "modified_by": "Administrator",
  "module": "Velocity CTP",
  "name": "Velocity",

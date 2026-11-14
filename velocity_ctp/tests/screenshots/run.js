@@ -189,6 +189,25 @@ async function main() {
 			else console.log(`No ${field.replace("_", " ")} found: skipping it.`);
 		}
 		pages.push({ key: "bundle-list", url: "/desk/bundle", ready: ".list-row-container, .no-result" });
+		// Costing and planning (Phase 5)
+		if (info.cost_sheet) {
+			pages.push({
+				key: "cost-sheet",
+				url: route("cost-sheet", info.cost_sheet),
+				ready: '[data-fieldname="customer"]',
+				extra: { name: "summary", click: '.form-tabs .nav-link:has-text("Summary")', wait: ".vt-costing" },
+			});
+		}
+		if (info.material_plan) {
+			pages.push({
+				key: "material-plan",
+				url: route("material-plan", info.material_plan),
+				ready: '[data-fieldname="fabrics"] .grid-body',
+				extra: { name: "availability", click: 'button:has-text("Check Availability")', wait: '[data-fieldname="availability_html"] table' },
+			});
+		}
+		pages.push({ key: "order-costing", url: "/desk/query-report/Order Costing", ready: ".dt-row, .no-result, .report-wrapper", settle: 1500 });
+		pages.push({ key: "cost-head-list", url: "/desk/cost-head", ready: ".list-row-container, .no-result" });
 		// Production (Phase 4)
 		pages.push({ key: "scan-station", url: "/desk/scan-station", ready: ".vt-choice" });
 		pages.push({ key: "control-tower", url: "/desk/production-control", ready: ".vt-kpi, .vt-empty" });
@@ -224,22 +243,36 @@ async function main() {
 				if (p.print && width !== 1366) continue;
 				for (const theme of p.print ? ["light"] : THEMES) {
 					errors = [];
-					await page.goto(BASE + p.url, { waitUntil: "networkidle" });
+					// Desk pages keep background requests open; wait for the page's own ready selector instead.
+					for (let attempt = 1; ; attempt++) {
+						try {
+							await page.goto(BASE + p.url, { waitUntil: "domcontentloaded", timeout: 60000 });
+							break;
+						} catch (e) {
+							if (attempt >= 2) throw e;
+							console.log(`Retrying ${p.key} at ${width}px after: ${e.message.split("\n")[0]}`);
+						}
+					}
 					await page.evaluate((t) => {
 						document.documentElement.setAttribute("data-theme", t);
 						document.documentElement.setAttribute("data-theme-mode", t);
 					}, theme);
-					await page.waitForSelector(p.ready, { timeout: 20000 });
+					await page.waitForSelector(p.ready, { timeout: 45000 });
 					await page.waitForTimeout(p.settle || 600);
 
 					const shots = [{ name: "", run: null }];
 					if (p.extra) shots.push({ name: p.extra.name, run: p.extra.click });
 					for (const shot of shots) {
 						if (shot.run) {
-							const target = page.locator(shot.run).first();
-							if (!(await target.count())) continue;
+							// Only visible controls (narrow screens move form buttons into a menu): skip the shot otherwise.
+							const target = page.locator(`${shot.run} >> visible=true`).first();
+							if (!(await target.count())) {
+								console.log(`Note: "${shot.name}" control not visible for ${p.key} at ${width}px; that view is skipped.`);
+								continue;
+							}
 							await target.click();
-							await page.waitForTimeout(400);
+							if (p.extra.wait) await page.waitForSelector(p.extra.wait, { timeout: 15000 }).catch(() => {});
+							await page.waitForTimeout(500);
 						}
 						const file = `${p.key}${shot.name ? "-" + shot.name : ""}-${theme}-${width}.png`;
 						await page.screenshot({ path: path.join(OUT, file), fullPage: true });

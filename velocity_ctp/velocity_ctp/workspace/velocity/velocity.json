@@ -1,7 +1,7 @@
 {
  "app": "velocity_ctp",
  "charts": [],
- "content": "[{\"id\": \"vt-head-1\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Today</b></span>\", \"col\": 12}}, {\"id\": \"vt-sc-0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Open Garment Orders\", \"col\": 4}}, {\"id\": \"vt-sc-1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Jobs Pending Approvals\", \"col\": 4}}, {\"id\": \"vt-sc-2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Jobs Ready to Cut\", \"col\": 4}}, {\"id\": \"vt-spacer-1\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"vt-head-2\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Production &amp; Masters</b></span>\", \"col\": 12}}, {\"id\": \"vt-card-1\", \"type\": \"card\", \"data\": {\"card_name\": \"Orders\", \"col\": 4}}, {\"id\": \"vt-card-2\", \"type\": \"card\", \"data\": {\"card_name\": \"Masters\", \"col\": 4}}, {\"id\": \"vt-card-3\", \"type\": \"card\", \"data\": {\"card_name\": \"Cutting\", \"col\": 4}}, {\"id\": \"vt-card-4\", \"type\": \"card\", \"data\": {\"card_name\": \"Production\", \"col\": 4}}]",
+ "content": "[{\"id\": \"vt-head-1\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Today</b></span>\", \"col\": 12}}, {\"id\": \"vt-sc-0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Open Garment Orders\", \"col\": 4}}, {\"id\": \"vt-sc-1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Jobs Pending Approvals\", \"col\": 4}}, {\"id\": \"vt-sc-2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Jobs Ready to Cut\", \"col\": 4}}, {\"id\": \"vt-spacer-1\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"vt-head-2\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Production &amp; Masters</b></span>\", \"col\": 12}}, {\"id\": \"vt-card-1\", \"type\": \"card\", \"data\": {\"card_name\": \"Orders\", \"col\": 4}}, {\"id\": \"vt-card-2\", \"type\": \"card\", \"data\": {\"card_name\": \"Masters\", \"col\": 4}}, {\"id\": \"vt-card-3\", \"type\": \"card\", \"data\": {\"card_name\": \"Cutting\", \"col\": 4}}, {\"id\": \"vt-card-4\", \"type\": \"card\", \"data\": {\"card_name\": \"Production\", \"col\": 4}}, {\"id\": \"vt-card-5\", \"type\": \"card\", \"data\": {\"card_name\": \"Costing & Planning\", \"col\": 4}}]",
  "creation": "2026-11-14 04:20:46.543881",
  "custom_blocks": [],
  "docstatus": 0,
@@ -279,9 +279,58 @@
    "link_type": "Report",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Costing & Planning",
+   "link_count": 4,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Cost Sheet",
+   "link_count": 0,
+   "link_to": "Cost Sheet",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Cost Head",
+   "link_count": 0,
+   "link_to": "Cost Head",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Material Plan",
+   "link_count": 0,
+   "link_to": "Material Plan",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Order Costing",
+   "link_count": 0,
+   "link_to": "Order Costing",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2026-11-14 16:48:25.593194",
+ "modified": "2026-11-14 18:27:21.785549",
  "modified_by": "Administrator",
  "module": "Velocity CTP",
  "name": "Velocity",
@@ -301,6 +350,12 @@
   },
   {
    "role": "Velocity Production"
+  },
+  {
+   "role": "Velocity Costing"
+  },
+  {
+   "role": "Velocity Costing Approver"
   }
  ],
  "sequence_id": 0.0,

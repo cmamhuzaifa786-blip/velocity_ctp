@@ -142,7 +142,14 @@ class OrderTracker {
 					<td>${r.ship_date ? frappe.datetime.str_to_user(r.ship_date) : ""}
 						<div class="small vt-days">${days}</div></td>
 					<td><span class="vt-badge vt-badge--${meta.tone}">${meta.label}</span>
-						<div class="vt-muted small">${__(r.status)}</div></td>
+						<div class="vt-muted small">${__(r.status)}</div>${
+					r.cost_sheet && r.estimated_profit_percent !== null && r.estimated_profit_percent !== undefined
+						? `<span class="vt-margin vt-margin--${flt(r.estimated_profit_percent) >= flt(data.target_margin) ? "ok" : "bad"}"
+							title="${esc(__("Estimated profit from Cost Sheet {0}; target {1}%", [r.cost_sheet, data.target_margin]))}">${__("Margin {0}%", [
+								format_number(r.estimated_profit_percent, null, 1),
+						  ])}</span>`
+						: ""
+				}</td>
 					<td class="vt-pipeline-cell"><div class="vt-pipeline">${steps}</div>
 						<span class="vt-pipeline__current">${esc(current)}</span></td>
 				</tr>`;

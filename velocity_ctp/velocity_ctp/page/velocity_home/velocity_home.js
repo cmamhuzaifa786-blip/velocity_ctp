@@ -59,6 +59,7 @@ class VelocityHome {
 						${this.shipments_html(data.shipments || [])}
 					</div>
 					${data.cutting ? this.cutting_html(data.cutting) : ""}
+					${data.margin_watch ? this.margin_html(data.margin_watch) : ""}
 					<div class="vt-card">
 						<div class="vt-card__title">
 							<span>${__("Orders by Customer")}</span>
@@ -140,6 +141,27 @@ class VelocityHome {
 		return `<button type="button" class="btn vt-quick__btn ${modifier}" data-new="${doctype}">
 			<span class="vt-quick__plus" aria-hidden="true">+</span><span>${label}</span>
 		</button>`;
+	}
+
+	margin_html(watch) {
+		const esc = frappe.utils.escape_html;
+		const rows = watch.rows || [];
+		const body = rows.length
+			? `<div class="vt-table-wrap"><table class="vt-table">
+				<thead><tr><th>${__("Job #")}</th><th>${__("Customer")}</th><th>${__("Style")}</th>
+					<th class="vt-num">${__("Quoted FOB")}</th><th class="vt-num">${__("Costed FOB")}</th><th class="vt-num">${__("Est. Profit %")}</th></tr></thead>
+				<tbody>${rows
+					.map(
+						(r) => `<tr data-order="${esc(r.name)}"><td><span class="vt-link">${esc(r.name)}</span></td><td>${esc(r.customer)}</td>
+							<td>${esc(r.style)}</td><td class="vt-num">${format_number(r.quoted_fob, null, 2)} ${esc(r.currency || "")}</td>
+							<td class="vt-num">${format_number(r.costed_fob, null, 2)}</td>
+							<td class="vt-num"><span class="vt-margin vt-margin--bad">${format_number(r.estimated_profit_percent, null, 1)}%</span></td></tr>`
+					)
+					.join("")}</tbody></table></div>`
+			: `<div class="vt-empty vt-empty--compact">${__("All open costed orders are at or above the {0}% target margin.", [watch.target])}</div>`;
+		return `<div class="vt-card">
+			<div class="vt-card__title"><span>${__("Margin Watch")}</span>
+				<span class="vt-card__hint">${__("Open orders below the {0}% target margin", [watch.target])}</span></div>${body}</div>`;
 	}
 
 	cutting_html(cutting) {

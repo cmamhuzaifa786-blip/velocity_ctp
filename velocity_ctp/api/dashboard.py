@@ -84,6 +84,10 @@ def get_home_data() -> dict:
 	shipments = get_upcoming_shipments(today, in_30)
 	cut_today = None
 	wip_pieces = None
+	pending_sheets = None
+	costing_roles = {"Velocity Costing", "Velocity Costing Approver", "System Manager"}
+	if costing_roles & set(frappe.get_roles()) and frappe.has_permission("Cost Sheet", "read"):
+		pending_sheets = frappe.db.count("Cost Sheet", {"status": "Pending Approval"})
 	if frappe.has_permission("Bundle", "read"):
 		from velocity_ctp.api.production import pieces_in_wip
 
@@ -153,6 +157,16 @@ def get_home_data() -> dict:
 				},
 			},
 			{
+				"key": "cost_sheets_pending",
+				"label": _("Cost Sheets Pending Approval"),
+				"sub": _("Waiting for an approver"),
+				"value": pending_sheets,
+				"tone": "warn",
+				"doctype": "Cost Sheet",
+				"filters": {"status": "Pending Approval"},
+				"hidden": pending_sheets is None,
+			},
+			{
 				"key": "pieces_in_wip",
 				"label": _("Pieces in WIP"),
 				"sub": _("Cut, not yet packed"),
@@ -183,9 +197,40 @@ def get_home_data() -> dict:
 		],
 		"shipments": shipments,
 		"customers": get_orders_by_customer(),
+		"margin_watch": get_margin_watch(),
 		"cutting": get_cutting_status() if frappe.has_permission("Cut Receive", "read") else None,
 		"pipeline": get_approval_pipeline() if can_read_job_map else None,
 	}
+
+
+def get_margin_watch(limit: int = 20) -> dict:
+	"""Open orders whose estimated profit % (from the Cost Sheet) is below the target margin."""
+	from velocity_ctp.cutting.settings import get_settings
+
+	target = flt(get_settings().target_margin_percent)
+	rows = frappe.get_list(
+		"Garment Order",
+		filters={
+			"docstatus": 1,
+			"status": ("in", ACTIVE_STATUSES),
+			"cost_sheet": ("is", "set"),
+			"estimated_profit_percent": ("<", target),
+		},
+		fields=[
+			"name",
+			"customer",
+			"style",
+			"cost_sheet",
+			"estimated_profit_percent",
+			"quoted_fob",
+			"costed_fob",
+			"currency",
+			"ship_date",
+		],
+		order_by="estimated_profit_percent asc",
+		limit_page_length=limit,
+	)
+	return {"target": target, "rows": rows}
 
 
 def get_orders_by_customer(limit: int = 20) -> list[dict]:
@@ -546,6 +591,8 @@ def get_order_tracker(
 			"ship_date",
 			"total_order_qty",
 			"total_cutting_qty",
+			"cost_sheet",
+			"estimated_profit_percent",
 		],
 		order_by="ship_date asc, name asc",
 		limit_page_length=limit + 1,
@@ -578,4 +625,11 @@ def get_order_tracker(
 		"risk_counts": risk_counts,
 		"truncated": truncated,
 		"limit": limit,
+		"target_margin": _target_margin(),
 	}
+
+
+def _target_margin() -> float:
+	from velocity_ctp.cutting.settings import get_settings
+
+	return flt(get_settings().target_margin_percent)

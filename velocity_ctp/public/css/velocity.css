@@ -582,10 +582,12 @@
 @media (max-width: 1199px) {
 	:is([data-route^="Form/Job Map"], [data-route^="Form/Fabric Issue"], [data-route^="Form/Cut Receive"],
 		[data-route^="Form/Bundle"], [data-route^="Form/Process Issue"], [data-route^="Form/Process Receive"],
-		[data-route^="Form/Packing List"]) .frappe-control[data-fieldtype="Table"] .form-grid-container { overflow-x: auto; }
+		[data-route^="Form/Packing List"], [data-route^="Form/Material Plan"], [data-route^="Form/Cost Sheet"])
+		.frappe-control[data-fieldtype="Table"] .form-grid-container { overflow-x: auto; }
 	:is([data-route^="Form/Job Map"], [data-route^="Form/Fabric Issue"], [data-route^="Form/Cut Receive"],
 		[data-route^="Form/Bundle"], [data-route^="Form/Process Issue"], [data-route^="Form/Process Receive"],
-		[data-route^="Form/Packing List"]) .frappe-control[data-fieldtype="Table"] .form-grid { min-width: 900px; }
+		[data-route^="Form/Packing List"], [data-route^="Form/Material Plan"], [data-route^="Form/Cost Sheet"])
+		.frappe-control[data-fieldtype="Table"] .form-grid { min-width: 900px; }
 	[data-route^="Form/Cutting Marker"] .frappe-control[data-fieldtype="Table"] .form-grid-container { overflow-x: auto; }
 	[data-route^="Form/Cutting Marker"] .frappe-control[data-fieldtype="Table"] .form-grid { min-width: 600px; }
 }
@@ -824,3 +826,41 @@
 	.vt-kpis.vt-kpis--many { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 .vt-kpis__empty { grid-column: 1 / -1; }
+
+/* ---------- Cost Sheet summary ---------- */
+.vt-costing__meta { margin-bottom: 10px; font-size: var(--text-sm, 13px); color: var(--text-muted); }
+.vt-costing__grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr); gap: 16px; align-items: start; }
+.vt-costing__wrap { margin: 0; border: 1px solid var(--border-color); border-radius: 10px; }
+.vt-costing__table tbody tr { cursor: default; }
+.vt-costing__table tbody tr:hover { background: transparent; }
+.vt-costing__section td { background: var(--subtle-fg); font-weight: 600; font-size: var(--text-xs, 12px); text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+.vt-costing__subtotal td { font-weight: 600; border-top: 1px solid var(--border-color); }
+.vt-costing__zero td { color: var(--text-muted); }
+.vt-costing__table tfoot td { font-weight: 700; background: var(--subtle-fg); }
+.vt-costing__result { border-radius: 12px; padding: 14px 16px; border: 1px solid var(--border-color); }
+.vt-costing__result.is-ok { background: var(--bg-green); border-color: transparent; }
+.vt-costing__result.is-bad { background: var(--bg-red); border-color: transparent; }
+.vt-costing__result-title { font-weight: 700; margin-bottom: 8px; color: var(--heading-color, var(--text-color)); }
+.vt-costing__tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.vt-costing__tiles div { display: flex; flex-direction: column; min-width: 0; }
+.vt-costing__tiles span { font-size: var(--text-xs, 12px); color: var(--text-muted); }
+.vt-costing__tiles b { font-size: 20px; font-variant-numeric: tabular-nums; color: var(--heading-color, var(--text-color)); }
+.vt-costing__tiles small { font-size: var(--text-xs, 12px); color: var(--text-muted); overflow-wrap: anywhere; }
+.vt-costing__result.is-ok .vt-costing__pct b { color: var(--text-on-green); }
+.vt-costing__result.is-bad .vt-costing__pct b { color: var(--text-on-red); }
+.vt-costing__totals div:not(.vt-card__title) { display: flex; justify-content: space-between; padding: 4px 0; font-size: var(--text-sm, 13px); }
+.vt-costing__totals b { font-variant-numeric: tabular-nums; }
+/* Side by side only when the form is wide enough for both the four-column table and the result card. */
+@media (max-width: 1599px) { .vt-costing__grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- Material Plan ---------- */
+.vt-mp__qty { display: flex; flex-wrap: wrap; gap: 8px; }
+.vt-mp__qty span { padding: 6px 10px; border-radius: 8px; background: var(--subtle-fg); font-size: var(--text-sm, 13px); }
+.vt-mp__qty b { font-variant-numeric: tabular-nums; }
+.vt-short { color: var(--red-500); font-weight: 700; }
+.vt-covered { color: var(--green-600, var(--green-500)); font-weight: 600; }
+
+/* Margin badge (Order Tracker / Velocity Home) */
+.vt-margin { display: inline-block; margin-top: 3px; padding: 1px 7px; border-radius: 999px; font-size: var(--text-xs, 11px); font-weight: 600; }
+.vt-margin--ok { background: var(--bg-green); color: var(--text-on-green); }
+.vt-margin--bad { background: var(--bg-red); color: var(--text-on-red); }

@@ -30,7 +30,8 @@ bench --site velocity.local execute velocity_ctp.tests.test_setup_masters.run
 Job Map, Fabric Issue, Cutting Marker, Cut Receive and Bundle, the Bundle list and the Cutting Report, in light and
 dark theme, at 1920px, 1366px and 820px (tablet) width; the Scan Station, Production Control Tower, Process Issue,
 Process Receive, Packing List and the Process Movement Report likewise; plus the Bundle Ticket (A4 and thermal), Process
-Challan and Packing List prints at 1366px.
+Challan and Packing List prints at 1366px; and the Cost Sheet (with its Summary tab), Material Plan (with availability),
+Order Costing report and Cost Head list in both themes and all widths.
 
 **Reports:** JavaScript errors, cut-off text, and pages that scroll sideways. Every result is also written to
 `screenshots/output/summary.json`. Always look at the screenshots yourself as well: the automatic checks cannot
