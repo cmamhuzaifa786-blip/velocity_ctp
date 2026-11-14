@@ -53,3 +53,7 @@ jspm_packages/
 
 # Aider AI Chat
 .aider*
+
+# Screenshot check (velocity_ctp/tests/screenshots): output and locally fetched browser libraries
+velocity_ctp/tests/screenshots/output/
+velocity_ctp/tests/screenshots/.browser-libs/
