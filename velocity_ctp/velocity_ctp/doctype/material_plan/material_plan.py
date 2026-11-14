@@ -187,6 +187,101 @@ def free_warehouses(company: str) -> list[str]:
 	]
 
 
+def get_issued_accessory_qty(plan, item: str) -> float:
+	"""Accessory quantity already issued for the plan's order.
+
+	Accessory issues are built in Phase 6; until then nothing is issued, so the full requirement
+	of other open plans stays reserved.
+	"""
+	return 0.0
+
+
+def job_maps_of_orders(orders: list[str]) -> dict[str, str]:
+	"""{garment_order: job map}, preferring a Job Map that is not closed (one query)."""
+	if not orders:
+		return {}
+	jm = frappe.qb.DocType("Job Map")
+	jmo = frappe.qb.DocType("Job Map Order")
+	rows = (
+		frappe.qb.from_(jmo)
+		.inner_join(jm)
+		.on(jm.name == jmo.parent)
+		.select(jmo.garment_order, jm.name)
+		.where((jmo.parenttype == "Job Map") & jmo.garment_order.isin(orders))
+		.orderby(jm.job_closed)
+		.orderby(jm.modified, order=frappe.qb.desc)
+		.run()
+	)
+	result: dict[str, str] = {}
+	for order, job_map in rows:
+		result.setdefault(order, job_map)
+	return result
+
+
+def reserved_by_other_plans(plan, items: list[str]) -> dict[str, float]:
+	"""Remaining requirement of other submitted plans of open orders, per item.
+
+	Fabric: plans on the same Job Map are taken together and the fabric already issued to that
+	Job Map (issued - returned) is deducted once, never below zero; plans without a Job Map keep
+	their full requirement. Accessories: requirement - get_issued_accessory_qty(), never below zero.
+	"""
+	from velocity_ctp.cutting.ledger import job_fabric
+
+	reserved: dict[str, float] = defaultdict(float)
+	if not items:
+		return reserved
+	others = frappe.get_all(
+		"Material Plan",
+		filters={"docstatus": 1, "name": ("!=", plan.name or ""), "company": plan.company},
+		fields=["name", "garment_order"],
+	)
+	open_orders = set(
+		frappe.get_all(
+			"Garment Order",
+			filters={
+				"name": ("in", [o.garment_order for o in others] or [""]),
+				"status": ("not in", ("Completed", "Cancelled")),
+			},
+			pluck="name",
+		)
+	)
+	others = [o for o in others if o.garment_order in open_orders]
+	if not others:
+		return reserved
+	plan_order = {o.name: o.garment_order for o in others}
+	job_maps = job_maps_of_orders(list(open_orders))
+
+	# Fabric: requirement per (job map or plan without one, item), less the net issue to that Job Map.
+	fabric_need: dict[tuple, float] = defaultdict(float)
+	for parent, item, qty in frappe.db.sql(
+		"""select parent, fabric_item, sum(required_qty) from `tabMaterial Plan Fabric`
+		where parenttype = 'Material Plan' and parent in %(p)s and fabric_item in %(i)s group by parent, fabric_item""",
+		{"p": list(plan_order), "i": items},
+	):
+		job_map = job_maps.get(plan_order[parent])
+		fabric_need[(job_map or f"plan:{parent}", item)] += flt(qty)
+	issued = job_fabric([k[0] for k in fabric_need if not k[0].startswith("plan:")])
+	for (key, item), qty in fabric_need.items():
+		net_issued = 0.0
+		if not key.startswith("plan:"):
+			net_issued = sum(
+				v["issued"] - v["returned"]
+				for (fabric, _batch), v in issued.get(key, {}).items()
+				if fabric == item
+			)
+		reserved[item] += max(qty - net_issued, 0.0)
+
+	# Accessories: requirement less what was issued for that plan's order.
+	for parent, item, qty in frappe.db.sql(
+		"""select parent, accessory_item, sum(required_qty) from `tabMaterial Plan Accessory`
+		where parenttype = 'Material Plan' and parent in %(p)s and accessory_item in %(i)s group by parent, accessory_item""",
+		{"p": list(plan_order), "i": items},
+	):
+		other = frappe._dict(name=parent, garment_order=plan_order[parent])
+		reserved[item] += max(flt(qty) - flt(get_issued_accessory_qty(other, item)), 0.0)
+	return reserved
+
+
 def availability(plan) -> list[dict]:
 	needs = plan.requirements()
 	items = list(needs) or [""]
@@ -217,33 +312,7 @@ def availability(plan) -> list[dict]:
 			{"i": items, "c": plan.company},
 		)
 	)
-	reserved: dict[str, float] = defaultdict(float)
-	others = frappe.get_all(
-		"Material Plan",
-		filters={"docstatus": 1, "name": ("!=", plan.name or ""), "company": plan.company},
-		fields=["name", "garment_order"],
-	)
-	open_orders = {
-		o.name
-		for o in frappe.get_all(
-			"Garment Order",
-			filters={
-				"name": ("in", [o.garment_order for o in others] or [""]),
-				"status": ("not in", ("Completed", "Cancelled")),
-			},
-			fields=["name"],
-		)
-	}
-	plans = [o.name for o in others if o.garment_order in open_orders] or [""]
-	for table, field in (
-		("Material Plan Fabric", "fabric_item"),
-		("Material Plan Accessory", "accessory_item"),
-	):
-		for item, qty in frappe.db.sql(
-			f"select {field}, sum(required_qty) from `tab{table}` where parent in %(p)s and {field} in %(i)s group by {field}",
-			{"p": plans, "i": items},
-		):
-			reserved[item] += flt(qty)
+	reserved = reserved_by_other_plans(plan, list(needs))
 
 	result = []
 	for item, need in needs.items():
