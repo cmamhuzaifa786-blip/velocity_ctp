@@ -12,6 +12,16 @@ matrix (rows created, updated and removed from the grid, rates, totals, read-onl
 node velocity_ctp/tests/quantity_matrix.test.js
 ```
 
+## Setup must not change existing records
+
+`setup_masters()` only creates missing records and sets defaults on the records it creates. This test changes
+existing values (Washing's colour change, a process type, a warehouse account, Stock Settings, Velocity Settings, a wash
+type, a UOM), runs `setup_masters()` again inside a transaction, checks every value is unchanged and rolls back:
+
+```bash
+bench --site velocity.local execute velocity_ctp.tests.test_setup_masters.run
+```
+
 ## Screenshot check
 
 `screenshots/run.js` opens the Velocity pages in a headless Chromium and saves full-page screenshots.

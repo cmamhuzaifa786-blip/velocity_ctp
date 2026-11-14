@@ -2,6 +2,12 @@
 
 Run on an existing site with:
     bench --site <site> execute velocity_ctp.setup.install.setup_masters
+
+Rule: setup only creates missing records and sets defaults on the records it creates in the
+same run. It never changes values on records that already exist (processes, warehouses,
+accounts, settings, ...), so changes made by users are kept. Where an existing value matters
+(for example batch tracking in Stock Settings), setup prints a warning instead of changing it.
+Test: bench --site <site> execute velocity_ctp.tests.test_setup_masters.run
 """
 
 from __future__ import annotations
@@ -15,7 +21,6 @@ MERCHANDISER_ROLE = "Velocity Merchandiser"
 CUTTING_ROLE = "Velocity Cutting"
 PRODUCTION_ROLE = "Velocity Production"
 VELOCITY_ROLES = (MERCHANDISER_ROLE, CUTTING_ROLE, PRODUCTION_ROLE)
-COLOUR_CHANGE_PROCESSES = ("Washing",)
 
 ITEM_ATTRIBUTES = ("Size", "Colour")
 
@@ -42,13 +47,13 @@ WAREHOUSES = (
 WIP_ACCOUNT_NAME = "Work In Progress"
 WIP_WAREHOUSES = ("Cutting WIP", "Stitching WIP", "Washing WIP", "Finishing WIP")
 
-# (process_name, sequence, wip warehouse, requires_barcode, allow_rejection)
+# (process_name, sequence, wip warehouse, requires_barcode, allow_rejection, allow_colour_change)
 PROCESSES = (
-	("Cutting", 1, "Cutting WIP", 0, 0),
-	("Stitching", 2, "Stitching WIP", 1, 1),
-	("Washing", 3, "Washing WIP", 1, 1),
-	("Finishing", 4, "Finishing WIP", 1, 1),
-	("Packing", 5, "Finished Goods Store", 1, 0),
+	("Cutting", 1, "Cutting WIP", 0, 0, 0),
+	("Stitching", 2, "Stitching WIP", 1, 1, 0),
+	("Washing", 3, "Washing WIP", 1, 1, 1),
+	("Finishing", 4, "Finishing WIP", 1, 1, 0),
+	("Packing", 5, "Finished Goods Store", 1, 0, 0),
 )
 
 WASH_TYPES = ("Rinse Wash", "Enzyme Wash", "Stone Wash", "Softener Wash")
@@ -67,25 +72,30 @@ def after_install() -> None:
 	setup_masters()
 
 
-def setup_masters() -> None:
+def setup_masters(commit: bool = True) -> list[str]:
+	"""Create missing masters. Returns the list of created records (also printed).
+
+	`commit=False` leaves the transaction open (used by the test, which rolls back).
+	"""
 	company = get_default_company()
 	log: list[str] = []
+	warnings: list[str] = []
 
 	ensure_role(log)
-	ensure_item_attributes(log)
-	ensure_batch_tracking(log)
+	ensure_item_attributes(log, warnings)
+	check_batch_tracking(warnings)
 	ensure_velocity_settings(log)
 	ensure_item_groups(log)
 	ensure_uoms(log)
-	warehouses = ensure_warehouses(company, log)
-	ensure_wip_account(company, warehouses, log)
-	ensure_colour_change_processes(log)
+	wip_account = ensure_wip_account(company, log, warnings)
+	warehouses = ensure_warehouses(company, wip_account, log)
 	ensure_processes(warehouses, log)
 	ensure_simple_records("Wash Type", "wash_type", WASH_TYPES, {"washing_category": "Denim"}, log)
 	ensure_simple_records("Product Category", "category_name", PRODUCT_CATEGORIES, {}, log)
 	ensure_sales_order_field(log)
 
-	frappe.db.commit()
+	if commit:
+		frappe.db.commit()
 
 	print(f"Velocity CTP setup complete for company: {company}")
 	print(
@@ -93,6 +103,9 @@ def setup_masters() -> None:
 		if log
 		else "  Nothing to create; all masters already exist."
 	)
+	for warning in warnings:
+		print(f"  warning: {warning}")
+	return log
 
 
 # ----------------------------------------------------------------------
@@ -126,12 +139,12 @@ def ensure_role(log: list[str] | None = None) -> None:
 			log.append(f"Role {role}")
 
 
-def ensure_item_attributes(log: list[str]) -> None:
+def ensure_item_attributes(log: list[str], warnings: list[str]) -> None:
 	for name in ITEM_ATTRIBUTES:
 		if frappe.db.exists("Item Attribute", name):
 			if frappe.db.get_value("Item Attribute", name, "numeric_values"):
-				print(
-					f"  warning: Item Attribute {name} uses numeric values; Velocity CTP expects text values."
+				warnings.append(
+					f"Item Attribute {name} uses numeric values; Velocity CTP expects text values."
 				)
 			continue
 		frappe.get_doc({"doctype": "Item Attribute", "attribute_name": name, "numeric_values": 0}).insert(
@@ -167,8 +180,12 @@ def ensure_uoms(log: list[str]) -> None:
 		log.append(f"UOM {name}")
 
 
-def ensure_warehouses(company: str, log: list[str]) -> dict[str, str]:
-	"""Create the production warehouses and return {warehouse_name: warehouse docname}."""
+def ensure_warehouses(company: str, wip_account: str | None, log: list[str]) -> dict[str, str]:
+	"""Create the production warehouses and return {warehouse_name: warehouse docname}.
+
+	New process WIP warehouses get the Work In Progress account; existing warehouses keep
+	whatever account they have.
+	"""
 	parent = frappe.db.get_value("Warehouse", {"company": company, "is_group": 1}, "name", order_by="lft asc")
 	result: dict[str, str] = {}
 	for name in WAREHOUSES:
@@ -176,22 +193,29 @@ def ensure_warehouses(company: str, log: list[str]) -> dict[str, str]:
 		if existing:
 			result[name] = existing
 			continue
-		doc = frappe.get_doc(
-			{
-				"doctype": "Warehouse",
-				"warehouse_name": name,
-				"company": company,
-				"parent_warehouse": parent,
-				"is_group": 0,
-			}
-		).insert(ignore_permissions=True)
+		values = {
+			"doctype": "Warehouse",
+			"warehouse_name": name,
+			"company": company,
+			"parent_warehouse": parent,
+			"is_group": 0,
+		}
+		if name in WIP_WAREHOUSES and wip_account:
+			values["account"] = wip_account
+		doc = frappe.get_doc(values).insert(ignore_permissions=True)
 		result[name] = doc.name
-		log.append(f"Warehouse {doc.name}")
+		log.append(f"Warehouse {doc.name}" + (f" (account {wip_account})" if values.get("account") else ""))
 	return result
 
 
 def ensure_processes(warehouses: dict[str, str], log: list[str]) -> None:
-	for process_name, sequence, warehouse, barcode, rejection in PROCESSES:
+	"""Create missing processes with their defaults (Washing allows a colour change).
+
+	The next process is chained only on processes created in this run; existing processes keep
+	their own settings.
+	"""
+	created: list[str] = []
+	for process_name, sequence, warehouse, barcode, rejection, colour_change in PROCESSES:
 		if frappe.db.exists("Process", process_name):
 			continue
 		frappe.get_doc(
@@ -203,15 +227,16 @@ def ensure_processes(warehouses: dict[str, str], log: list[str]) -> None:
 				"wip_warehouse": warehouses[warehouse],
 				"requires_barcode": barcode,
 				"allow_rejection": rejection,
+				"allow_colour_change": colour_change,
 				"is_active": 1,
 			}
 		).insert(ignore_permissions=True)
+		created.append(process_name)
 		log.append(f"Process {process_name}")
 
-	# Chain next_process only where it is still empty, so manual changes are kept.
 	for current, following in pairwise(PROCESSES):
 		name, next_name = current[0], following[0]
-		if frappe.db.exists("Process", name) and not frappe.db.get_value("Process", name, "next_process"):
+		if name in created and frappe.db.exists("Process", next_name):
 			doc = frappe.get_doc("Process", name)
 			doc.next_process = next_name
 			doc.save(ignore_permissions=True)
@@ -252,15 +277,13 @@ def ensure_sales_order_field(log: list[str]) -> None:
 	log.append("Custom Field Sales Order-garment_order")
 
 
-def ensure_batch_tracking(log: list[str]) -> None:
-	"""Fabric is tracked by batch (lot / shade), which needs batch tracking switched on in Stock Settings."""
-	if frappe.db.get_single_value("Stock Settings", "enable_serial_and_batch_no_for_item"):
-		return
-	settings = frappe.get_single("Stock Settings")
-	settings.enable_serial_and_batch_no_for_item = 1
-	settings.flags.ignore_permissions = True
-	settings.save()
-	log.append("Stock Settings: Activate Serial / Batch No for Item")
+def check_batch_tracking(warnings: list[str]) -> None:
+	"""Fabric is tracked by batch (lot / shade). Stock Settings is an existing record: warn, never change it."""
+	if not frappe.db.get_single_value("Stock Settings", "enable_serial_and_batch_no_for_item"):
+		warnings.append(
+			"Batch tracking is off. Fabric items need batches: tick 'Activate Serial / Batch No for Item' "
+			"in Stock Settings."
+		)
 
 
 def ensure_velocity_settings(log: list[str]) -> None:
@@ -270,8 +293,11 @@ def ensure_velocity_settings(log: list[str]) -> None:
 		log.append("Velocity Settings defaults")
 
 
-def ensure_wip_account(company: str, warehouses: dict[str, str], log: list[str]) -> None:
-	"""Create the "Work In Progress" stock account under Current Assets and set it on the WIP warehouses."""
+def ensure_wip_account(company: str, log: list[str], warnings: list[str]) -> str | None:
+	"""Create the "Work In Progress" stock account under Current Assets if it is missing.
+
+	Returns the account to use for newly created WIP warehouses (None if it is not a Stock account).
+	"""
 	account = frappe.db.get_value(
 		"Account", {"company": company, "account_name": WIP_ACCOUNT_NAME, "is_group": 0}, "name"
 	)
@@ -300,28 +326,8 @@ def ensure_wip_account(company: str, warehouses: dict[str, str], log: list[str])
 		account = doc.name
 		log.append(f"Account {account}")
 	elif frappe.db.get_value("Account", account, "account_type") != "Stock":
-		frappe.throw(
-			_(
-				"Account {0} exists but its Account Type is not Stock. Please correct it and run the setup again."
-			).format(frappe.bold(account))
+		warnings.append(
+			f"Account {account} exists but its Account Type is not Stock; it is not used for new WIP warehouses."
 		)
-
-	for warehouse_name in WIP_WAREHOUSES:
-		warehouse = warehouses.get(warehouse_name)
-		if not warehouse or frappe.db.get_value("Warehouse", warehouse, "account") == account:
-			continue
-		doc = frappe.get_doc("Warehouse", warehouse)
-		doc.account = account
-		doc.flags.ignore_permissions = True
-		doc.save()
-		log.append(f"Warehouse {warehouse} -> account {account}")
-
-
-def ensure_colour_change_processes(log: list[str]) -> None:
-	"""Washing may receive bundles in another colour of the style (for example Dark Indigo -> Washed Light)."""
-	for name in COLOUR_CHANGE_PROCESSES:
-		if frappe.db.exists("Process", name) and not frappe.db.get_value(
-			"Process", name, "allow_colour_change"
-		):
-			frappe.db.set_value("Process", name, "allow_colour_change", 1)
-			log.append(f"Process {name}: Allow Colour Change")
+		return None
+	return account
