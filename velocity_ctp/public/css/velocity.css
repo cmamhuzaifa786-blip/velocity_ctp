@@ -12,7 +12,8 @@
 	--vt-bad: var(--red-500);
 	--vt-info: var(--blue-500);
 	--vt-idle: var(--gray-400);
-	padding: 8px 0 32px;
+	/* Side padding lines the content up with the page header and breadcrumb. */
+	padding: 8px 16px 32px;
 	color: var(--text-color);
 	container-type: inline-size;
 	container-name: vt-page;
@@ -353,6 +354,11 @@
 	gap: 8px 12px;
 	align-items: end;
 	margin-bottom: var(--vt-gap);
+	/* Same inner padding as the cards below, so labels line up with the card content. */
+	padding: 12px 18px 14px;
+	background: var(--card-bg);
+	border: 1px solid var(--border-color);
+	border-radius: var(--vt-radius);
 }
 .vt-filters .frappe-control { margin-bottom: 0; }
 .vt-filters .form-group { margin-bottom: 0; }
@@ -485,24 +491,182 @@
 .vt-matrix__empty { padding: 20px; text-align: center; color: var(--text-muted); }
 .vt-matrix__value { display: inline-block; min-width: 40px; text-align: right; font-variant-numeric: tabular-nums; }
 
-/* ---------- Approval tracker (Job Map) ---------- */
+/* ---------- Approval cards (Job Map): the cards are the approval control ---------- */
 .vt-approvals {
 	display: grid;
 	grid-template-columns: repeat(5, minmax(0, 1fr));
-	gap: 6px;
+	gap: 8px;
 	margin-bottom: 8px;
 }
 .vt-approval {
-	padding: 10px;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 4px;
+	width: 100%;
+	min-width: 0;
+	padding: 10px 12px;
+	border: 1px solid var(--border-color);
+	border-radius: 10px;
+	background: var(--card-bg);
+	color: var(--text-muted);
+	font-size: var(--text-xs, 11px);
+	line-height: 1.4;
+	text-align: left;
+	cursor: pointer;
+	transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.vt-approval__name {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: var(--text-sm, 13px);
+	font-weight: 600;
+	color: var(--text-color);
+}
+.vt-approval__mark {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+	flex: none;
+	border-radius: 999px;
+	border: 1.5px solid var(--gray-400);
+	font-size: 10px;
+	line-height: 1;
+}
+.vt-approval__detail { display: block; }
+.vt-approval:hover { border-color: var(--gray-400); background: var(--subtle-fg); }
+.vt-approval:focus { outline: none; }
+.vt-approval:focus-visible { outline: 2px solid var(--text-color); outline-offset: 2px; }
+.vt-approval--done {
+	background: var(--bg-green);
+	border-color: transparent;
+	color: var(--text-on-green);
+}
+.vt-approval--done .vt-approval__name { color: var(--text-on-green); }
+.vt-approval--done .vt-approval__mark {
+	background: var(--green-600, var(--green-500));
+	border-color: var(--green-600, var(--green-500));
+	color: #fff;
+}
+.vt-approval--done:hover { background: var(--bg-green); border-color: var(--green-500); }
+.vt-approval--next { border-color: var(--orange-400, var(--orange-500)); }
+.vt-approval--next .vt-approval__mark { border-color: var(--orange-500); }
+.vt-approval--blocked { border-style: dashed; }
+.vt-approvals--readonly .vt-approval,
+.vt-approval:disabled { cursor: default; }
+.vt-approvals--readonly .vt-approval:hover { background: var(--card-bg); border-color: var(--border-color); }
+.vt-approvals--readonly .vt-approval--done:hover { background: var(--bg-green); border-color: transparent; }
+
+/* ---------- Grid total strip (Job Map: Garment Orders table) ---------- */
+.vt-grid-total {
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+	gap: 24px;
+	flex-wrap: wrap;
+	margin-top: -4px;
+	padding: 8px 12px;
+	border: 1px solid var(--border-color);
 	border-radius: 8px;
 	background: var(--subtle-fg);
-	font-size: var(--text-xs, 11px);
+	font-size: var(--text-sm, 13px);
 	color: var(--text-muted);
 }
-.vt-approval__name { display: block; font-size: var(--text-sm, 13px); font-weight: 600; color: var(--text-color); }
-.vt-approval--done { background: var(--bg-green); color: var(--text-on-green); }
-.vt-approval--done .vt-approval__name { color: var(--text-on-green); }
-.vt-approval--next { box-shadow: inset 0 0 0 1px var(--vt-warn, var(--orange-500)); }
+.vt-grid-total__label { margin-right: auto; font-weight: 600; color: var(--text-color); }
+.vt-grid-total__item b { margin-left: 6px; color: var(--text-color); font-variant-numeric: tabular-nums; }
+
+/* Keep every Job Map order column readable on narrow screens: scroll the grid instead. */
+@media (max-width: 1199px) {
+	[data-route^="Form/Job Map"] .frappe-control[data-fieldname="jobs"] .form-grid-container { overflow-x: auto; }
+	[data-route^="Form/Job Map"] .frappe-control[data-fieldname="jobs"] .form-grid { min-width: 900px; }
+}
+
+/* ---------- Segmented toggle (Garment Order matrix) ---------- */
+.vt-seg {
+	display: inline-flex;
+	padding: 2px;
+	border-radius: 8px;
+	background: var(--subtle-fg);
+	flex: none;
+}
+.vt-seg__btn {
+	border: 0;
+	padding: 3px 10px;
+	border-radius: 6px;
+	background: transparent;
+	color: var(--text-muted);
+	font-size: var(--text-xs, 12px);
+	font-weight: 500;
+	white-space: nowrap;
+}
+.vt-seg__btn:hover { color: var(--text-color); }
+.vt-seg__btn.is-active {
+	background: var(--card-bg);
+	color: var(--text-color);
+	box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.1));
+}
+.vt-seg__btn:focus { outline: none; }
+.vt-seg__btn:focus-visible { outline: 2px solid var(--text-color); outline-offset: 1px; }
+.vt-matrix__summary { flex: 1; min-width: 0; }
+.vt-matrix__note {
+	padding: 6px 12px;
+	border-bottom: 1px solid var(--border-color);
+	font-size: var(--text-xs, 12px);
+	color: var(--text-muted);
+	background: var(--subtle-fg);
+}
+
+/* ---------- Order Tracker: compact stage view below 1400px ---------- */
+.vt-pipeline__current { display: none; }
+.vt-dot-legend { display: none; }
+@media (max-width: 1399px) {
+	.vt-tracker .vt-pipeline-cell { min-width: 0; white-space: nowrap; }
+	.vt-tracker .vt-pipeline {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		min-width: 0;
+		vertical-align: middle;
+	}
+	.vt-tracker .vt-step {
+		width: 12px;
+		height: 12px;
+		padding: 0;
+		border-radius: 999px;
+		flex: none;
+	}
+	.vt-tracker .vt-step__name,
+	.vt-tracker .vt-step__detail { display: none; }
+	.vt-pipeline__current {
+		display: inline-block;
+		margin-left: 8px;
+		vertical-align: middle;
+		font-size: var(--text-xs, 12px);
+		color: var(--text-muted);
+	}
+	.vt-dot-legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px 16px;
+		margin: -4px 0 12px;
+		font-size: var(--text-xs, 12px);
+		color: var(--text-muted);
+	}
+	.vt-dot-legend span { display: inline-flex; align-items: center; gap: 6px; }
+	.vt-dot-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 999px; }
+	/* Solid dot colours (the wide view uses soft tints, too faint for small dots). */
+	.vt-tracker .vt-step--done,
+	.vt-dot-legend .vt-step--done { background: var(--green-500); }
+	.vt-tracker .vt-step--active,
+	.vt-dot-legend .vt-step--active { background: var(--blue-500); }
+	.vt-tracker .vt-step--blocked,
+	.vt-dot-legend .vt-step--blocked { background: var(--orange-500); }
+	.vt-tracker .vt-step--pending,
+	.vt-dot-legend .vt-step--pending { background: transparent; box-shadow: inset 0 0 0 1.5px var(--gray-400); }
+}
 
 /* ---------- Responsive ---------- */
 @media (max-width: 991px) {
@@ -513,3 +677,31 @@
 	.vt-approvals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 	.vt-header__title { font-size: 19px; }
 }
+
+/* Garment Order: let the long form title ("STJ-0001/26 · Customer") wrap in the form sidebar. */
+[data-route^="Form/Garment Order"] .sidebar-meta-details > .flex > .ellipsis,
+[data-route^="Form/Garment Order"] .sidebar-meta-details .form-title-text > .ellipsis {
+	white-space: normal;
+	overflow-wrap: anywhere;
+}
+
+.vt-nowrap { white-space: nowrap; }
+.vt-only-narrow { display: none; }
+
+/* Order Tracker on tablets: keep the progress column in view without sideways scrolling. */
+@media (max-width: 1099px) {
+	.vt-tracker .vt-col-style { display: none; }
+	.vt-tracker .vt-only-narrow { display: block; }
+	.vt-tracker th,
+	.vt-tracker td { padding-left: 8px; padding-right: 8px; }
+	.vt-tracker th:first-child,
+	.vt-tracker td:first-child { padding-left: 18px; }
+	.vt-pipeline__current { display: block; margin: 4px 0 0; }
+}
+
+/* Garment Order matrix: on narrow forms the summary gets its own line under the controls. */
+.vt-matrix { container-type: inline-size; }
+@container (max-width: 640px) {
+	.vt-matrix__summary { order: 3; flex-basis: 100%; }
+}
+.vt-matrix__summary b { white-space: nowrap; }

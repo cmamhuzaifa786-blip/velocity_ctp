@@ -14,7 +14,7 @@
  ],
  "fields": [
   {
-   "columns": 2,
+   "columns": 3,
    "fieldname": "garment_order",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -33,11 +33,10 @@
    "read_only": 1
   },
   {
-   "columns": 2,
    "fetch_from": "garment_order.customer",
    "fieldname": "customer",
    "fieldtype": "Link",
-   "in_list_view": 1,
+   "in_list_view": 0,
    "label": "Customer",
    "options": "Customer",
    "read_only": 1
@@ -52,7 +51,7 @@
    "read_only": 1
   },
   {
-   "columns": 1,
+   "columns": 2,
    "fetch_from": "garment_order.total_order_qty",
    "fieldname": "total_order_qty",
    "fieldtype": "Int",
@@ -66,7 +65,7 @@
    "fieldname": "total_cutting_qty",
    "fieldtype": "Int",
    "in_list_view": 1,
-   "label": "Cutting Qty",
+   "label": "Cut Qty",
    "read_only": 1
   }
  ],

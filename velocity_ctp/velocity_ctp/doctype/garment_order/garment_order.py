@@ -29,6 +29,7 @@ class GarmentOrder(Document):
 		self.validate_items()
 		self.set_item_codes()
 		self.calculate_totals()
+		self.set_title()
 		if self.docstatus == 0:
 			self.status = "Draft"
 
@@ -149,6 +150,11 @@ class GarmentOrder(Document):
 			self.currency = frappe.get_cached_value("Company", self.company, "default_currency")
 		if not self.merchandiser:
 			self.merchandiser = frappe.session.user
+
+	def set_title(self) -> None:
+		"""Form title: order number first, then the customer ("STJ-0001/26 · Test Buyer")."""
+		customer = frappe.db.get_value("Customer", self.customer, "customer_name") or self.customer
+		self.title = f"{self.name} · {customer}" if customer else self.name
 
 	def validate_dates(self) -> None:
 		self.validate_ship_date()

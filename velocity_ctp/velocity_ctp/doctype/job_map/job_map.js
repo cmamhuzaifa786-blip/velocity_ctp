@@ -19,6 +19,9 @@ const VT_APPROVALS = [
 	{ check: "ok_to_cut", date: "ok_to_cut_date", by: "ok_to_cut_by", label: __("OK to Cut") },
 ];
 const PICKABLE_STATUSES = ["Open", "On Hold"];
+const PP_REQUIRED_MESSAGE = __(
+	"OK to Cut can only be given after the PP sample is approved. Please approve the PP sample first."
+);
 
 frappe.ui.form.on("Job Map", {
 	setup(frm) {
@@ -33,7 +36,8 @@ frappe.ui.form.on("Job Map", {
 
 	refresh(frm) {
 		render_approval_tracker(frm);
-		if (!frm.doc.job_closed) {
+		render_jobs_total(frm);
+		if (!frm.doc.job_closed && frm.has_perm("write")) {
 			frm.add_custom_button(__("Pick Orders"), () => pick_orders(frm));
 		}
 	},
@@ -41,13 +45,7 @@ frappe.ui.form.on("Job Map", {
 	ok_to_cut(frm) {
 		if (frm.doc.ok_to_cut && !frm.doc.pp_sample_approved) {
 			frm.set_value("ok_to_cut", 0);
-			frappe.msgprint({
-				title: __("PP Sample Not Approved"),
-				message: __(
-					"OK to Cut can only be given after the PP sample is approved. Please tick PP Sample Approved first."
-				),
-				indicator: "orange",
-			});
+			frappe.msgprint({ title: __("PP Sample Not Approved"), message: PP_REQUIRED_MESSAGE, indicator: "orange" });
 			return;
 		}
 		stamp(frm, "ok_to_cut");
@@ -56,16 +54,18 @@ frappe.ui.form.on("Job Map", {
 	pp_sample_approved(frm) {
 		if (!frm.doc.pp_sample_approved && frm.doc.ok_to_cut) {
 			frm.set_value("ok_to_cut", 0);
-			frappe.show_alert({
-				message: __("OK to Cut was removed because the PP sample is no longer approved."),
-				indicator: "orange",
-			});
 		}
 		stamp(frm, "pp_sample_approved");
 	},
 	fit_sample_approved: (frm) => stamp(frm, "fit_sample_approved"),
 	size_set_sample_approved: (frm) => stamp(frm, "size_set_sample_approved"),
 	photo_sample_approved: (frm) => stamp(frm, "photo_sample_approved"),
+});
+
+frappe.ui.form.on("Job Map Order", {
+	garment_order: (frm) => setTimeout(() => render_jobs_total(frm), 300),
+	jobs_add: (frm) => render_jobs_total(frm),
+	jobs_remove: (frm) => render_jobs_total(frm),
 });
 
 /** Show the date and approver immediately; the server sets the final values on save. */
@@ -82,24 +82,108 @@ function stamp(frm, check) {
 	render_approval_tracker(frm);
 }
 
+/**
+ * Approval cards are the control: a card approves its stage, an approved card undoes it.
+ * Both ask for confirmation and save the Job Map, so the change lands in the timeline.
+ * Users without write permission see the cards but cannot click them.
+ */
 function render_approval_tracker(frm) {
 	const esc = frappe.utils.escape_html;
+	const can_edit = frm.has_perm("write");
 	const next = VT_APPROVALS.find((a) => !frm.doc[a.check]);
+
 	const html = VT_APPROVALS.map((a) => {
 		const done = !!frm.doc[a.check];
-		const cls = done ? "vt-approval--done" : a === next ? "vt-approval--next" : "";
-		const detail = done
-			? `${frappe.datetime.str_to_user(frm.doc[a.date]) || ""}<br>${esc(
-					frappe.user.full_name(frm.doc[a.by]) || ""
-			  )}`
-			: a === next
-			? __("Next approval")
-			: __("Pending");
-		return `<div class="vt-approval ${cls}">
-			<span class="vt-approval__name">${a.label}</span>${detail}
-		</div>`;
+		const blocked = a.check === "ok_to_cut" && !done && !frm.doc.pp_sample_approved;
+		let state = "pending";
+		let detail = __("Pending");
+		if (done) {
+			state = "done";
+			const date = frappe.datetime.str_to_user(frm.doc[a.date]) || "";
+			detail = `${__("Approved {0}", [`<span class="vt-nowrap">${date}</span>`])}<br>${esc(
+				frappe.user.full_name(frm.doc[a.by]) || ""
+			)}`;
+		} else if (blocked) {
+			state = "blocked";
+			detail = __("Needs PP approval");
+		} else if (a === next) {
+			state = "next";
+			detail = can_edit ? __("Click to approve") : __("Next approval");
+		} else if (can_edit) {
+			detail = __("Click to approve");
+		}
+		const action = done ? __("Undo {0} approval", [a.label]) : __("Approve {0}", [a.label]);
+		return `<button type="button" class="vt-approval vt-approval--${state}" data-approval="${a.check}"
+			${can_edit ? `title="${esc(action)}"` : "disabled aria-disabled=\"true\""}>
+			<span class="vt-approval__name">
+				<span class="vt-approval__mark" aria-hidden="true">${done ? "✓" : ""}</span>${a.label}
+			</span>
+			<span class="vt-approval__detail">${detail}</span>
+		</button>`;
 	}).join("");
-	frm.get_field("approval_tracker").$wrapper.html(`<div class="vt-approvals">${html}</div>`);
+
+	const $wrapper = frm.get_field("approval_tracker").$wrapper;
+	$wrapper.html(`<div class="vt-approvals ${can_edit ? "" : "vt-approvals--readonly"}">${html}</div>`);
+	if (can_edit) {
+		$wrapper.find("[data-approval]").on("click", (e) => on_approval_click(frm, e.currentTarget.dataset.approval));
+	}
+}
+
+function on_approval_click(frm, check) {
+	const a = VT_APPROVALS.find((x) => x.check === check);
+	const approve = !frm.doc[check];
+
+	if (approve && check === "ok_to_cut" && !frm.doc.pp_sample_approved) {
+		frappe.msgprint({ title: __("PP Sample Not Approved"), message: PP_REQUIRED_MESSAGE, indicator: "orange" });
+		return;
+	}
+
+	const notes = [];
+	if (approve) {
+		notes.push(__("Today's date and your name will be recorded as the approval."));
+	} else {
+		notes.push(__("The approval date and approver will be cleared."));
+		if (check === "pp_sample_approved" && frm.doc.ok_to_cut) {
+			notes.push(__("OK to Cut will also be removed, because it needs the PP approval."));
+		}
+	}
+	if (frm.is_dirty() && !frm.is_new()) {
+		notes.push(__("Your other unsaved changes on this Job Map will be saved too."));
+	}
+	const question = approve ? __("Approve the {0}?", [a.label]) : __("Undo the {0} approval?", [a.label]);
+
+	frappe.confirm(`<p><b>${question}</b></p><p>${notes.join("<br>")}</p>`, () => {
+		frm.set_value(check, approve ? 1 : 0).then(() => {
+			if (frm.is_new()) {
+				frappe.show_alert({
+					message: __("The approval will be recorded when you save this Job Map."),
+					indicator: "blue",
+				});
+				return;
+			}
+			frm.save().catch(() => frm.reload_doc());
+		});
+	});
+}
+
+function render_jobs_total(frm) {
+	const field = frm.get_field("jobs_total");
+	if (!field) return;
+	const rows = (frm.doc.jobs || []).filter((r) => r.garment_order);
+	const order = rows.reduce((t, r) => t + cint(r.total_order_qty), 0);
+	const cut = rows.reduce((t, r) => t + cint(r.total_cutting_qty), 0);
+	field.$wrapper.html(
+		rows.length
+			? `<div class="vt-grid-total">
+				<span class="vt-grid-total__label">${__("Total")}
+					<span class="vt-muted">· ${__("{0} orders", [rows.length])}</span></span>
+				<span class="vt-grid-total__item">${__("Order Qty")}
+					<b>${format_number(order, null, 0)}</b></span>
+				<span class="vt-grid-total__item">${__("Cut Qty")}
+					<b>${format_number(cut, null, 0)}</b></span>
+			</div>`
+			: ""
+	);
 }
 
 function pick_orders(frm) {
@@ -159,6 +243,7 @@ function pick_orders(frm) {
 								})
 							);
 							frm.refresh_field("jobs");
+							render_jobs_total(frm);
 							frm.dirty();
 							this.dialog.hide();
 							frappe.show_alert({

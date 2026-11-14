@@ -127,16 +127,24 @@ class OrderTracker {
 						</div>`
 					)
 					.join("");
+				// Compact view (narrow screens): dots plus the current stage as text.
+				const current_index = r.stages.findIndex((s) => s.state !== "done");
+				const current =
+					current_index === -1
+						? __("All stages done")
+						: `${data.stages[current_index].label}: ${r.stages[current_index].detail}`;
 				return `<tr class="${row_cls}" data-order="${esc(r.name)}">
 					<td><span class="vt-link">${esc(r.name)}</span>
-						<div class="vt-muted small">${esc(r.customer)}</div></td>
-					<td>${esc(r.style)}<div class="vt-muted small">${esc(r.style_name || "")}</div></td>
+						<div class="vt-muted small">${esc(r.customer)}</div>
+						<div class="vt-muted small vt-only-narrow">${esc(r.style)}</div></td>
+					<td class="vt-col-style">${esc(r.style)}<div class="vt-muted small">${esc(r.style_name || "")}</div></td>
 					<td class="vt-num">${format_number(r.total_order_qty || 0, null, 0)}</td>
 					<td>${r.ship_date ? frappe.datetime.str_to_user(r.ship_date) : ""}
 						<div class="small vt-days">${days}</div></td>
 					<td><span class="vt-badge vt-badge--${meta.tone}">${meta.label}</span>
 						<div class="vt-muted small">${__(r.status)}</div></td>
-					<td class="vt-pipeline-cell"><div class="vt-pipeline">${steps}</div></td>
+					<td class="vt-pipeline-cell"><div class="vt-pipeline">${steps}</div>
+						<span class="vt-pipeline__current">${esc(current)}</span></td>
 				</tr>`;
 			})
 			.join("");
@@ -151,9 +159,16 @@ class OrderTracker {
 					}</span></span>
 				<span class="vt-legend">${legend}</span>
 			</div>
+			<div class="vt-dot-legend" aria-hidden="true">
+				<span><i class="vt-step--done"></i>${__("Done")}</span>
+				<span><i class="vt-step--active"></i>${__("In progress")}</span>
+				<span><i class="vt-step--blocked"></i>${__("On hold")}</span>
+				<span><i class="vt-step--pending"></i>${__("Not started")}</span>
+				<span class="vt-muted">${__("Hover a dot to see the stage")}</span>
+			</div>
 			<div class="vt-table-wrap"><table class="vt-table vt-tracker">
 				<thead><tr>
-					<th>${__("Job #")}</th><th>${__("Style")}</th><th class="vt-num">${__("Qty")}</th>
+					<th>${__("Job #")}</th><th class="vt-col-style">${__("Style")}</th><th class="vt-num">${__("Qty")}</th>
 					<th>${__("Ship Date")}</th><th>${__("Risk")}</th>
 					<th title="${esc(head)}">${__("Progress")}</th>
 				</tr></thead>

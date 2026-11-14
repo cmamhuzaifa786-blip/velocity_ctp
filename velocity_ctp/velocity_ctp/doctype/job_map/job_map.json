@@ -12,6 +12,7 @@
   "status",
   "section_orders",
   "jobs",
+  "jobs_total",
   "section_planned",
   "trims_start_date",
   "trims_closing_date",
@@ -88,7 +89,7 @@
   {
    "fieldname": "section_orders",
    "fieldtype": "Section Break",
-   "label": "Garment Orders"
+   "label": ""
   },
   {
    "fieldname": "jobs",
@@ -96,6 +97,11 @@
    "label": "Garment Orders",
    "options": "Job Map Order",
    "reqd": 1
+  },
+  {
+   "fieldname": "jobs_total",
+   "fieldtype": "HTML",
+   "label": "Garment Orders Total"
   },
   {
    "fieldname": "section_planned",
@@ -147,18 +153,21 @@
    "default": "0",
    "fieldname": "fit_sample_approved",
    "fieldtype": "Check",
+   "hidden": 1,
    "label": "Fit Sample Approved"
   },
   {
    "default": "0",
    "fieldname": "size_set_sample_approved",
    "fieldtype": "Check",
+   "hidden": 1,
    "label": "Size Set Sample Approved"
   },
   {
    "default": "0",
    "fieldname": "photo_sample_approved",
    "fieldtype": "Check",
+   "hidden": 1,
    "label": "Photo Sample Approved"
   },
   {
@@ -170,6 +179,7 @@
    "default": "0",
    "fieldname": "pp_sample_approved",
    "fieldtype": "Check",
+   "hidden": 1,
    "label": "PP Sample Approved"
   },
   {
@@ -177,6 +187,7 @@
    "description": "Requires PP Sample Approved.",
    "fieldname": "ok_to_cut",
    "fieldtype": "Check",
+   "hidden": 1,
    "label": "OK to Cut"
   },
   {

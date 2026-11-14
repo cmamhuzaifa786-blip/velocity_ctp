@@ -6,6 +6,7 @@
  "engine": "InnoDB",
  "field_order": [
   "naming_series",
+  "title",
   "order_type",
   "customer",
   "style",
@@ -49,6 +50,15 @@
    "options": "STJ-.####./.YY.\nSC-.####./.YY.",
    "reqd": 1,
    "set_only_once": 1
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Title",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
   },
   {
    "default": "Bulk",
@@ -183,6 +193,7 @@
    "options": "Garment Order Item"
   },
   {
+   "collapsible": 1,
    "fieldname": "section_totals",
    "fieldtype": "Section Break",
    "label": "Totals"
@@ -306,10 +317,10 @@
   }
  ],
  "search_fields": "customer,style,buyer_po_no,ship_date",
- "show_title_field_in_link": 0,
+ "show_title_field_in_link": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "title_field": "customer",
+ "title_field": "title",
  "track_changes": 1
 }

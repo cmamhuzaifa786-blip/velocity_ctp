@@ -124,6 +124,20 @@ frm.add_child("items", { colour: "Red", size: "28", order_qty: 1 });
 m.render(frm);
 assert.ok(html.includes("1 detail row(s) do not match"));
 
+// Cutting Qty mode: read only, shows cutting_qty, no rate column, toggle state reflected.
+frm.doc.items = frm.doc.items.filter((r) => r.colour !== "Red");
+frm.vt_matrix_mode = "cutting";
+m.render(frm);
+assert.equal((html.match(/<input/g) || []).length, 0, "no inputs in cutting mode");
+const di28 = frm.doc.items.find((r) => r.colour === "Dark Indigo" && r.size === "28");
+assert.ok(html.includes(`<span class="vt-matrix__value">${di28.cutting_qty}</span>`), "cutting qty shown");
+assert.ok(!html.includes(">Rate<"), "no rate column in cutting mode");
+assert.ok(/is-active"\s+data-matrix-mode="cutting"/.test(html), "cutting toggle active");
+assert.ok(html.includes("Switch to Order Qty to edit"));
+frm.vt_matrix_mode = "order";
+m.render(frm);
+assert.ok((html.match(/class="vt-qty /g) || []).length > 0, "inputs back in order mode");
+
 // Read-only after submit: no inputs.
 frm.doc.docstatus = 1;
 m.render(frm);

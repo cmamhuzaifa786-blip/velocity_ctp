@@ -100,7 +100,7 @@ class JobMap(Document):
 		if self.ok_to_cut and not self.pp_sample_approved:
 			frappe.throw(
 				_(
-					"OK to Cut can only be given after the PP sample is approved. Please tick PP Sample Approved first."
+					"OK to Cut can only be given after the PP sample is approved. Please approve the PP sample first."
 				),
 				title=_("PP Sample Not Approved"),
 			)

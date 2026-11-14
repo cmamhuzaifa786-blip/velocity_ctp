@@ -238,7 +238,9 @@ const vt_matrix = {
 		const wrapper = frm.get_field("quantity_matrix").$wrapper;
 		if (!layout) return;
 
-		const editable = frm.doc.docstatus === 0;
+		const cutting = this.mode(frm) === "cutting";
+		const field = cutting ? "cutting_qty" : "order_qty";
+		const editable = frm.doc.docstatus === 0 && !cutting;
 		const rows = this.row_map(frm);
 		const esc = frappe.utils.escape_html;
 		const unmatched = (frm.doc.items || []).filter((r) => !this.in_layout(layout, r)).length;
@@ -258,7 +260,7 @@ const vt_matrix = {
 				const cells = layout.sizes
 					.map((size) => {
 						const row = rows[this.key(colour, size)];
-						const qty = row ? cint(row.order_qty) : "";
+						const qty = row ? cint(row[field]) : "";
 						if (!editable) {
 							return `<td><span class="vt-matrix__value">${qty || "–"}</span></td>`;
 						}
@@ -269,7 +271,9 @@ const vt_matrix = {
 					})
 					.join("");
 				const rate = this.colour_rate(frm, colour);
-				const rate_cell = editable
+				const rate_cell = cutting
+					? ""
+					: editable
 					? `<input type="number" min="0" step="any" class="vt-rate" data-colour="${esc(colour)}"
 						value="${rate.value}" placeholder="${rate.mixed ? __("Mixed") : "0.00"}"
 						aria-label="${__("Rate")} ${esc(colour)}">`
@@ -280,7 +284,7 @@ const vt_matrix = {
 					<th scope="row" class="vt-matrix__colour" title="${esc(colour)}">${esc(colour)}</th>
 					${cells}
 					<td class="vt-matrix__total" data-row-total></td>
-					<td class="vt-matrix__rate">${rate_cell}</td>
+					${cutting ? "" : `<td class="vt-matrix__rate">${rate_cell}</td>`}
 				</tr>`;
 			})
 			.join("");
@@ -290,9 +294,23 @@ const vt_matrix = {
 		wrapper.html(`
 			<div class="vt-matrix">
 				<div class="vt-matrix__bar">
+					<div class="vt-seg" role="group" aria-label="${__("Quantity shown")}">
+						<button type="button" class="vt-seg__btn ${cutting ? "" : "is-active"}"
+							data-matrix-mode="order" aria-pressed="${!cutting}">${__("Order Qty")}</button>
+						<button type="button" class="vt-seg__btn ${cutting ? "is-active" : ""}"
+							data-matrix-mode="cutting" aria-pressed="${cutting}">${__("Cutting Qty")}</button>
+					</div>
 					<div class="vt-matrix__summary" data-summary></div>
 					<button type="button" class="btn btn-xs btn-default" data-toggle-rows>${toggle_label}</button>
 				</div>
+				${
+					cutting
+						? `<div class="vt-matrix__note">${__(
+								"Cutting quantity = order quantity + {0}% excess per size. Switch to Order Qty to edit.",
+								[flt(frm.doc.excess_percent)]
+						  )}</div>`
+						: ""
+				}
 				${
 					unmatched
 						? `<div class="vt-matrix__bar text-warning">${__(
@@ -307,14 +325,14 @@ const vt_matrix = {
 							<th class="vt-matrix__colour">${__("Colour / Size")}</th>
 							${head}
 							<th class="vt-matrix__total">${__("Total")}</th>
-							<th>${__("Rate")}</th>
+							${cutting ? "" : `<th>${__("Rate")}</th>`}
 						</tr></thead>
 						<tbody>${body}</tbody>
 						<tfoot><tr>
 							<td class="vt-matrix__colour">${__("Total")}</td>
 							${foot}
 							<td class="vt-matrix__total" data-grand-total></td>
-							<td></td>
+							${cutting ? "" : "<td></td>"}
 						</tr></tfoot>
 					</table>
 				</div>
@@ -324,7 +342,18 @@ const vt_matrix = {
 		this.bind(frm, wrapper);
 	},
 
+	mode(frm) {
+		return frm.vt_matrix_mode === "cutting" ? "cutting" : "order";
+	},
+
 	bind(frm, wrapper) {
+		wrapper.find("[data-matrix-mode]").on("click", (e) => {
+			const mode = e.currentTarget.dataset.matrixMode;
+			if (mode === this.mode(frm)) return;
+			frm.vt_matrix_mode = mode;
+			this.render(frm);
+		});
+
 		wrapper.find("[data-toggle-rows]").on("click", () => {
 			frm.vt_show_rows = !frm.vt_show_rows;
 			frm.toggle_display("items", frm.vt_show_rows);
@@ -421,13 +450,14 @@ const vt_matrix = {
 		const layout = frm.vt_layout;
 		if (!layout) return;
 		const rows = this.row_map(frm);
+		const field = this.mode(frm) === "cutting" ? "cutting_qty" : "order_qty";
 		const qty_of = (colour, size) => {
 			const input = wrapper.find(
 				`input.vt-qty[data-colour="${CSS.escape(colour)}"][data-size="${CSS.escape(size)}"]`
 			);
 			if (input.length) return Math.max(0, cint(input.val()));
 			const row = rows[this.key(colour, size)];
-			return row ? cint(row.order_qty) : 0;
+			return row ? cint(row[field]) : 0;
 		};
 
 		const col_totals = {};
@@ -452,10 +482,13 @@ const vt_matrix = {
 		wrapper.find("[data-grand-total]").text(format_number(grand, null, 0));
 
 		const excess = flt(frm.doc.excess_percent);
-		const cutting = (frm.doc.items || []).reduce((t, r) => t + cint(r.cutting_qty), 0);
+		const items = frm.doc.items || [];
+		const cutting = items.reduce((t, r) => t + cint(r.cutting_qty), 0);
+		// In Order Qty mode the grid total is live (includes a value still being typed).
+		const order = field === "order_qty" ? grand : items.reduce((t, r) => t + cint(r.order_qty), 0);
 		wrapper.find("[data-summary]").html(
 			__("Order {0} pcs · Excess {1}% · Cutting {2} pcs · Amount {3}", [
-				`<b>${format_number(grand, null, 0)}</b>`,
+				`<b>${format_number(order, null, 0)}</b>`,
 				`<b>${excess}</b>`,
 				`<b>${format_number(cutting, null, 0)}</b>`,
 				`<b>${format_currency(frm.doc.total_amount || 0, frm.doc.currency)}</b>`,
