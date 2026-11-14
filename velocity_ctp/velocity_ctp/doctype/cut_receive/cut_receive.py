@@ -48,7 +48,10 @@ class CutReceive(Document):
 
 	def on_submit(self) -> None:
 		self.warn_on_wastage()
-		self.db_set("stock_entry", stock.make_cut_repack(self, self.marker_groups()))
+		groups = self.marker_groups()
+		entry, valuation = stock.make_cut_repack(self, groups)
+		self.db_set("stock_entry", entry)
+		self.store_fabric_cost(groups, valuation)
 		for row in self.markers:
 			frappe.db.set_value("Cutting Marker", row.cutting_marker, "status", "Cut")
 		self.db_set("bundle_count", bundles.create_bundles(self))
@@ -64,6 +67,22 @@ class CutReceive(Document):
 		for row in self.markers:
 			frappe.db.set_value("Cutting Marker", row.cutting_marker, "status", "Planned")
 		self.db_set("bundle_count", 0)
+		for row in self.pieces:
+			row.db_set({"fabric_cost_per_pc": 0, "fabric_cost_amount": 0}, update_modified=False)
+
+	def store_fabric_cost(self, groups: list[dict], valuation: list[dict[str, dict]]) -> None:
+		"""Store the fabric value posted to each piece row (marker + variant) by the Repack."""
+		by_marker = {group["marker"]: values for group, values in zip(groups, valuation, strict=True)}
+		for row in self.pieces:
+			posted = by_marker.get(row.cutting_marker, {}).get(row.item_code)
+			if posted and cint(row.good_qty):
+				row.db_set(
+					{
+						"fabric_cost_per_pc": flt(posted["rate"], 2),
+						"fabric_cost_amount": flt(posted["amount"], 2),
+					},
+					update_modified=False,
+				)
 
 	# ------------------------------------------------------------------
 	# Markers -> pieces and fabric

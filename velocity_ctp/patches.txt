@@ -7,3 +7,4 @@
 velocity_ctp.patches.v0_1.set_garment_order_title
 velocity_ctp.patches.v0_1.save_velocity_settings_defaults
 velocity_ctp.patches.v0_1.set_bundle_cut_qty
+velocity_ctp.patches.v0_1.store_cut_receive_fabric_cost

@@ -142,12 +142,15 @@ def make_fabric_transfer(doc) -> str:
 	return _post(entry)
 
 
-def make_cut_repack(doc, groups: list[dict]) -> str:
+def make_cut_repack(doc, groups: list[dict]) -> tuple[str, list[dict[str, dict]]]:
 	"""Repack: consume fabric batches from Cutting WIP, produce the variants into Cutting WIP.
 
 	`groups` come from Cut Receive.marker_groups(): per marker, its fabric rows and its good
 	pieces. Each marker's fabric value (as ERPNext values that batch) is split only across that
 	marker's good pieces, in proportion to quantity; the marker's last row takes the rounding.
+
+	Returns (stock entry name, valuation): valuation[i] is {item_code: {"rate", "amount", "qty"}}
+	for groups[i], read from the posted rows, so the cost can be stored on the Cut Receive.
 	"""
 	wip = get_cutting_wip(doc.company)
 	entry = _new_entry(
@@ -187,7 +190,19 @@ def make_cut_repack(doc, groups: list[dict]) -> str:
 		positions.append((fabric_rows, piece_rows))
 
 	# The first save lets ERPNext value the consumed batches; then each marker's value is distributed.
-	return _post(entry, distribute=lambda e: distribute_fabric_value(e, positions))
+	name = _post(entry, distribute=lambda e: distribute_fabric_value(e, positions))
+	valuation = [
+		{
+			entry.items[i].item_code: {
+				"rate": flt(entry.items[i].basic_rate),
+				"amount": flt(entry.items[i].basic_amount),
+				"qty": flt(entry.items[i].transfer_qty),
+			}
+			for i in piece_rows
+		}
+		for _fabric_rows, piece_rows in positions
+	]
+	return name, valuation
 
 
 def distribute_fabric_value(entry, positions: list[tuple[list[int], list[int]]]) -> None:
