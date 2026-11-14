@@ -1,0 +1,82 @@
+{
+ "actions": [],
+ "creation": "2026-11-14 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "cost_head",
+  "section",
+  "calculation",
+  "rate_or_percent",
+  "amount_pkr",
+  "amount_fc"
+ ],
+ "fields": [
+  {
+   "columns": 3,
+   "fieldname": "cost_head",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Cost Head",
+   "options": "Cost Head",
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "fetch_from": "cost_head.section",
+   "fieldname": "section",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Section",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fetch_from": "cost_head.calculation",
+   "fieldname": "calculation",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Calculation",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "description": "PKR per piece, or percent of the quoted FOB.",
+   "fieldname": "rate_or_percent",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Rate / %"
+  },
+  {
+   "columns": 2,
+   "fieldname": "amount_pkr",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount (PKR)",
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "amount_fc",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Amount (Order Currency)",
+   "precision": "2",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-11-14 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Velocity CTP",
+ "name": "Cost Sheet Head",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -30,6 +30,7 @@ class GarmentOrder(Document):
 		self.set_item_codes()
 		self.calculate_totals()
 		self.validate_against_cut()
+		self.validate_cost_sheet()
 		self.set_title()
 		if self.docstatus == 0:
 			self.status = "Draft"
@@ -39,6 +40,7 @@ class GarmentOrder(Document):
 			frappe.throw(_("Ship Date cannot be before the Order Date."))
 
 	def before_update_after_submit(self) -> None:
+		self.validate_cost_sheet()
 		before = self.get_doc_before_save()
 		if before and getdate(before.ship_date) != getdate(self.ship_date):
 			check_hold_role(_("Only a System Manager or Velocity Merchandiser can change the ship date."))
@@ -184,6 +186,38 @@ class GarmentOrder(Document):
 			self.currency = frappe.get_cached_value("Company", self.company, "default_currency")
 		if not self.merchandiser:
 			self.merchandiser = frappe.session.user
+
+	def validate_cost_sheet(self) -> None:
+		"""A newly selected Cost Sheet must be Approved and for the same customer and style."""
+		if not self.cost_sheet:
+			return
+		before = self.get_doc_before_save()
+		if before and before.cost_sheet == self.cost_sheet:
+			return  # an existing link may since have been superseded; the form offers to switch
+		cs = frappe.db.get_value("Cost Sheet", self.cost_sheet, ["status", "customer", "style"], as_dict=True)
+		if not cs or cs.status != "Approved":
+			frappe.throw(
+				_("Cost Sheet {0} is {1}. Only an Approved Cost Sheet can be linked.").format(
+					frappe.bold(self.cost_sheet), _(cs.status) if cs else _("missing")
+				)
+			)
+		if (cs.customer, cs.style) != (self.customer, self.style):
+			frappe.throw(
+				_("Cost Sheet {0} is for {1} / {2}, not {3} / {4}.").format(
+					frappe.bold(self.cost_sheet), cs.customer, cs.style, self.customer, self.style
+				)
+			)
+
+	def before_submit(self) -> None:
+		from velocity_ctp.cutting.settings import get_settings
+
+		if self.order_type == "Bulk" and not self.cost_sheet and cint(get_settings().require_cost_sheet):
+			frappe.throw(
+				_(
+					"A Bulk Garment Order needs an approved Cost Sheet (Velocity Settings: Require Cost Sheet)."
+				),
+				title=_("Cost Sheet Required"),
+			)
 
 	def set_title(self) -> None:
 		"""Form title: order number first, then the customer ("STJ-0001/26 · Test Buyer")."""

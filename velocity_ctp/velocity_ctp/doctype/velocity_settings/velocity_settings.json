@@ -12,7 +12,11 @@
   "section_cutting",
   "cut_over_tolerance_percent",
   "column_break_2",
-  "fabric_wastage_alert_percent"
+  "fabric_wastage_alert_percent",
+  "section_costing",
+  "target_margin_percent",
+  "column_break_costing",
+  "require_cost_sheet"
  ],
  "fields": [
   {
@@ -73,6 +77,30 @@
    "fieldname": "fabric_wastage_alert_percent",
    "fieldtype": "Percent",
    "label": "Fabric Wastage Alert %"
+  },
+  {
+   "fieldname": "section_costing",
+   "fieldtype": "Section Break",
+   "label": "Costing"
+  },
+  {
+   "default": "15",
+   "description": "Cost Sheets and orders below this profit % are highlighted.",
+   "fieldname": "target_margin_percent",
+   "fieldtype": "Percent",
+   "label": "Target Margin %"
+  },
+  {
+   "fieldname": "column_break_costing",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "default": "0",
+   "description": "A Bulk Garment Order cannot be submitted without an approved Cost Sheet.",
+   "fieldname": "require_cost_sheet",
+   "fieldtype": "Check",
+   "label": "Require Cost Sheet"
   }
  ],
  "index_web_pages_for_search": 0,
@@ -100,6 +128,18 @@
   {
    "read": 1,
    "role": "Velocity Cutting"
+  },
+  {
+   "read": 1,
+   "role": "Velocity Costing"
+  },
+  {
+   "read": 1,
+   "role": "Velocity Costing Approver"
+  },
+  {
+   "read": 1,
+   "role": "Velocity Production"
   }
  ],
  "sort_field": "modified",

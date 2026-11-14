@@ -1,0 +1,557 @@
+{
+ "actions": [],
+ "autoname": null,
+ "creation": "2026-11-14 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "tab_details",
+  "customer",
+  "style",
+  "style_name",
+  "product_category",
+  "wash_type",
+  "merchandiser",
+  "column_break_1",
+  "costing_date",
+  "ship_date",
+  "price_basis",
+  "quantity_pcs",
+  "excess_percent",
+  "column_break_2",
+  "company",
+  "currency",
+  "exchange_rate",
+  "payment_terms",
+  "payment_days",
+  "section_status",
+  "status",
+  "approved_by",
+  "approved_on",
+  "rejection_reason",
+  "column_break_3",
+  "base_cost_sheet",
+  "revision_no",
+  "revision_reason",
+  "tab_fabric",
+  "fabrics",
+  "tab_accessories",
+  "accessories",
+  "tab_summary",
+  "quoted_fob_fc",
+  "column_break_4",
+  "quoted_cnf_fc",
+  "section_summary",
+  "summary_html",
+  "section_heads",
+  "costs",
+  "section_totals",
+  "fabric_cost_pkr",
+  "accessory_cost_pkr",
+  "quoted_fob_pkr",
+  "costed_fob_pkr",
+  "costed_fob_fc",
+  "profit_fob_pkr",
+  "profit_fob_fc",
+  "profit_fob_percent",
+  "freight_pkr",
+  "column_break_5",
+  "costed_cnf_pkr",
+  "costed_cnf_fc",
+  "quoted_cnf_pkr",
+  "profit_cnf_pkr",
+  "profit_cnf_fc",
+  "profit_cnf_percent",
+  "total_costed_value",
+  "total_quoted_value",
+  "total_profit"
+ ],
+ "fields": [
+  {
+   "fieldname": "tab_details",
+   "fieldtype": "Tab Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Customer",
+   "options": "Customer",
+   "reqd": 1
+  },
+  {
+   "fieldname": "style",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Style",
+   "options": "Style",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "style.style_name",
+   "fieldname": "style_name",
+   "fieldtype": "Data",
+   "label": "Style Name",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "style.product_category",
+   "fieldname": "product_category",
+   "fieldtype": "Link",
+   "label": "Product Category",
+   "options": "Product Category",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "style.wash_type",
+   "fetch_if_empty": 1,
+   "fieldname": "wash_type",
+   "fieldtype": "Link",
+   "label": "Wash Type",
+   "options": "Wash Type"
+  },
+  {
+   "default": "__user",
+   "fieldname": "merchandiser",
+   "fieldtype": "Link",
+   "label": "Merchandiser",
+   "options": "User"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "default": "Today",
+   "fieldname": "costing_date",
+   "fieldtype": "Date",
+   "label": "Costing Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "ship_date",
+   "fieldtype": "Date",
+   "label": "Ship Date"
+  },
+  {
+   "default": "FOB",
+   "fieldname": "price_basis",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Price Basis",
+   "options": "FOB\nCNF",
+   "reqd": 1
+  },
+  {
+   "fieldname": "quantity_pcs",
+   "fieldtype": "Int",
+   "label": "Quantity (Pcs)",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "description": "Applied to fabric and accessory cost.",
+   "fieldname": "excess_percent",
+   "fieldtype": "Percent",
+   "label": "Excess %"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "remember_last_selected_value": 1,
+   "reqd": 1
+  },
+  {
+   "default": "USD",
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency",
+   "reqd": 1
+  },
+  {
+   "description": "1 unit of the order currency in the company currency (PKR).",
+   "fieldname": "exchange_rate",
+   "fieldtype": "Float",
+   "label": "Exchange Rate",
+   "precision": "4",
+   "reqd": 1
+  },
+  {
+   "fieldname": "payment_terms",
+   "fieldtype": "Link",
+   "label": "Payment Terms",
+   "options": "Payment Terms Template"
+  },
+  {
+   "fieldname": "payment_days",
+   "fieldtype": "Int",
+   "label": "Payment Days"
+  },
+  {
+   "fieldname": "section_status",
+   "fieldtype": "Section Break",
+   "label": "Approval and Revision"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "no_copy": 1,
+   "options": "Draft\nPending Approval\nApproved\nRejected\nSuperseded",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "approved_on",
+   "fieldtype": "Datetime",
+   "label": "Approved On",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "rejection_reason",
+   "fieldtype": "Small Text",
+   "label": "Rejection Reason",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "description": "The first version of this Cost Sheet; revisions share its number.",
+   "fieldname": "base_cost_sheet",
+   "fieldtype": "Link",
+   "label": "Base Cost Sheet",
+   "no_copy": 1,
+   "options": "Cost Sheet",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "revision_no",
+   "fieldtype": "Int",
+   "label": "Revision No.",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "description": "Required on revisions.",
+   "fieldname": "revision_reason",
+   "fieldtype": "Small Text",
+   "label": "Revision Reason",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "tab_fabric",
+   "fieldtype": "Tab Break",
+   "label": "Fabric"
+  },
+  {
+   "fieldname": "fabrics",
+   "fieldtype": "Table",
+   "label": "Fabric",
+   "options": "Cost Sheet Fabric"
+  },
+  {
+   "fieldname": "tab_accessories",
+   "fieldtype": "Tab Break",
+   "label": "Accessories"
+  },
+  {
+   "fieldname": "accessories",
+   "fieldtype": "Table",
+   "label": "Accessories",
+   "options": "Cost Sheet Accessory"
+  },
+  {
+   "fieldname": "tab_summary",
+   "fieldtype": "Tab Break",
+   "label": "Summary"
+  },
+  {
+   "fieldname": "quoted_fob_fc",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Quoted FOB (Order Currency)",
+   "precision": "2",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_4",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "depends_on": "eval:doc.price_basis=='CNF'",
+   "fieldname": "quoted_cnf_fc",
+   "fieldtype": "Float",
+   "label": "Quoted CNF (Order Currency)",
+   "precision": "2"
+  },
+  {
+   "fieldname": "section_summary",
+   "fieldtype": "Section Break",
+   "label": ""
+  },
+  {
+   "fieldname": "summary_html",
+   "fieldtype": "HTML",
+   "label": "Costing Summary"
+  },
+  {
+   "collapsible": 1,
+   "description": "Rates and percentages per head. Fabric Cost and Accessory Cost are computed from the tabs.",
+   "fieldname": "section_heads",
+   "fieldtype": "Section Break",
+   "label": "Cost Heads"
+  },
+  {
+   "fieldname": "costs",
+   "fieldtype": "Table",
+   "label": "Cost Heads",
+   "options": "Cost Sheet Head"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_totals",
+   "fieldtype": "Section Break",
+   "label": "Calculated Values"
+  },
+  {
+   "fieldname": "fabric_cost_pkr",
+   "fieldtype": "Currency",
+   "label": "Fabric Cost (PKR)",
+   "no_copy": 1,
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "accessory_cost_pkr",
+   "fieldtype": "Currency",
+   "label": "Accessory Cost (PKR)",
+   "no_copy": 1,
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "quoted_fob_pkr",
+   "fieldtype": "Currency",
+   "label": "Quoted FOB (PKR)",
+   "no_copy": 1,
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "costed_fob_pkr",
+   "fieldtype": "Currency",
+   "label": "Costed FOB (PKR)",
+   "no_copy": 1,
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "costed_fob_fc",
+   "fieldtype": "Float",
+   "label": "Costed FOB",
+   "no_copy": 1,
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "profit_fob_pkr",
+   "fieldtype": "Currency",
+   "label": "Profit FOB (PKR)",
+   "no_copy": 1,
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "profit_fob_fc",
+   "fieldtype": "Float",
+   "label": "Profit FOB",
+   "no_copy": 1,
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "profit_fob_percent",
+   "fieldtype": "Percent",
+   "label": "Profit FOB %",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "freight_pkr",
+   "fieldtype": "Currency",
+   "label": "Freight (PKR)",
+   "no_copy": 1,
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_5",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "costed_cnf_pkr",
+   "fieldtype": "Currency",
+   "label": "Costed CNF (PKR)",
+   "no_copy": 1,
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "costed_cnf_fc",
+   "fieldtype": "Float",
+   "label": "Costed CNF",
+   "no_copy": 1,
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "quoted_cnf_pkr",
+   "fieldtype": "Currency",
+   "label": "Quoted CNF (PKR)",
+   "no_copy": 1,
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "profit_cnf_pkr",
+   "fieldtype": "Currency",
+   "label": "Profit CNF (PKR)",
+   "no_copy": 1,
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "profit_cnf_fc",
+   "fieldtype": "Float",
+   "label": "Profit CNF",
+   "no_copy": 1,
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "profit_cnf_percent",
+   "fieldtype": "Percent",
+   "label": "Profit CNF %",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_costed_value",
+   "fieldtype": "Currency",
+   "label": "Total Costed Value (PKR)",
+   "no_copy": 1,
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_quoted_value",
+   "fieldtype": "Currency",
+   "label": "Total Quoted Value (PKR)",
+   "no_copy": 1,
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_profit",
+   "fieldtype": "Currency",
+   "label": "Total Profit (PKR)",
+   "no_copy": 1,
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-11-14 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Velocity CTP",
+ "name": "Cost Sheet",
+ "naming_rule": "By script",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Velocity Costing",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "cancel": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Velocity Costing Approver",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Velocity Merchandiser"
+  }
+ ],
+ "search_fields": "customer,style,status",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "style",
+ "track_changes": 1
+}

@@ -20,7 +20,36 @@ from frappe import _
 MERCHANDISER_ROLE = "Velocity Merchandiser"
 CUTTING_ROLE = "Velocity Cutting"
 PRODUCTION_ROLE = "Velocity Production"
-VELOCITY_ROLES = (MERCHANDISER_ROLE, CUTTING_ROLE, PRODUCTION_ROLE)
+COSTING_ROLE = "Velocity Costing"
+COSTING_APPROVER_ROLE = "Velocity Costing Approver"
+VELOCITY_ROLES = (MERCHANDISER_ROLE, CUTTING_ROLE, PRODUCTION_ROLE, COSTING_ROLE, COSTING_APPROVER_ROLE)
+
+# (head, section, calculation) in sequence order
+COST_HEADS = (
+	("Fabric Cost", "Material", "Computed"),
+	("Accessory Cost", "Material", "Computed"),
+	("Pocketing Cost", "Material", "Amount per Piece"),
+	("Dyeing Cost", "Processing", "Amount per Piece"),
+	("Washing Cost", "Processing", "Amount per Piece"),
+	("Accessory Import Cost", "Material", "Amount per Piece"),
+	("Embroidery", "Processing", "Amount per Piece"),
+	("Print", "Processing", "Amount per Piece"),
+	("Laser", "Processing", "Amount per Piece"),
+	("Piping", "Processing", "Amount per Piece"),
+	("Embellishment", "Processing", "Amount per Piece"),
+	("Manufacturing Cost", "Processing", "Amount per Piece"),
+	("Courier Charges", "Overheads", "Amount per Piece"),
+	("Testing / Inspection Cost", "Overheads", "Amount per Piece"),
+	("Clearing / Handling Charges", "Overheads", "Amount per Piece"),
+	("Transport / Forwarding Charges", "Overheads", "Amount per Piece"),
+	("Sample Cost", "Overheads", "Percent of Quoted FOB"),
+	("Bank Charges", "Commercial", "Percent of Quoted FOB"),
+	("Financial Cost", "Commercial", "Percent of Quoted FOB"),
+	("Insurance Charges", "Commercial", "Percent of Quoted FOB"),
+	("Commission", "Commercial", "Percent of Quoted FOB"),
+	("Service Charges / Fashion Support", "Commercial", "Percent of Quoted FOB"),
+	("Freight Charges", "Freight", "Amount per Piece"),
+)
 
 ITEM_ATTRIBUTES = ("Size", "Colour")
 
@@ -93,6 +122,8 @@ def setup_masters(commit: bool = True) -> list[str]:
 	ensure_simple_records("Wash Type", "wash_type", WASH_TYPES, {"washing_category": "Denim"}, log)
 	ensure_simple_records("Product Category", "category_name", PRODUCT_CATEGORIES, {}, log)
 	ensure_sales_order_field(log)
+	ensure_cost_heads(log)
+	ensure_material_request_field(log)
 
 	if commit:
 		frappe.db.commit()
@@ -289,8 +320,9 @@ def check_batch_tracking(warnings: list[str]) -> None:
 def ensure_velocity_settings(log: list[str]) -> None:
 	from velocity_ctp.cutting.settings import ensure_saved
 
-	if ensure_saved():
-		log.append("Velocity Settings defaults")
+	stored = ensure_saved()
+	if stored:
+		log.append(f"Velocity Settings defaults: {', '.join(stored)}")
 
 
 def ensure_wip_account(company: str, log: list[str], warnings: list[str]) -> str | None:
@@ -331,3 +363,42 @@ def ensure_wip_account(company: str, log: list[str], warnings: list[str]) -> str
 		)
 		return None
 	return account
+
+
+def ensure_cost_heads(log: list[str]) -> None:
+	for sequence, (name, section, calculation) in enumerate(COST_HEADS, start=1):
+		if frappe.db.exists("Cost Head", name):
+			continue
+		frappe.get_doc(
+			{
+				"doctype": "Cost Head",
+				"head_name": name,
+				"section": section,
+				"calculation": calculation,
+				"sequence": sequence * 10,
+				"default_value": 0,
+				"is_active": 1,
+			}
+		).insert(ignore_permissions=True)
+		log.append(f"Cost Head {name}")
+
+
+def ensure_material_request_field(log: list[str]) -> None:
+	if frappe.db.exists("Custom Field", "Material Request-material_plan"):
+		return
+	from frappe.custom.doctype.custom_field.custom_field import create_custom_field
+
+	create_custom_field(
+		"Material Request",
+		{
+			"fieldname": "material_plan",
+			"label": "Material Plan",
+			"fieldtype": "Link",
+			"options": "Material Plan",
+			"insert_after": "material_request_type",
+			"read_only": 1,
+			"no_copy": 1,
+			"in_standard_filter": 1,
+		},
+	)
+	log.append("Custom Field Material Request-material_plan")

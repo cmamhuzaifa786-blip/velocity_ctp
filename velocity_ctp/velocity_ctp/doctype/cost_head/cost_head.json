@@ -1,0 +1,114 @@
+{
+ "actions": [],
+ "autoname": "field:head_name",
+ "creation": "2026-11-14 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "head_name",
+  "section",
+  "calculation",
+  "column_break_1",
+  "default_value",
+  "sequence",
+  "is_active"
+ ],
+ "fields": [
+  {
+   "fieldname": "head_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Head Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "section",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Section",
+   "options": "Material\nProcessing\nOverheads\nCommercial\nFreight",
+   "reqd": 1
+  },
+  {
+   "description": "Computed heads (Fabric Cost, Accessory Cost) come from the breakdown tables.",
+   "fieldname": "calculation",
+   "fieldtype": "Select",
+   "in_list_view": 0,
+   "in_standard_filter": 1,
+   "label": "Calculation",
+   "options": "Amount per Piece\nPercent of Quoted FOB\nComputed",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "description": "Default amount per piece (PKR) or percent.",
+   "fieldname": "default_value",
+   "fieldtype": "Float",
+   "label": "Default Value"
+  },
+  {
+   "fieldname": "sequence",
+   "fieldtype": "Int",
+   "in_list_view": 0,
+   "label": "Sequence"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "in_list_view": 0,
+   "in_standard_filter": 1,
+   "label": "Is Active"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-14 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Velocity CTP",
+ "name": "Cost Head",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Velocity Costing"
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Velocity Costing Approver"
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Velocity Merchandiser"
+  }
+ ],
+ "sort_field": "sequence",
+ "sort_order": "ASC",
+ "states": [],
+ "track_changes": 1
+}

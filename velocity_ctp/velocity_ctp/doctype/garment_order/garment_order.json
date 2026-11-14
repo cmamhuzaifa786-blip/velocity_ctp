@@ -23,6 +23,7 @@
   "currency",
   "merchandiser",
   "excess_percent",
+  "cost_sheet",
   "section_quantities",
   "quantity_matrix",
   "items",
@@ -32,6 +33,12 @@
   "column_break_totals",
   "total_cutting_qty",
   "total_amount",
+  "section_costing",
+  "costed_fob",
+  "quoted_fob",
+  "column_break_costing",
+  "estimated_profit_percent",
+  "cost_sheet_status",
   "section_status",
   "status",
   "sales_order",
@@ -177,6 +184,14 @@
    "label": "Excess %"
   },
   {
+   "allow_on_submit": 1,
+   "description": "Approved Cost Sheet for this customer and style.",
+   "fieldname": "cost_sheet",
+   "fieldtype": "Link",
+   "label": "Cost Sheet",
+   "options": "Cost Sheet"
+  },
+  {
    "fieldname": "section_quantities",
    "fieldtype": "Section Break",
    "label": "Quantities"
@@ -227,6 +242,51 @@
    "fieldtype": "Currency",
    "label": "Total Amount",
    "options": "currency",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_costing",
+   "fieldtype": "Section Break",
+   "label": "Costing"
+  },
+  {
+   "allow_on_submit": 1,
+   "fetch_from": "cost_sheet.costed_fob_fc",
+   "fieldname": "costed_fob",
+   "fieldtype": "Float",
+   "label": "Costed FOB",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fetch_from": "cost_sheet.quoted_fob_fc",
+   "fieldname": "quoted_fob",
+   "fieldtype": "Float",
+   "label": "Quoted FOB",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_costing",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "allow_on_submit": 1,
+   "fetch_from": "cost_sheet.profit_fob_percent",
+   "fieldname": "estimated_profit_percent",
+   "fieldtype": "Percent",
+   "label": "Estimated Profit %",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fetch_from": "cost_sheet.status",
+   "fieldname": "cost_sheet_status",
+   "fieldtype": "Data",
+   "label": "Cost Sheet Status",
    "read_only": 1
   },
   {

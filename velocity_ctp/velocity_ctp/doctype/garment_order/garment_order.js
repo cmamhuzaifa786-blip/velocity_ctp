@@ -9,6 +9,9 @@ frappe.ui.form.on("Garment Order", {
 		frm.set_query("style", () => ({
 			filters: frm.doc.customer ? { customer: frm.doc.customer } : {},
 		}));
+		frm.set_query("cost_sheet", () => ({
+			filters: { status: "Approved", customer: frm.doc.customer || "", style: frm.doc.style || "" },
+		}));
 	},
 
 	onload(frm) {
@@ -23,6 +26,7 @@ frappe.ui.form.on("Garment Order", {
 	},
 
 	refresh(frm) {
+		cost_sheet_notice(frm);
 		frm.toggle_display("items", !!frm.vt_show_rows);
 		vt_matrix.load(frm);
 		add_action_buttons(frm);
@@ -64,6 +68,34 @@ frappe.ui.form.on("Garment Order", {
 					indicator: "orange",
 				});
 			}
+		});
+	},
+
+	cost_sheet(frm) {
+		if (!frm.doc.cost_sheet) return;
+		frappe.db.get_value("Cost Sheet", frm.doc.cost_sheet, ["excess_percent", "currency", "quoted_fob_fc"]).then((r) => {
+			const cs = r.message || {};
+			if (frm.doc.docstatus !== 0) {
+				frm.save("Update");
+				return;
+			}
+			frm.set_value("excess_percent", cs.excess_percent);
+			frm.set_value("currency", cs.currency);
+			(frm.doc.items || []).forEach((row) => {
+				row.rate = flt(cs.quoted_fob_fc);
+				vt_matrix.calc_row(frm, row);
+			});
+			frm.vt_default_rate = flt(cs.quoted_fob_fc);
+			vt_matrix.after_change(frm);
+			frappe.show_alert({
+				message: __("Excess {0}%, currency {1} and rate {2} copied from {3}. The rates stay editable.", [
+					cs.excess_percent,
+					cs.currency,
+					cs.quoted_fob_fc,
+					frm.doc.cost_sheet,
+				]),
+				indicator: "green",
+			});
 		});
 	},
 
@@ -393,7 +425,7 @@ const vt_matrix = {
 				frm.add_child("items", {
 					colour,
 					size,
-					rate: this.colour_rate(frm, colour).value || 0,
+					rate: this.colour_rate(frm, colour).value || frm.vt_default_rate || 0,
 				});
 			target.order_qty = qty;
 			this.calc_row(frm, target);
@@ -496,3 +528,22 @@ const vt_matrix = {
 		);
 	},
 };
+
+/** If the linked Cost Sheet was superseded by a newer approved revision, offer to switch. */
+function cost_sheet_notice(frm) {
+	if (!frm.doc.cost_sheet || frm.doc.cost_sheet_status !== "Superseded") return;
+	frappe
+		.call("velocity_ctp.velocity_ctp.doctype.cost_sheet.cost_sheet.current_revision", { cost_sheet: frm.doc.cost_sheet })
+		.then((r) => {
+			const current = r.message;
+			const esc = frappe.utils.escape_html;
+			frm.dashboard.set_headline_alert(
+				current
+					? `${__("Cost Sheet {0} has been superseded by {1}.", [esc(frm.doc.cost_sheet), esc(current)])}
+						<button class="btn btn-xs btn-default vt-switch-cs" style="margin-left:8px">${__("Switch to {0}", [esc(current)])}</button>`
+					: __("Cost Sheet {0} has been superseded.", [esc(frm.doc.cost_sheet)]),
+				"orange"
+			);
+			frm.dashboard.wrapper.find(".vt-switch-cs").on("click", () => frm.set_value("cost_sheet", current));
+		});
+}

@@ -155,9 +155,24 @@ doc_events = {
 fixtures = [
 	{
 		"dt": "Role",
-		"filters": [["name", "in", ["Velocity Merchandiser", "Velocity Cutting", "Velocity Production"]]],
+		"filters": [
+			[
+				"name",
+				"in",
+				[
+					"Velocity Merchandiser",
+					"Velocity Cutting",
+					"Velocity Production",
+					"Velocity Costing",
+					"Velocity Costing Approver",
+				],
+			]
+		],
 	},
-	{"dt": "Custom Field", "filters": [["name", "in", ["Sales Order-garment_order"]]]},
+	{
+		"dt": "Custom Field",
+		"filters": [["name", "in", ["Sales Order-garment_order", "Material Request-material_plan"]]],
+	},
 ]
 
 # ---------------
