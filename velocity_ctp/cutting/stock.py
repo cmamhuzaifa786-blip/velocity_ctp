@@ -4,7 +4,7 @@
 - Cut Receive: "Repack" that consumes fabric (by batch) from Cutting WIP and produces the style
   variants into Cutting WIP. ERPNext v16 only allows one finished item in "Manufacture", and in a
   Repack with several finished items it requires the basic rate to be set manually on each of
-  them, so the fabric value is distributed here in proportion to the good quantity.
+  them, so each marker's fabric value is distributed here over that marker's good pieces.
 """
 
 from __future__ import annotations
@@ -91,7 +91,7 @@ def _new_entry(purpose: str, company: str, posting_date, remarks: str):
 	return entry
 
 
-def _post(entry, distribute: bool = False) -> str:
+def _post(entry, distribute=None) -> str:
 	"""Insert and submit on the user's behalf (their own document's submit right was checked).
 
 	ERPNext still checks some permissions inside stock posting (for example on Serial and Batch
@@ -100,7 +100,7 @@ def _post(entry, distribute: bool = False) -> str:
 	try:
 		entry.insert()
 		if distribute:
-			distribute_fabric_value(entry)
+			distribute(entry)
 			entry.save()
 		entry.submit()
 	except frappe.PermissionError:
@@ -142,12 +142,12 @@ def make_fabric_transfer(doc) -> str:
 	return _post(entry)
 
 
-def make_cut_repack(doc, good_rows: list[dict]) -> str:
+def make_cut_repack(doc, groups: list[dict]) -> str:
 	"""Repack: consume fabric batches from Cutting WIP, produce the variants into Cutting WIP.
 
-	`good_rows` are {"item_code", "qty"} for good pieces. The consumed fabric value (as ERPNext
-	values the batches) is split across the pieces in proportion to quantity; the last row takes
-	any rounding difference so that pieces value == fabric value.
+	`groups` come from Cut Receive.marker_groups(): per marker, its fabric rows and its good
+	pieces. Each marker's fabric value (as ERPNext values that batch) is split only across that
+	marker's good pieces, in proportion to quantity; the marker's last row takes the rounding.
 	"""
 	wip = get_cutting_wip(doc.company)
 	entry = _new_entry(
@@ -156,51 +156,56 @@ def make_cut_repack(doc, good_rows: list[dict]) -> str:
 		doc.posting_date,
 		_("Cut Receive {0} for Job Map {1}").format(doc.name, doc.job_map),
 	)
-	for row in doc.fabric:
-		if flt(row.used_qty) <= 0:
+	positions: list[tuple[list[int], list[int]]] = []  # per marker: (fabric row indexes, piece row indexes)
+	for group in groups:
+		fabric_rows, piece_rows = [], []
+		for row in group["fabric"]:
+			entry.append(
+				"items",
+				{
+					"item_code": row["item_code"],
+					"qty": row["qty"],
+					"s_warehouse": wip,
+					"use_serial_batch_fields": 1,
+					"batch_no": row["batch_no"],
+				},
+			)
+			fabric_rows.append(len(entry.items) - 1)
+		for row in group["pieces"]:
+			entry.append(
+				"items",
+				{
+					"item_code": row["item_code"],
+					"qty": row["qty"],
+					"t_warehouse": wip,
+					"is_finished_item": 1,
+					"set_basic_rate_manually": 1,
+					"basic_rate": 0,
+				},
+			)
+			piece_rows.append(len(entry.items) - 1)
+		positions.append((fabric_rows, piece_rows))
+
+	# The first save lets ERPNext value the consumed batches; then each marker's value is distributed.
+	return _post(entry, distribute=lambda e: distribute_fabric_value(e, positions))
+
+
+def distribute_fabric_value(entry, positions: list[tuple[list[int], list[int]]]) -> None:
+	for fabric_rows, piece_rows in positions:
+		finished = [entry.items[i] for i in piece_rows]
+		consumed = sum(flt(entry.items[i].basic_amount) for i in fabric_rows)
+		total_qty = sum(flt(r.transfer_qty) for r in finished)
+		if not finished or not total_qty:
 			continue
-		entry.append(
-			"items",
-			{
-				"item_code": row.fabric_item,
-				"qty": row.used_qty,
-				"s_warehouse": wip,
-				"use_serial_batch_fields": 1,
-				"batch_no": row.batch_no,
-			},
-		)
-	for row in good_rows:
-		entry.append(
-			"items",
-			{
-				"item_code": row["item_code"],
-				"qty": row["qty"],
-				"t_warehouse": wip,
-				"is_finished_item": 1,
-				"set_basic_rate_manually": 1,
-				"basic_rate": 0,
-			},
-		)
-
-	# The first save lets ERPNext value the consumed batches; then that value is distributed.
-	return _post(entry, distribute=True)
-
-
-def distribute_fabric_value(entry) -> None:
-	consumed = sum(flt(r.basic_amount) for r in entry.items if r.s_warehouse and not r.t_warehouse)
-	finished = [r for r in entry.items if r.is_finished_item]
-	total_qty = sum(flt(r.transfer_qty) for r in finished)
-	if not finished or not total_qty:
-		return
-	rate = consumed / total_qty
-	allocated = 0.0
-	for row in finished[:-1]:
-		row.basic_rate = rate
-		row.basic_amount = flt(flt(row.transfer_qty) * rate, row.precision("basic_amount"))
-		allocated += row.basic_amount
-	last = finished[-1]
-	last.basic_rate = (consumed - allocated) / flt(last.transfer_qty)
-	last.basic_amount = flt(consumed - allocated, last.precision("basic_amount"))
+		rate = consumed / total_qty
+		allocated = 0.0
+		for row in finished[:-1]:
+			row.basic_rate = rate
+			row.basic_amount = flt(flt(row.transfer_qty) * rate, row.precision("basic_amount"))
+			allocated += row.basic_amount
+		last = finished[-1]
+		last.basic_rate = (consumed - allocated) / flt(last.transfer_qty)
+		last.basic_amount = flt(consumed - allocated, last.precision("basic_amount"))
 
 
 def cancel_stock_entry(name: str | None) -> None:

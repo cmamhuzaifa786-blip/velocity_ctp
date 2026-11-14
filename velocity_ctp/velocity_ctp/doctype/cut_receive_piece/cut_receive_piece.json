@@ -5,6 +5,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "cutting_marker",
   "garment_order",
   "colour",
   "size",
@@ -16,10 +17,20 @@
  ],
  "fields": [
   {
+   "columns": 2,
+   "fieldname": "cutting_marker",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Cutting Marker",
+   "options": "Cutting Marker",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
    "columns": 3,
    "fieldname": "garment_order",
    "fieldtype": "Link",
-   "in_list_view": 1,
+   "in_list_view": 0,
    "label": "Garment Order",
    "options": "Garment Order",
    "read_only": 1
@@ -48,7 +59,7 @@
    "read_only": 1
   },
   {
-   "columns": 1,
+   "columns": 2,
    "fieldname": "planned_qty",
    "fieldtype": "Int",
    "in_list_view": 1,

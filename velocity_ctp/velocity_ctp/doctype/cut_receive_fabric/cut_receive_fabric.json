@@ -5,6 +5,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "cutting_marker",
   "fabric_item",
   "batch_no",
   "required_qty",
@@ -14,9 +15,20 @@
  "fields": [
   {
    "columns": 2,
-   "fieldname": "fabric_item",
+   "description": "Each fabric row belongs to one marker.",
+   "fieldname": "cutting_marker",
    "fieldtype": "Link",
    "in_list_view": 1,
+   "label": "Cutting Marker",
+   "options": "Cutting Marker",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "fabric_item",
+   "fieldtype": "Link",
+   "in_list_view": 0,
    "label": "Fabric Item",
    "options": "Item",
    "read_only": 1

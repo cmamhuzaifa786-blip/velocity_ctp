@@ -106,6 +106,12 @@ function pageChecks() {
 			truncated.push(text.slice(0, 60));
 		}
 	}
+	// Table column headers (their cells hold several elements, so check them explicitly).
+	for (const el of root.querySelectorAll(".grid-heading-row .static-area, .dt-cell__content--header")) {
+		if (el.offsetParent && el.scrollWidth > el.clientWidth + 1) {
+			truncated.push(`(column header) ${(el.innerText || "").trim().slice(0, 40)}`);
+		}
+	}
 	// Velocity elements that hide content vertically (for example a fixed-height ticket).
 	for (const el of document.querySelectorAll('[class*="vt-"]')) {
 		const cs = getComputedStyle(el);

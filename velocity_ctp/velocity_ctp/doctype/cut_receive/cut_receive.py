@@ -21,6 +21,7 @@ class CutReceive(Document):
 		if not self.company:
 			self.company = get_default_company()
 		markers = self.validate_markers()
+		self.validate_row_markers(markers)
 		self.sync_from_markers(markers)
 		self.validate_pieces()
 		self.validate_fabric()
@@ -31,10 +32,23 @@ class CutReceive(Document):
 			frappe.throw(_("There are no good pieces to receive. Enter the cut quantities first."))
 		if flt(self.total_fabric_used) <= 0:
 			frappe.throw(_("Please enter the fabric used."))
+		for group in self.marker_groups():
+			if group["fabric"] and not group["pieces"]:
+				frappe.throw(
+					_(
+						"Marker {0} has fabric used but no good pieces. Its fabric cost would have no pieces to go to."
+					).format(frappe.bold(group["marker"]))
+				)
+			if group["pieces"] and not group["fabric"]:
+				frappe.throw(
+					_(
+						"Marker {0} has good pieces but no fabric used. Enter the fabric used for this marker."
+					).format(frappe.bold(group["marker"]))
+				)
 
 	def on_submit(self) -> None:
 		self.warn_on_wastage()
-		self.db_set("stock_entry", stock.make_cut_repack(self, self.good_rows()))
+		self.db_set("stock_entry", stock.make_cut_repack(self, self.marker_groups()))
 		for row in self.markers:
 			frappe.db.set_value("Cutting Marker", row.cutting_marker, "status", "Cut")
 		self.db_set("bundle_count", bundles.create_bundles(self))
@@ -115,35 +129,32 @@ class CutReceive(Document):
 		for s in sizes:
 			sizes_by_marker[s.parent].append(s)
 
-		planned: dict[tuple, dict] = {}
-		required: dict[tuple, float] = {}
-		for marker in markers:
-			for s in sizes_by_marker[marker.name]:
-				key = ledger.piece_key(marker.garment_order, marker.colour, s.size)
-				line = planned.setdefault(
-					key,
-					{
-						"garment_order": marker.garment_order,
-						"colour": marker.colour,
-						"size": s.size,
-						"qty": 0,
-					},
-				)
-				line["qty"] += cint(s.planned_pieces)
-			fabric_key = (marker.fabric_item, marker.batch_no)
-			required[fabric_key] = required.get(fabric_key, 0.0) + flt(marker.fabric_required)
-
-		item_codes = self.variant_codes(planned.values())
-		existing_pieces = {ledger.piece_key(p.garment_order, p.colour, p.size): p for p in self.pieces}
+		# One piece row per marker and size, one fabric row per marker: fabric cost stays with its marker.
+		lines = [
+			{
+				"cutting_marker": marker.name,
+				"garment_order": marker.garment_order,
+				"colour": marker.colour,
+				"size": s.size,
+				"qty": cint(s.planned_pieces),
+			}
+			for marker in markers
+			for s in sizes_by_marker[marker.name]
+		]
+		item_codes = self.variant_codes(lines)
+		existing_pieces = {(p.cutting_marker, (p.size or "").lower()): p for p in self.pieces}
 		pieces = []
-		for key, line in planned.items():
-			old = existing_pieces.get(key)
+		for line in lines:
+			old = existing_pieces.get((line["cutting_marker"], line["size"].lower()))
 			pieces.append(
 				{
+					"cutting_marker": line["cutting_marker"],
 					"garment_order": line["garment_order"],
 					"colour": line["colour"],
 					"size": line["size"],
-					"item_code": item_codes.get(key),
+					"item_code": item_codes.get(
+						ledger.piece_key(line["garment_order"], line["colour"], line["size"])
+					),
 					"planned_qty": line["qty"],
 					"cut_qty": cint(old.cut_qty) if old else line["qty"],
 					"rejected_qty": cint(old.rejected_qty) if old else 0,
@@ -151,18 +162,19 @@ class CutReceive(Document):
 			)
 		self.set("pieces", pieces)
 
-		existing_fabric = {(f.fabric_item, f.batch_no): f for f in self.fabric}
+		existing_fabric = {f.cutting_marker: f for f in self.fabric}
 		wip = stock.get_cutting_wip(self.company or get_default_company())
 		fabric = []
-		for (item, batch), qty in required.items():
-			old = existing_fabric.get((item, batch))
+		for marker in markers:
+			old = existing_fabric.get(marker.name)
 			fabric.append(
 				{
-					"fabric_item": item,
-					"batch_no": batch,
-					"required_qty": flt(qty, 3),
-					"used_qty": flt(old.used_qty) if old else flt(qty, 3),
-					"available_qty": stock.batch_qty(batch, wip),
+					"cutting_marker": marker.name,
+					"fabric_item": marker.fabric_item,
+					"batch_no": marker.batch_no,
+					"required_qty": flt(marker.fabric_required, 3),
+					"used_qty": flt(old.used_qty) if old else flt(marker.fabric_required, 3),
+					"available_qty": stock.batch_qty(marker.batch_no, wip),
 				}
 			)
 		self.set("fabric", fabric)
@@ -237,28 +249,81 @@ class CutReceive(Document):
 					title=_("Over-Cut"),
 				)  # fmt: skip
 
+	def validate_row_markers(self, markers: list[frappe._dict]) -> None:
+		"""Each fabric row belongs to exactly one marker of this Cut Receive (its cost goes to that marker)."""
+		by_name = {m.name: m for m in markers}
+		seen: dict[str, int] = {}
+		for row in self.fabric:
+			if not row.cutting_marker:
+				frappe.throw(
+					_(
+						"Fabric row {0} (batch {1}) is not linked to a Cutting Marker. Each fabric row must belong to "
+						"one marker; a fabric row cannot be shared by several markers."
+					).format(row.idx, row.batch_no),
+					title=_("Fabric Row Without Marker"),
+				)
+			marker = by_name.get(row.cutting_marker)
+			if not marker:
+				frappe.throw(
+					_(
+						"Fabric row {0} belongs to Cutting Marker {1}, which is not in the Markers table."
+					).format(row.idx, frappe.bold(row.cutting_marker))
+				)
+			if (row.fabric_item, row.batch_no) != (marker.fabric_item, marker.batch_no):
+				frappe.throw(
+					_("Fabric row {0}: Cutting Marker {1} uses batch {2}, not {3}.").format(
+						row.idx,
+						frappe.bold(marker.name),
+						frappe.bold(marker.batch_no),
+						frappe.bold(row.batch_no),
+					)
+				)
+			if row.cutting_marker in seen:
+				frappe.throw(
+					_(
+						"Fabric rows {0} and {1} both belong to Cutting Marker {2}. Each marker has one fabric row; "
+						"enter its total fabric used there."
+					).format(seen[row.cutting_marker], row.idx, frappe.bold(row.cutting_marker)),
+					title=_("Shared Fabric Row"),
+				)
+			seen[row.cutting_marker] = row.idx
+		for row in self.pieces:
+			if row.cutting_marker and row.cutting_marker not in by_name:
+				frappe.throw(
+					_(
+						"Cut Pieces row {0} belongs to Cutting Marker {1}, which is not in the Markers table."
+					).format(row.idx, frappe.bold(row.cutting_marker))
+				)
+
 	def validate_fabric(self) -> None:
+		"""Rows of the same batch (different markers) are checked together against stock and the job."""
 		wip = stock.get_cutting_wip(self.company)
 		balances = ledger.job_fabric([self.job_map], exclude_cut_receive=self.name)[self.job_map]
+		used_by_batch: dict[tuple[str, str], float] = defaultdict(float)
 		for row in self.fabric:
-			label = _("Fabric row {0} (batch {1})").format(row.idx, row.batch_no)
 			if flt(row.used_qty) < 0:
-				frappe.throw(_("{0}: used quantity cannot be negative.").format(label))
-			row.available_qty = stock.batch_qty(row.batch_no, wip)
-			if flt(row.used_qty) > flt(row.available_qty) + 1e-9:
+				frappe.throw(_("Fabric row {0}: used quantity cannot be negative.").format(row.idx))
+			used_by_batch[(row.fabric_item, row.batch_no)] += flt(row.used_qty)
+		available = {key: stock.batch_qty(key[1], wip) for key in used_by_batch}
+		for row in self.fabric:
+			row.available_qty = available[(row.fabric_item, row.batch_no)]
+
+		for (item, batch), used in used_by_batch.items():
+			label = _("Batch {0}").format(frappe.bold(batch))
+			if used > available[(item, batch)] + 1e-9:
 				frappe.throw(
-					_("{0}: used {1} m, but only {2} m of this batch is in {3}.").format(
-						label, flt(row.used_qty), flt(row.available_qty), frappe.bold(wip)
+					_("{0}: used {1} m in total, but only {2} m of this batch is in {3}.").format(
+						label, flt(used, 3), available[(item, batch)], frappe.bold(wip)
 					),
 					title=_("Not Enough Fabric in Cutting WIP"),
 				)
-			values = balances.get((row.fabric_item, row.batch_no), {"issued": 0, "returned": 0, "used": 0})
+			values = balances.get((item, batch), {"issued": 0, "returned": 0, "used": 0})
 			job_balance = ledger.fabric_balance(values)
-			if flt(row.used_qty) > job_balance + 1e-9:
+			if used > job_balance + 1e-9:
 				frappe.throw(
 					_(
-						"{0}: used {1} m, but only {2} m of this batch is issued to Job Map {3} and not yet used or returned."
-					).format(label, flt(row.used_qty), max(job_balance, 0), frappe.bold(self.job_map)),
+						"{0}: used {1} m in total, but only {2} m of this batch is issued to Job Map {3} and not yet used or returned."
+					).format(label, flt(used, 3), max(job_balance, 0), frappe.bold(self.job_map)),
 					title=_("Not Enough Fabric Issued"),
 				)
 
@@ -280,12 +345,31 @@ class CutReceive(Document):
 			self.total_cut_qty * flt(self.piece_rate), self.precision("contractor_amount")
 		)
 
-	def good_rows(self) -> list[dict]:
-		merged: dict[str, int] = defaultdict(int)
-		for row in self.pieces:
-			if cint(row.good_qty) > 0:
-				merged[row.item_code] += cint(row.good_qty)
-		return [{"item_code": item, "qty": qty} for item, qty in merged.items()]
+	def marker_groups(self) -> list[dict]:
+		"""Per marker: its fabric (item, batch, used) and its good pieces (item, qty), in marker order.
+
+		The Repack values each marker's fabric only into that marker's pieces.
+		"""
+		groups = []
+		for marker_row in self.markers:
+			name = marker_row.cutting_marker
+			fabric = [
+				{"item_code": f.fabric_item, "batch_no": f.batch_no, "qty": flt(f.used_qty)}
+				for f in self.fabric
+				if f.cutting_marker == name and flt(f.used_qty) > 0
+			]
+			pieces: dict[str, int] = defaultdict(int)
+			for p in self.pieces:
+				if p.cutting_marker == name and cint(p.good_qty) > 0:
+					pieces[p.item_code] += cint(p.good_qty)
+			groups.append(
+				{
+					"marker": name,
+					"fabric": fabric,
+					"pieces": [{"item_code": item, "qty": qty} for item, qty in pieces.items()],
+				}
+			)
+		return groups
 
 	def warn_on_wastage(self) -> None:
 		alert = flt(get_settings().fabric_wastage_alert_percent)

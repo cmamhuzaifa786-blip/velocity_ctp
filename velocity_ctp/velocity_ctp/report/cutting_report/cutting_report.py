@@ -8,14 +8,12 @@ Cutting WIP up to the end date, and totals of the detail rows.
 Level 1: Garment Order + colour cut from that batch — planned, cut and rejected pieces, fabric used,
 wastage, marker efficiency and contractor amount.
 
-A Cut Receive records fabric per batch and pieces per order/colour/size. When one Cut Receive
-covers several markers, fabric is split by each marker's fabric requirement and pieces by each
-marker's planned pieces (exact when each order/colour/size comes from one marker).
+Every Cut Receive piece row and fabric row is linked to its Cutting Marker, so fabric used,
+wastage and pieces are exact per marker (no allocation).
 """
 
 from __future__ import annotations
 
-from collections import defaultdict
 
 import frappe
 from frappe import _
@@ -93,17 +91,13 @@ def get_data(filters: frappe._dict) -> list[dict]:
 		for r in frappe.get_all("Cut Receive", filters=cr_filters, fields=["name", "job_map", "piece_rate"])
 	}
 	cr_names = list(receives) or [""]
-	cr_markers = frappe.get_all(
-		"Cut Receive Marker", filters={"parent": ("in", cr_names), "parenttype": "Cut Receive"},
-		fields=["parent", "cutting_marker"],
-	)  # fmt: skip
 	cr_pieces = frappe.get_all(
 		"Cut Receive Piece", filters={"parent": ("in", cr_names), "parenttype": "Cut Receive"},
-		fields=["parent", "garment_order", "colour", "size", "cut_qty", "rejected_qty"],
+		fields=["parent", "cutting_marker", "cut_qty", "rejected_qty"],
 	)  # fmt: skip
 	cr_fabric = frappe.get_all(
 		"Cut Receive Fabric", filters={"parent": ("in", cr_names), "parenttype": "Cut Receive"},
-		fields=["parent", "fabric_item", "batch_no", "used_qty"],
+		fields=["parent", "cutting_marker", "fabric_item", "batch_no", "required_qty", "used_qty"],
 	)  # fmt: skip
 
 	# --- markers: all submitted markers of the Job Maps involved ------------------------------
@@ -120,12 +114,6 @@ def get_data(filters: frappe._dict) -> list[dict]:
 			        "fabric_required", "total_planned_pieces", "marker_efficiency"],
 		)
 	}  # fmt: skip
-	marker_sizes = defaultdict(dict)
-	for s in frappe.get_all(
-		"Cutting Marker Size", filters={"parent": ("in", list(markers) or [""]), "parenttype": "Cutting Marker"},
-		fields=["parent", "size", "planned_pieces"],
-	):  # fmt: skip
-		marker_sizes[s.parent][s.size.lower()] = cint(s.planned_pieces)
 
 	parents: dict[tuple, dict] = {}
 	children: dict[tuple, dict] = {}
@@ -185,46 +173,24 @@ def get_data(filters: frappe._dict) -> list[dict]:
 		child["efficiency_weight"] += cint(marker.total_planned_pieces) if marker.marker_efficiency else 0
 		parent_row(marker.job_map, marker.fabric_item, marker.batch_no)
 
-	# Cut Receives: allocate pieces and fabric to markers, then to order/colour rows.
-	markers_by_cr = defaultdict(list)
-	for row in cr_markers:
-		if row.cutting_marker in markers:
-			markers_by_cr[row.parent].append(markers[row.cutting_marker])
-	pieces_by_cr = defaultdict(list)
-	for row in cr_pieces:
-		pieces_by_cr[row.parent].append(row)
-	fabric_by_cr = defaultdict(list)
-	for row in cr_fabric:
-		fabric_by_cr[row.parent].append(row)
-
-	for cr_name, cr in receives.items():
-		cr_marker_list = markers_by_cr.get(cr_name, [])
-		for piece in pieces_by_cr[cr_name]:
-			sources = [
-				(m, marker_sizes[m.name].get(piece.size.lower(), 0))
-				for m in cr_marker_list
-				if m.garment_order == piece.garment_order and m.colour.lower() == piece.colour.lower()
-			]
-			total = sum(planned for _m, planned in sources)
-			for marker, planned in sources:
-				share = planned / total if total else 1 / len(sources)
-				child = child_row(marker)
-				child["cut_pcs"] += cint(piece.cut_qty) * share
-				child["rejected_pcs"] += cint(piece.rejected_qty) * share
-				child["contractor_amount"] += cint(piece.cut_qty) * share * flt(cr.piece_rate)
-		for fabric in fabric_by_cr[cr_name]:
-			sources = [
-				m
-				for m in cr_marker_list
-				if (m.fabric_item, m.batch_no) == (fabric.fabric_item, fabric.batch_no)
-			]
-			total_required = sum(flt(m.fabric_required) for m in sources)
-			parent_row(cr.job_map, fabric.fabric_item, fabric.batch_no)["fabric_used"] += flt(fabric.used_qty)
-			for marker in sources:
-				share = flt(marker.fabric_required) / total_required if total_required else 1 / len(sources)
-				child = child_row(marker)
-				child["fabric_used"] += flt(fabric.used_qty) * share
-				child["fabric_required"] += flt(marker.fabric_required)
+	# Cut Receives: every piece and fabric row names its marker, so the figures are exact.
+	for piece in cr_pieces:
+		marker = markers.get(piece.cutting_marker)
+		if not marker:
+			continue  # marker excluded by the filters
+		child = child_row(marker)
+		child["cut_pcs"] += cint(piece.cut_qty)
+		child["rejected_pcs"] += cint(piece.rejected_qty)
+		child["contractor_amount"] += cint(piece.cut_qty) * flt(receives[piece.parent].piece_rate)
+	for fabric in cr_fabric:
+		parent_row(receives[fabric.parent].job_map, fabric.fabric_item, fabric.batch_no)["fabric_used"] += (
+			flt(fabric.used_qty)
+		)
+		marker = markers.get(fabric.cutting_marker)
+		if marker:
+			child = child_row(marker)
+			child["fabric_used"] += flt(fabric.used_qty)
+			child["fabric_required"] += flt(fabric.required_qty)
 
 	alert = flt(get_settings().fabric_wastage_alert_percent)
 	data = []
