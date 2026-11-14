@@ -44,7 +44,9 @@ class VelocityHome {
 					<div class="vt-header__meta">${weekday}, ${today}</div>
 				</div>
 			</div>
-			<div class="vt-kpis">${this.kpis_html(data.kpis || [])}</div>
+			<div class="vt-kpis" style="--vt-kpi-count:${(data.kpis || []).filter((k) => !k.hidden).length}">${this.kpis_html(
+				data.kpis || []
+			)}</div>
 			<div class="vt-grid-2">
 				<div class="vt-stack">
 					<div class="vt-card">
@@ -54,6 +56,7 @@ class VelocityHome {
 						</div>
 						${this.shipments_html(data.shipments || [])}
 					</div>
+					${data.cutting ? this.cutting_html(data.cutting) : ""}
 					<div class="vt-card">
 						<div class="vt-card__title">
 							<span>${__("Orders by Customer")}</span>
@@ -135,6 +138,52 @@ class VelocityHome {
 		return `<button type="button" class="btn vt-quick__btn ${modifier}" data-new="${doctype}">
 			<span class="vt-quick__plus" aria-hidden="true">+</span><span>${label}</span>
 		</button>`;
+	}
+
+	cutting_html(cutting) {
+		const esc = frappe.utils.escape_html;
+		const rows = cutting.rows || [];
+		const body = rows.length
+			? `<div class="vt-table-wrap"><table class="vt-table">
+				<thead><tr>
+					<th>${__("Job Map")}</th>
+					<th class="vt-num" title="${esc(__("Issued minus returned"))}">${__("Net Issued (m)")}</th>
+					<th class="vt-num">${__("Fabric Used (m)")}</th>
+					<th>${__("Pieces Cut / Planned")}</th>
+					<th class="vt-num">${__("Wastage %")}</th>
+				</tr></thead>
+				<tbody>${rows
+					.map((r) => {
+						const pct = r.pieces_planned ? Math.min(100, Math.round((r.pieces_cut / r.pieces_planned) * 100)) : 0;
+						const wastage =
+							r.wastage_percent === null || r.wastage_percent === undefined
+								? '<span class="vt-muted">–</span>'
+								: `<span class="${r.wastage_alert ? "vt-wastage-alert" : ""}" ${
+										r.wastage_alert ? `title="${esc(__("Above the alert level of {0}%", [cutting.alert]))}"` : ""
+								  }>${format_number(r.wastage_percent, null, 2)}%</span>`;
+						return `<tr data-job-map="${esc(r.job_map)}" class="${r.wastage_alert ? "vt-row--overdue" : ""}">
+							<td><span class="vt-link">${esc(r.job_map)}</span>
+								<div class="vt-muted small">${__(r.status)}</div></td>
+							<td class="vt-num">${format_number(r.fabric_issued, null, 2)}</td>
+							<td class="vt-num">${format_number(r.fabric_used, null, 2)}</td>
+							<td><div class="vt-progress"><span style="width:${pct}%"></span></div>
+								<div class="small">${format_number(r.pieces_cut, null, 0)} / ${format_number(
+							r.pieces_planned,
+							null,
+							0
+						)} <span class="vt-muted">· ${pct}%</span></div></td>
+							<td class="vt-num">${wastage}</td>
+						</tr>`;
+					})
+					.join("")}</tbody></table></div>`
+			: `<div class="vt-empty">${__("No active Job Maps in cutting.")}</div>`;
+		return `<div class="vt-card">
+			<div class="vt-card__title">
+				<span>${__("Cutting Status")}</span>
+				<span class="vt-card__hint">${__("Active Job Maps · wastage alert above {0}%", [cutting.alert])}</span>
+			</div>
+			${body}
+		</div>`;
 	}
 
 	customers_html(rows) {
@@ -221,6 +270,9 @@ class VelocityHome {
 		});
 		this.$body.find("tr[data-order]").on("click", (e) => {
 			frappe.set_route("Form", "Garment Order", e.currentTarget.dataset.order);
+		});
+		this.$body.find("tr[data-job-map]").on("click", (e) => {
+			frappe.set_route("Form", "Job Map", e.currentTarget.dataset.jobMap);
 		});
 		this.$body.find("tr[data-customer]").on("click", (e) => {
 			const row = data.customers[cint(e.currentTarget.dataset.customer)];

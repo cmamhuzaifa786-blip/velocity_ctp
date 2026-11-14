@@ -11,7 +11,7 @@ from typing import TypedDict
 
 import frappe
 from frappe import _
-from frappe.utils import add_days, cint, date_diff, getdate, nowdate
+from frappe.utils import add_days, cint, date_diff, flt, getdate, nowdate
 
 from velocity_ctp.setup.install import get_default_company
 
@@ -82,6 +82,15 @@ def get_home_data() -> dict:
 		}
 
 	shipments = get_upcoming_shipments(today, in_30)
+	cut_today = None
+	if frappe.has_permission("Cut Receive", "read"):
+		cut_today = cint(
+			frappe.get_list(
+				"Cut Receive",
+				filters={"docstatus": 1, "posting_date": today},
+				fields=[_agg("total_cut_qty", "SUM", "qty")],
+			)[0].qty
+		)
 
 	return {
 		"company": get_default_company(throw=False),
@@ -139,6 +148,16 @@ def get_home_data() -> dict:
 				},
 			},
 			{
+				"key": "pieces_cut_today",
+				"label": _("Pieces Cut Today"),
+				"sub": _("From today's Cut Receives"),
+				"value": cut_today,
+				"tone": "ok",
+				"doctype": "Cut Receive",
+				"filters": {"docstatus": 1, "posting_date": str(today)},
+				"hidden": cut_today is None,
+			},
+			{
 				"key": "on_hold",
 				"label": _("On Hold"),
 				"sub": _("Paused orders"),
@@ -150,6 +169,7 @@ def get_home_data() -> dict:
 		],
 		"shipments": shipments,
 		"customers": get_orders_by_customer(),
+		"cutting": get_cutting_status() if frappe.has_permission("Cut Receive", "read") else None,
 		"pipeline": get_approval_pipeline() if can_read_job_map else None,
 	}
 
@@ -185,6 +205,69 @@ def get_orders_by_customer(limit: int = 20) -> list[dict]:
 		row.overdue = bool(row.next_ship_date and getdate(row.next_ship_date) < today)
 		row.filters = {"docstatus": 1, "status": ["in", list(OPEN_STATUSES)], "customer": row.customer}
 	return rows
+
+
+def get_cutting_status() -> dict:
+	"""Active (not closed) Job Maps with cutting activity or ready to cut: fabric and pieces."""
+	from velocity_ctp.cutting.ledger import job_fabric
+	from velocity_ctp.cutting.settings import get_settings
+
+	maps = frappe.get_list(
+		"Job Map",
+		filters={"job_closed": 0},
+		fields=["name", "status", "priority"],
+		order_by="modified desc",
+		limit_page_length=50,
+	)
+	names = [m.name for m in maps]
+	fabric = job_fabric(names)
+	planned = {
+		r.job_map: cint(r.pcs)
+		for r in frappe.get_all(
+			"Cutting Marker",
+			filters={"job_map": ("in", names or [""]), "docstatus": 1},
+			fields=["job_map", _agg("total_planned_pieces", "SUM", "pcs")],
+			group_by="job_map",
+		)
+	}
+	cut = {
+		r.job_map: r
+		for r in frappe.get_all(
+			"Cut Receive",
+			filters={"job_map": ("in", names or [""]), "docstatus": 1},
+			fields=[
+				"job_map",
+				_agg("total_cut_qty", "SUM", "pcs"),
+				_agg("total_fabric_required", "SUM", "required"),
+				_agg("total_fabric_used", "SUM", "used"),
+			],
+			group_by="job_map",
+		)
+	}
+	alert = flt(get_settings().fabric_wastage_alert_percent)
+	rows = []
+	for m in maps:
+		values = fabric.get(m.name, {})
+		issued = sum(v["issued"] - v["returned"] for v in values.values())
+		used = sum(v["used"] for v in values.values())
+		receive = cut.get(m.name)
+		if not (issued or m.name in planned or receive or m.status == "Ready to Cut"):
+			continue
+		required = flt(receive.required) if receive else 0
+		wastage = flt((flt(receive.used) - required) / required * 100, 2) if receive and required else None
+		rows.append(
+			{
+				"job_map": m.name,
+				"status": m.status,
+				"fabric_issued": flt(issued, 2),
+				"fabric_used": flt(used, 2),
+				"pieces_cut": cint(receive.pcs) if receive else 0,
+				"pieces_planned": planned.get(m.name, 0),
+				"wastage_percent": wastage,
+				"wastage_alert": bool(wastage is not None and alert and wastage > alert),
+			}
+		)
+	return {"rows": rows, "alert": alert}
 
 
 def get_upcoming_shipments(today, until) -> list[dict]:
@@ -323,8 +406,27 @@ def stage_approvals(orders: list[frappe._dict], context: dict) -> dict[str, Stag
 
 
 def stage_cutting(orders: list[frappe._dict], context: dict) -> dict[str, StageState]:
-	"""Cutting stage. Plug in cut quantities (for example from cutting entries) in a later phase."""
-	return _not_started(orders)
+	"""Cutting stage from submitted Cut Receives: cut pieces against the order's cutting quantity.
+
+	Not started: nothing cut. In progress: "x of y pcs · z%". Done: cut >= cutting quantity.
+	"""
+	from velocity_ctp.cutting.ledger import order_cut_totals
+
+	cut = order_cut_totals([o.name for o in orders])
+	result: dict[str, StageState] = {}
+	for o in orders:
+		done, target = cint(cut.get(o.name)), cint(o.total_cutting_qty)
+		percent = round(done / target * 100) if target else 0
+		if not done:
+			result[o.name] = {"state": "pending", "detail": _("Not started")}
+		elif target and done >= target:
+			result[o.name] = {"state": "done", "detail": _("{0} pcs · {1}%").format(done, percent)}
+		else:
+			result[o.name] = {
+				"state": "active",
+				"detail": _("{0} of {1} pcs · {2}%").format(done, target, percent),
+			}
+	return result
 
 
 def stage_stitching(orders: list[frappe._dict], context: dict) -> dict[str, StageState]:

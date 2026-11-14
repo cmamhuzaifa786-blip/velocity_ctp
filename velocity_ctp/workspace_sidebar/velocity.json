@@ -69,6 +69,89 @@
   {
    "child": 0,
    "collapsible": 1,
+   "icon": "scissors",
+   "indent": 1,
+   "keep_closed": 0,
+   "label": "Cutting",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Section Break"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "icon": "arrow-right-left",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Fabric Issue",
+   "link_to": "Fabric Issue",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "icon": "ruler",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Cutting Marker",
+   "link_to": "Cutting Marker",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "icon": "scissors",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Cut Receive",
+   "link_to": "Cut Receive",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "icon": "package",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Bundle",
+   "link_to": "Bundle",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "icon": "bar-chart-3",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Cutting Report",
+   "link_to": "Cutting Report",
+   "link_type": "Report",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "icon": "settings",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Velocity Settings",
+   "link_to": "Velocity Settings",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
    "icon": "database",
    "indent": 1,
    "keep_closed": 0,
@@ -162,7 +245,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-11-14 04:20:46.687272",
+ "modified": "2026-11-14 06:15:03.440677",
  "modified_by": "Administrator",
  "module": "Velocity CTP",
  "name": "Velocity",
