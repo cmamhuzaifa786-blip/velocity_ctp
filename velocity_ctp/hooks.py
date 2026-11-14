@@ -44,6 +44,10 @@ required_apps = ["erpnext"]
 
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {
+	"Material Request": "public/js/material_request.js",
+	"Purchase Order": "public/js/purchase_order.js",
+}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -141,6 +145,8 @@ after_install = "velocity_ctp.setup.install.after_install"
 # }
 
 # Document Events
+BUYING = "velocity_ctp.procurement.buying."
+
 doc_events = {
 	"Item": {
 		"validate": "velocity_ctp.cutting.item_hooks.validate_fabric_batch",
@@ -149,9 +155,70 @@ doc_events = {
 		"on_cancel": "velocity_ctp.velocity_ctp.doctype.garment_order.garment_order.clear_sales_order_link",
 		"on_trash": "velocity_ctp.velocity_ctp.doctype.garment_order.garment_order.clear_sales_order_link",
 	},
+	"Material Request": {
+		"validate": BUYING + "material_request_validate",
+	},
+	"Purchase Order": {
+		"before_validate": BUYING + "purchase_order_before_validate",
+		"validate": BUYING + "purchase_order_validate",
+	},
+	"Purchase Receipt": {
+		"before_validate": BUYING + "purchase_receipt_before_validate",
+		"validate": BUYING + "purchase_receipt_validate",
+		"before_submit": BUYING + "purchase_receipt_before_submit",
+		"on_submit": BUYING + "purchase_receipt_on_submit",
+	},
 }
 
-# Fixtures (Velocity records only)
+# "Update Items" on a Purchase Order: only Velocity PO Approver L1 may change items, rates or quantities.
+override_whitelisted_methods = {
+	"erpnext.controllers.accounts_controller.update_child_qty_rate": BUYING + "update_child_qty_rate",
+}
+
+# Custom fields on core DocTypes (fields only; no custom permissions on core DocTypes).
+VELOCITY_CUSTOM_FIELDS = [
+	"Sales Order-garment_order",
+	"Material Request-material_plan",
+	"Material Request-request_category",
+	"Material Request-department",
+	"Material Request-purpose",
+	"Material Request-rejection_reason",
+	"Purchase Order-section_velocity",
+	"Purchase Order-po_category",
+	"Purchase Order-po_type",
+	"Purchase Order-shortfall_reason",
+	"Purchase Order-column_break_velocity",
+	"Purchase Order-supplier_pi_no",
+	"Purchase Order-rejection_reason",
+	"Purchase Order-section_velocity_approvals",
+	"Purchase Order-l1_approved_by",
+	"Purchase Order-l1_approved_on",
+	"Purchase Order-column_break_velocity_approvals",
+	"Purchase Order-l2_approved_by",
+	"Purchase Order-l2_approved_on",
+	"Purchase Order Item-garment_order",
+	"Purchase Order Item-job_map",
+	"Purchase Receipt-supplier_challan_no",
+	"Purchase Receipt Item-garment_order",
+	"Purchase Receipt Item-job_map",
+	"Purchase Receipt Item-supplier_lot_no",
+	"Purchase Receipt Item-shade",
+	"Batch-supplier_lot_no",
+	"Batch-shade",
+]
+
+VELOCITY_WORKFLOWS = ["Velocity Material Request Approval", "Velocity Purchase Order Approval"]
+VELOCITY_WORKFLOW_STATES = [
+	"Draft",
+	"Pending Approval",
+	"Pending 1st Approval",
+	"Pending 2nd Approval",
+	"Approved",
+	"Rejected",
+	"Cancelled",
+]
+VELOCITY_WORKFLOW_ACTIONS = ["Submit for Approval", "Approve", "Reject", "Revise", "Submit", "Cancel"]
+
 fixtures = [
 	{
 		"dt": "Role",
@@ -165,14 +232,18 @@ fixtures = [
 					"Velocity Production",
 					"Velocity Costing",
 					"Velocity Costing Approver",
+					"Velocity Requisition Approver",
+					"Velocity PO Approver L1",
+					"Velocity PO Approver L2",
 				],
 			]
 		],
 	},
-	{
-		"dt": "Custom Field",
-		"filters": [["name", "in", ["Sales Order-garment_order", "Material Request-material_plan"]]],
-	},
+	{"dt": "Custom Field", "filters": [["name", "in", VELOCITY_CUSTOM_FIELDS]]},
+	{"dt": "Workflow State", "filters": [["name", "in", VELOCITY_WORKFLOW_STATES]]},
+	{"dt": "Workflow Action Master", "filters": [["name", "in", VELOCITY_WORKFLOW_ACTIONS]]},
+	{"dt": "Workflow", "filters": [["name", "in", VELOCITY_WORKFLOWS]]},
+	{"dt": "Property Setter", "filters": [["name", "in", ["Purchase Order-main-default_print_format"]]]},
 ]
 
 # ---------------
@@ -302,5 +373,6 @@ jinja = {
 		"velocity_ctp.cutting.bundles.get_bundle_tickets",
 		"velocity_ctp.production.printing.get_challan_lines",
 		"velocity_ctp.production.printing.get_packing_summary",
+		"velocity_ctp.procurement.printing.get_po_approval",
 	],
 }

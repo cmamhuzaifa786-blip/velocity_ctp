@@ -22,7 +22,21 @@ CUTTING_ROLE = "Velocity Cutting"
 PRODUCTION_ROLE = "Velocity Production"
 COSTING_ROLE = "Velocity Costing"
 COSTING_APPROVER_ROLE = "Velocity Costing Approver"
-VELOCITY_ROLES = (MERCHANDISER_ROLE, CUTTING_ROLE, PRODUCTION_ROLE, COSTING_ROLE, COSTING_APPROVER_ROLE)
+REQUISITION_APPROVER_ROLE = "Velocity Requisition Approver"
+PO_APPROVER_L1_ROLE = "Velocity PO Approver L1"
+PO_APPROVER_L2_ROLE = "Velocity PO Approver L2"
+VELOCITY_ROLES = (
+	MERCHANDISER_ROLE,
+	CUTTING_ROLE,
+	PRODUCTION_ROLE,
+	COSTING_ROLE,
+	COSTING_APPROVER_ROLE,
+	REQUISITION_APPROVER_ROLE,
+	PO_APPROVER_L1_ROLE,
+	PO_APPROVER_L2_ROLE,
+)
+
+CONSUMPTION_ACCOUNT_NAME = "Production Consumables"
 
 # (head, section, calculation) in sequence order
 COST_HEADS = (
@@ -124,6 +138,7 @@ def setup_masters(commit: bool = True) -> list[str]:
 	ensure_sales_order_field(log)
 	ensure_cost_heads(log)
 	ensure_material_request_field(log)
+	ensure_consumption_account(company, log, warnings)
 
 	if commit:
 		frappe.db.commit()
@@ -402,3 +417,40 @@ def ensure_material_request_field(log: list[str]) -> None:
 		},
 	)
 	log.append("Custom Field Material Request-material_plan")
+
+
+def ensure_consumption_account(company: str, log: list[str], warnings: list[str]) -> None:
+	"""Create "Production Consumables" under Direct Expenses if missing, and use it in Velocity Settings
+	only when no Department Consumption Account is set yet."""
+	account = frappe.db.get_value(
+		"Account", {"company": company, "account_name": CONSUMPTION_ACCOUNT_NAME, "is_group": 0}, "name"
+	)
+	if not account:
+		parent = frappe.db.get_value(
+			"Account", {"company": company, "account_name": "Direct Expenses", "is_group": 1}, "name"
+		)
+		if not parent:
+			warnings.append(
+				f"Account group Direct Expenses was not found for {company}; "
+				f"create the {CONSUMPTION_ACCOUNT_NAME} account and set it in Velocity Settings."
+			)
+			return
+		doc = frappe.get_doc(
+			{
+				"doctype": "Account",
+				"account_name": CONSUMPTION_ACCOUNT_NAME,
+				"parent_account": parent,
+				"company": company,
+				"is_group": 0,
+				"root_type": "Expense",
+				"report_type": "Profit and Loss",
+			}
+		)
+		doc.flags.ignore_permissions = True
+		doc.insert()
+		account = doc.name
+		log.append(f"Account {account}")
+	if not frappe.db.get_single_value("Velocity Settings", "department_consumption_account"):
+		frappe.db.set_single_value("Velocity Settings", "department_consumption_account", account)
+		frappe.clear_document_cache("Velocity Settings", "Velocity Settings")
+		log.append(f"Velocity Settings Department Consumption Account: {account}")

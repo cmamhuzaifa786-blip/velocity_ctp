@@ -16,7 +16,13 @@
   "section_costing",
   "target_margin_percent",
   "column_break_costing",
-  "require_cost_sheet"
+  "require_cost_sheet",
+  "section_procurement",
+  "po_second_approval_limit",
+  "column_break_procurement",
+  "department_consumption_account",
+  "section_department_cost_centers",
+  "department_cost_centers"
  ],
  "fields": [
   {
@@ -101,12 +107,48 @@
    "fieldname": "require_cost_sheet",
    "fieldtype": "Check",
    "label": "Require Cost Sheet"
+  },
+  {
+   "fieldname": "section_procurement",
+   "fieldtype": "Section Break",
+   "label": "Procurement"
+  },
+  {
+   "default": "500000",
+   "description": "Purchase Orders with a grand total (company currency) above this amount need a second approval (Velocity PO Approver L2).",
+   "fieldname": "po_second_approval_limit",
+   "fieldtype": "Currency",
+   "label": "PO Second Approval Limit",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "column_break_procurement",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Expense account charged by Department Issues (non-product consumables).",
+   "fieldname": "department_consumption_account",
+   "fieldtype": "Link",
+   "label": "Department Consumption Account",
+   "options": "Account"
+  },
+  {
+   "description": "Department Issues use the cost center mapped to their department here, else the company's default cost center.",
+   "fieldname": "section_department_cost_centers",
+   "fieldtype": "Section Break",
+   "label": "Department Cost Centers"
+  },
+  {
+   "fieldname": "department_cost_centers",
+   "fieldtype": "Table",
+   "label": "Department Cost Centers",
+   "options": "Velocity Department Cost Center"
   }
  ],
  "index_web_pages_for_search": 0,
  "issingle": 1,
  "links": [],
- "modified": "2026-11-14 12:00:00.000000",
+ "modified": "2026-11-15 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Velocity CTP",
  "name": "Velocity Settings",
@@ -140,6 +182,26 @@
   {
    "read": 1,
    "role": "Velocity Production"
+  },
+  {
+   "read": 1,
+   "role": "Stock User"
+  },
+  {
+   "read": 1,
+   "role": "Stock Manager"
+  },
+  {
+   "read": 1,
+   "role": "Purchase User"
+  },
+  {
+   "read": 1,
+   "role": "Purchase Manager"
+  },
+  {
+   "read": 1,
+   "role": "Accounts User"
   }
  ],
  "sort_field": "modified",
