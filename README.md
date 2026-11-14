@@ -31,3 +31,14 @@ Pre-commit is configured to use the following tools for checking and formatting 
 ### License
 
 mit
+
+## Development checks
+
+A git pre-commit hook runs `ruff check` and `ruff format --check` on `velocity_ctp` and blocks the commit on any
+problem. It uses `uvx ruff@0.14.10` (or a `ruff` on the PATH). Install it once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Tests and the screenshot check are described in `velocity_ctp/tests/README.md`.
