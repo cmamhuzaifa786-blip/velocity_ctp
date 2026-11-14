@@ -35,6 +35,11 @@ WAREHOUSES = (
 	"Rejection Store",
 )
 
+# Process WIP warehouses carry their stock on the "Work In Progress" account; stores stay on
+# the company's default inventory account (Stock In Hand).
+WIP_ACCOUNT_NAME = "Work In Progress"
+WIP_WAREHOUSES = ("Cutting WIP", "Stitching WIP", "Washing WIP", "Finishing WIP")
+
 # (process_name, sequence, wip warehouse, requires_barcode, allow_rejection)
 PROCESSES = (
 	("Cutting", 1, "Cutting WIP", 0, 0),
@@ -71,6 +76,7 @@ def setup_masters() -> None:
 	ensure_item_groups(log)
 	ensure_uoms(log)
 	warehouses = ensure_warehouses(company, log)
+	ensure_wip_account(company, warehouses, log)
 	ensure_processes(warehouses, log)
 	ensure_simple_records("Wash Type", "wash_type", WASH_TYPES, {"washing_category": "Denim"}, log)
 	ensure_simple_records("Product Category", "category_name", PRODUCT_CATEGORIES, {}, log)
@@ -259,3 +265,50 @@ def ensure_velocity_settings(log: list[str]) -> None:
 
 	if ensure_saved():
 		log.append("Velocity Settings defaults")
+
+
+def ensure_wip_account(company: str, warehouses: dict[str, str], log: list[str]) -> None:
+	"""Create the "Work In Progress" stock account under Current Assets and set it on the WIP warehouses."""
+	account = frappe.db.get_value(
+		"Account", {"company": company, "account_name": WIP_ACCOUNT_NAME, "is_group": 0}, "name"
+	)
+	if not account:
+		parent = frappe.db.get_value(
+			"Account", {"company": company, "account_name": "Current Assets", "is_group": 1}, "name"
+		)
+		if not parent:
+			frappe.throw(
+				_("Account group {0} was not found for company {1}.").format(
+					frappe.bold("Current Assets"), company
+				)
+			)
+		doc = frappe.get_doc(
+			{
+				"doctype": "Account",
+				"account_name": WIP_ACCOUNT_NAME,
+				"parent_account": parent,
+				"company": company,
+				"is_group": 0,
+				"account_type": "Stock",
+			}
+		)
+		doc.flags.ignore_permissions = True
+		doc.insert()
+		account = doc.name
+		log.append(f"Account {account}")
+	elif frappe.db.get_value("Account", account, "account_type") != "Stock":
+		frappe.throw(
+			_(
+				"Account {0} exists but its Account Type is not Stock. Please correct it and run the setup again."
+			).format(frappe.bold(account))
+		)
+
+	for warehouse_name in WIP_WAREHOUSES:
+		warehouse = warehouses.get(warehouse_name)
+		if not warehouse or frappe.db.get_value("Warehouse", warehouse, "account") == account:
+			continue
+		doc = frappe.get_doc("Warehouse", warehouse)
+		doc.account = account
+		doc.flags.ignore_permissions = True
+		doc.save()
+		log.append(f"Warehouse {warehouse} -> account {account}")
