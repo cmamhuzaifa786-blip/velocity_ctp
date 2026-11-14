@@ -45,6 +45,8 @@ class JobMap(Document):
 	def validate(self) -> None:
 		self.validate_orders()
 		self.validate_approvals()
+		self.validate_cutting_lock()
+		self.validate_closing()
 		self.stamp_approvals()
 		self.set_status()
 
@@ -95,6 +97,56 @@ class JobMap(Document):
 						frappe.bold(order), frappe.bold(job_map)
 					)
 				)
+
+	def validate_cutting_lock(self) -> None:
+		"""PP approval and OK to Cut cannot be undone once cutting documents are submitted."""
+		before = self.get_doc_before_save()
+		if not before:
+			return
+		undone = [
+			label
+			for field, label in (
+				("pp_sample_approved", _("PP Sample approval")),
+				("ok_to_cut", _("OK to Cut")),
+			)
+			if before.get(field) and not self.get(field)
+		]
+		if not undone:
+			return
+		from velocity_ctp.cutting.ledger import submitted_cutting_documents
+
+		documents = submitted_cutting_documents(self.name)
+		if documents:
+			doctype, name = documents[0]
+			frappe.throw(
+				_("{0} cannot be undone because {1} {2} is submitted for Job Map {3}.").format(
+					" / ".join(undone), _(doctype), frappe.bold(name), frappe.bold(self.name)
+				),
+				title=_("Cutting Has Started"),
+			)
+
+	def validate_closing(self) -> None:
+		"""A Job Map cannot be closed while its fabric is still in Cutting WIP."""
+		before = self.get_doc_before_save()
+		if not self.job_closed or (before and before.job_closed):
+			return
+		from velocity_ctp.cutting.ledger import fabric_balance, job_fabric
+
+		remaining = [
+			(item, batch, fabric_balance(values))
+			for (item, batch), values in job_fabric([self.name])[self.name].items()
+			if fabric_balance(values) > 1e-9
+		]
+		if remaining:
+			lines = "<br>".join(
+				_("{0} m of {1}, batch {2}").format(qty, item, frappe.bold(batch))
+				for item, batch, qty in remaining
+			)
+			frappe.throw(
+				_("Job Map {0} cannot be closed while fabric is still in Cutting WIP:<br>{1}<br>"
+				  "Return it with a Fabric Issue of type Return first.").format(frappe.bold(self.name), lines),
+				title=_("Fabric Still in Cutting"),
+			)  # fmt: skip
 
 	def validate_approvals(self) -> None:
 		if self.ok_to_cut and not self.pp_sample_approved:

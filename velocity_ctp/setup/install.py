@@ -12,6 +12,8 @@ import frappe
 from frappe import _
 
 MERCHANDISER_ROLE = "Velocity Merchandiser"
+CUTTING_ROLE = "Velocity Cutting"
+VELOCITY_ROLES = (MERCHANDISER_ROLE, CUTTING_ROLE)
 
 ITEM_ATTRIBUTES = ("Size", "Colour")
 
@@ -64,6 +66,8 @@ def setup_masters() -> None:
 
 	ensure_role(log)
 	ensure_item_attributes(log)
+	ensure_batch_tracking(log)
+	ensure_velocity_settings(log)
 	ensure_item_groups(log)
 	ensure_uoms(log)
 	warehouses = ensure_warehouses(company, log)
@@ -103,13 +107,14 @@ def get_default_company(throw: bool = True) -> str | None:
 
 
 def ensure_role(log: list[str] | None = None) -> None:
-	if frappe.db.exists("Role", MERCHANDISER_ROLE):
-		return
-	frappe.get_doc({"doctype": "Role", "role_name": MERCHANDISER_ROLE, "desk_access": 1}).insert(
-		ignore_permissions=True
-	)
-	if log is not None:
-		log.append(f"Role {MERCHANDISER_ROLE}")
+	for role in VELOCITY_ROLES:
+		if frappe.db.exists("Role", role):
+			continue
+		frappe.get_doc({"doctype": "Role", "role_name": role, "desk_access": 1}).insert(
+			ignore_permissions=True
+		)
+		if log is not None:
+			log.append(f"Role {role}")
 
 
 def ensure_item_attributes(log: list[str]) -> None:
@@ -236,3 +241,21 @@ def ensure_sales_order_field(log: list[str]) -> None:
 		},
 	)
 	log.append("Custom Field Sales Order-garment_order")
+
+
+def ensure_batch_tracking(log: list[str]) -> None:
+	"""Fabric is tracked by batch (lot / shade), which needs batch tracking switched on in Stock Settings."""
+	if frappe.db.get_single_value("Stock Settings", "enable_serial_and_batch_no_for_item"):
+		return
+	settings = frappe.get_single("Stock Settings")
+	settings.enable_serial_and_batch_no_for_item = 1
+	settings.flags.ignore_permissions = True
+	settings.save()
+	log.append("Stock Settings: Activate Serial / Batch No for Item")
+
+
+def ensure_velocity_settings(log: list[str]) -> None:
+	from velocity_ctp.cutting.settings import ensure_saved
+
+	if ensure_saved():
+		log.append("Velocity Settings defaults")

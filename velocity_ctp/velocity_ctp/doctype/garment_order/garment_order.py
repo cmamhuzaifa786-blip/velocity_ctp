@@ -29,6 +29,7 @@ class GarmentOrder(Document):
 		self.validate_items()
 		self.set_item_codes()
 		self.calculate_totals()
+		self.validate_against_cut()
 		self.set_title()
 		if self.docstatus == 0:
 			self.status = "Draft"
@@ -125,8 +126,41 @@ class GarmentOrder(Document):
 	def on_submit(self) -> None:
 		self.db_set("status", "Open")
 
+	def validate_against_cut(self) -> None:
+		"""Colour/size quantities cannot be reduced below what has already been cut."""
+		if self.is_new():
+			return
+		from velocity_ctp.cutting.ledger import cut_quantities, piece_key
+
+		before = self.get_doc_before_save()
+		cut = cut_quantities([self.name])
+		if not cut or not before:
+			return
+		old = {piece_key(self.name, r.colour, r.size): cint(r.cutting_qty) for r in before.items}
+		lines = {piece_key(self.name, r.colour, r.size): cint(r.cutting_qty) for r in self.items}
+		for key, values in cut.items():
+			(_order, colour, size), new_qty = key, lines.get(key, 0)
+			# Only a reduction counts: a cut within the over-cut tolerance may exceed the line already.
+			if values["cut"] and new_qty < old.get(key, 0) and new_qty < values["cut"]:
+				frappe.throw(
+					_(
+						"{0} / {1}: {2} pieces have already been cut, so the quantity cannot be reduced below that."
+					).format(frappe.bold(colour), frappe.bold(size), values["cut"]),
+					title=_("Already Cut"),
+				)
+
 	def before_cancel(self) -> None:
+		from velocity_ctp.cutting.ledger import order_cut_totals
 		from velocity_ctp.velocity_ctp.doctype.job_map.job_map import get_active_job_maps
+
+		cut = order_cut_totals([self.name]).get(self.name, 0)
+		if cut:
+			frappe.throw(
+				_("Garment Order {0} cannot be cancelled: {1} pieces have already been cut.").format(
+					frappe.bold(self.name), cut
+				),
+				title=_("Already Cut"),
+			)
 
 		job_map = get_active_job_maps([self.name]).get(self.name)
 		if job_map:

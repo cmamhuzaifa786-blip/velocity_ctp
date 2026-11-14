@@ -1,0 +1,50 @@
+{
+ "actions": [],
+ "creation": "2026-11-14 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "size",
+  "ratio",
+  "planned_pieces"
+ ],
+ "fields": [
+  {
+   "columns": 3,
+   "fieldname": "size",
+   "fieldtype": "Autocomplete",
+   "in_list_view": 1,
+   "label": "Size",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "ratio",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Ratio",
+   "reqd": 1
+  },
+  {
+   "columns": 3,
+   "fieldname": "planned_pieces",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Planned Pieces",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-11-14 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Velocity CTP",
+ "name": "Cutting Marker Size",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -1,0 +1,109 @@
+{
+ "actions": [],
+ "creation": "2026-11-14 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_bundles",
+  "default_bundle_size",
+  "barcode_level",
+  "column_break_1",
+  "bundle_ticket_format",
+  "section_cutting",
+  "cut_over_tolerance_percent",
+  "column_break_2",
+  "fabric_wastage_alert_percent"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_bundles",
+   "fieldtype": "Section Break",
+   "label": "Bundles and Tickets"
+  },
+  {
+   "default": "20",
+   "description": "Number of pieces per bundle. The last bundle of each colour and size takes the remainder.",
+   "fieldname": "default_bundle_size",
+   "fieldtype": "Int",
+   "label": "Default Bundle Size",
+   "reqd": 1
+  },
+  {
+   "default": "Bundle",
+   "description": "Barcodes are printed per bundle. Piece-level barcodes are planned for a later phase and will be added as an option here.",
+   "fieldname": "barcode_level",
+   "fieldtype": "Select",
+   "label": "Barcode Level",
+   "options": "Bundle",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "default": "A4 sheet",
+   "description": "Default ticket size for Print Bundle Tickets.",
+   "fieldname": "bundle_ticket_format",
+   "fieldtype": "Select",
+   "label": "Bundle Ticket Format",
+   "options": "A4 sheet\nThermal 4x2 inch"
+  },
+  {
+   "fieldname": "section_cutting",
+   "fieldtype": "Section Break",
+   "label": "Cutting Controls"
+  },
+  {
+   "default": "2",
+   "description": "Allowed cut quantity above the Garment Order's cutting quantity, per colour and size.",
+   "fieldname": "cut_over_tolerance_percent",
+   "fieldtype": "Percent",
+   "label": "Cut Over Tolerance %"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "default": "5",
+   "description": "A Cut Receive above this wastage can be submitted, but shows a warning and records it in the timeline.",
+   "fieldname": "fabric_wastage_alert_percent",
+   "fieldtype": "Percent",
+   "label": "Fabric Wastage Alert %"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-11-14 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Velocity CTP",
+ "name": "Velocity Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Velocity Merchandiser"
+  },
+  {
+   "read": 1,
+   "role": "Velocity Cutting"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

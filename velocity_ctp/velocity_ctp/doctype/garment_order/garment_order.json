@@ -314,6 +314,12 @@
    "share": 1,
    "submit": 1,
    "write": 1
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Velocity Cutting"
   }
  ],
  "search_fields": "customer,style,buyer_po_no,ship_date",

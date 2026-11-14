@@ -1,0 +1,188 @@
+{
+ "actions": [],
+ "autoname": "BDL-.#######",
+ "creation": "2026-11-14 12:00:00.000000",
+ "description": "Created automatically when a Cut Receive is submitted. The name is the barcode value.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "garment_order",
+  "job_map",
+  "cut_receive",
+  "style",
+  "column_break_1",
+  "colour",
+  "size",
+  "item_code",
+  "qty",
+  "bundle_no_in_lot",
+  "bundles_in_lot",
+  "column_break_2",
+  "current_process",
+  "current_warehouse",
+  "status",
+  "section_history",
+  "history"
+ ],
+ "fields": [
+  {
+   "fieldname": "garment_order",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Garment Order",
+   "options": "Garment Order",
+   "read_only": 1
+  },
+  {
+   "fieldname": "job_map",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Job Map",
+   "options": "Job Map",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cut_receive",
+   "fieldtype": "Link",
+   "label": "Cut Receive",
+   "options": "Cut Receive",
+   "read_only": 1
+  },
+  {
+   "fieldname": "style",
+   "fieldtype": "Link",
+   "label": "Style",
+   "options": "Style",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "colour",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Colour",
+   "read_only": 1
+  },
+  {
+   "fieldname": "size",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Size",
+   "read_only": 1
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "label": "Item Code",
+   "options": "Item",
+   "read_only": 1
+  },
+  {
+   "fieldname": "qty",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "bundle_no_in_lot",
+   "fieldtype": "Int",
+   "label": "Bundle No.",
+   "read_only": 1
+  },
+  {
+   "description": "Bundles of the same order, colour and size in this Cut Receive.",
+   "fieldname": "bundles_in_lot",
+   "fieldtype": "Int",
+   "label": "Bundles in Lot",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "current_process",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Current Process",
+   "options": "Process",
+   "read_only": 1
+  },
+  {
+   "fieldname": "current_warehouse",
+   "fieldtype": "Link",
+   "label": "Current Warehouse",
+   "options": "Warehouse",
+   "read_only": 1
+  },
+  {
+   "default": "In Cutting",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "In Cutting\nIssued\nReceived\nCompleted\nRejected",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_history",
+   "fieldtype": "Section Break",
+   "label": "History"
+  },
+  {
+   "fieldname": "history",
+   "fieldtype": "Table",
+   "label": "History",
+   "options": "Bundle Movement",
+   "read_only": 1
+  }
+ ],
+ "in_create": 1,
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-14 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Velocity CTP",
+ "name": "Bundle",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Velocity Cutting"
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Velocity Merchandiser"
+  }
+ ],
+ "search_fields": "garment_order,colour,size",
+ "show_title_field_in_link": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "garment_order"
+}

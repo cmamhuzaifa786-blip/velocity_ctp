@@ -142,15 +142,18 @@ after_install = "velocity_ctp.setup.install.after_install"
 
 # Document Events
 doc_events = {
+	"Item": {
+		"validate": "velocity_ctp.cutting.item_hooks.validate_fabric_batch",
+	},
 	"Sales Order": {
 		"on_cancel": "velocity_ctp.velocity_ctp.doctype.garment_order.garment_order.clear_sales_order_link",
 		"on_trash": "velocity_ctp.velocity_ctp.doctype.garment_order.garment_order.clear_sales_order_link",
-	}
+	},
 }
 
 # Fixtures (Velocity records only)
 fixtures = [
-	{"dt": "Role", "filters": [["name", "=", "Velocity Merchandiser"]]},
+	{"dt": "Role", "filters": [["name", "in", ["Velocity Merchandiser", "Velocity Cutting"]]]},
 	{"dt": "Custom Field", "filters": [["name", "in", ["Sales Order-garment_order"]]]},
 ]
 
@@ -274,3 +277,10 @@ fixtures = [
 # ------------
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
+
+# Jinja helpers for print formats (Bundle Ticket)
+jinja = {
+	"methods": [
+		"velocity_ctp.cutting.bundles.get_bundle_tickets",
+	],
+}

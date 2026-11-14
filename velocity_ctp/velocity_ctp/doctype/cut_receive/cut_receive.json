@@ -1,0 +1,250 @@
+{
+ "actions": [],
+ "autoname": "CR-.#####",
+ "creation": "2026-11-14 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "job_map",
+  "cutting_party",
+  "piece_rate",
+  "column_break_1",
+  "posting_date",
+  "company",
+  "stock_entry",
+  "bundle_count",
+  "section_markers",
+  "markers",
+  "section_pieces",
+  "pieces",
+  "section_fabric",
+  "fabric",
+  "section_summary",
+  "total_planned_qty",
+  "total_cut_qty",
+  "total_rejected_qty",
+  "total_good_qty",
+  "column_break_2",
+  "total_fabric_required",
+  "total_fabric_used",
+  "wastage_percent",
+  "contractor_amount",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "job_map",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Job Map",
+   "options": "Job Map",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cutting_party",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Cutting Party",
+   "options": "Supplier"
+  },
+  {
+   "description": "Rate per cut piece for the cutting contractor; used for billing in a later phase.",
+   "fieldname": "piece_rate",
+   "fieldtype": "Currency",
+   "label": "Piece Rate"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "default": "Today",
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Posting Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "remember_last_selected_value": 1,
+   "reqd": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "stock_entry",
+   "fieldtype": "Link",
+   "label": "Stock Entry",
+   "no_copy": 1,
+   "options": "Stock Entry",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "bundle_count",
+   "fieldtype": "Int",
+   "label": "Bundles",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_markers",
+   "fieldtype": "Section Break",
+   "label": "Markers"
+  },
+  {
+   "fieldname": "markers",
+   "fieldtype": "Table",
+   "label": "Markers",
+   "options": "Cut Receive Marker",
+   "reqd": 1
+  },
+  {
+   "description": "Filled from the markers. Enter the actual cut and rejected quantities.",
+   "fieldname": "section_pieces",
+   "fieldtype": "Section Break",
+   "label": "Cut Pieces"
+  },
+  {
+   "fieldname": "pieces",
+   "fieldtype": "Table",
+   "label": "Cut Pieces",
+   "options": "Cut Receive Piece"
+  },
+  {
+   "fieldname": "section_fabric",
+   "fieldtype": "Section Break",
+   "label": "Fabric Used"
+  },
+  {
+   "fieldname": "fabric",
+   "fieldtype": "Table",
+   "label": "Fabric Used",
+   "options": "Cut Receive Fabric"
+  },
+  {
+   "fieldname": "section_summary",
+   "fieldtype": "Section Break",
+   "label": "Summary"
+  },
+  {
+   "fieldname": "total_planned_qty",
+   "fieldtype": "Int",
+   "label": "Total Planned Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_cut_qty",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Total Cut Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_rejected_qty",
+   "fieldtype": "Int",
+   "label": "Total Rejected Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_good_qty",
+   "fieldtype": "Int",
+   "label": "Total Good Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "total_fabric_required",
+   "fieldtype": "Float",
+   "label": "Fabric Required (m)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_fabric_used",
+   "fieldtype": "Float",
+   "label": "Fabric Used (m)",
+   "read_only": 1
+  },
+  {
+   "description": "Fabric used above the markers' requirement, as a percentage of the requirement.",
+   "fieldname": "wastage_percent",
+   "fieldtype": "Percent",
+   "label": "Wastage %",
+   "read_only": 1
+  },
+  {
+   "description": "Total cut qty \u00d7 piece rate.",
+   "fieldname": "contractor_amount",
+   "fieldtype": "Currency",
+   "label": "Contractor Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Cut Receive",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-11-14 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Velocity CTP",
+ "name": "Cut Receive",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Velocity Cutting",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Velocity Merchandiser"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
