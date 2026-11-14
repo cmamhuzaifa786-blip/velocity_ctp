@@ -1,0 +1,204 @@
+{
+ "actions": [],
+ "autoname": "MP-.YY.-.#####",
+ "creation": "2026-11-14 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "garment_order",
+  "customer",
+  "style",
+  "column_break_1",
+  "planning_date",
+  "company",
+  "cutting_qty_total",
+  "material_request",
+  "section_quantities",
+  "quantities_html",
+  "section_fabrics",
+  "fabrics",
+  "section_accessories",
+  "accessories",
+  "section_availability",
+  "availability_html",
+  "remarks",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "garment_order",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Garment Order",
+   "options": "Garment Order",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "garment_order.customer",
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Customer",
+   "options": "Customer",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "garment_order.style",
+   "fieldname": "style",
+   "fieldtype": "Link",
+   "label": "Style",
+   "options": "Style",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "default": "Today",
+   "fieldname": "planning_date",
+   "fieldtype": "Date",
+   "label": "Planning Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "remember_last_selected_value": 1,
+   "reqd": 1
+  },
+  {
+   "fetch_from": "garment_order.total_cutting_qty",
+   "fieldname": "cutting_qty_total",
+   "fieldtype": "Int",
+   "label": "Cutting Qty (Total)",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "material_request",
+   "fieldtype": "Link",
+   "label": "Last Material Request",
+   "no_copy": 1,
+   "options": "Material Request",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_quantities",
+   "fieldtype": "Section Break",
+   "label": "Cutting Quantities"
+  },
+  {
+   "fieldname": "quantities_html",
+   "fieldtype": "HTML",
+   "label": "Cutting Quantities"
+  },
+  {
+   "fieldname": "section_fabrics",
+   "fieldtype": "Section Break",
+   "label": "Fabric"
+  },
+  {
+   "fieldname": "fabrics",
+   "fieldtype": "Table",
+   "label": "Fabric",
+   "options": "Material Plan Fabric"
+  },
+  {
+   "fieldname": "section_accessories",
+   "fieldtype": "Section Break",
+   "label": "Accessories"
+  },
+  {
+   "fieldname": "accessories",
+   "fieldtype": "Table",
+   "label": "Accessories",
+   "options": "Material Plan Accessory"
+  },
+  {
+   "description": "Calculated on demand with Check Availability.",
+   "fieldname": "section_availability",
+   "fieldtype": "Section Break",
+   "label": "Availability and Shortfall"
+  },
+  {
+   "fieldname": "availability_html",
+   "fieldtype": "HTML",
+   "label": "Availability"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Material Plan",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-11-14 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Velocity CTP",
+ "name": "Material Plan",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Velocity Merchandiser",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Velocity Costing"
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Velocity Production"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

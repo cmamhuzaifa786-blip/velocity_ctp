@@ -1,0 +1,103 @@
+{
+ "actions": [],
+ "creation": "2026-11-14 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "placement",
+  "fabric_item",
+  "colour",
+  "consumption_per_pc",
+  "wastage_percent",
+  "cutting_qty",
+  "required_qty",
+  "uom"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "default": "Body",
+   "fieldname": "placement",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Placement",
+   "options": "Body\nContrast\nPocketing\nOther",
+   "reqd": 1
+  },
+  {
+   "columns": 3,
+   "fieldname": "fabric_item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Fabric Item",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "description": "Leave empty for all colours.",
+   "fieldname": "colour",
+   "fieldtype": "Autocomplete",
+   "in_list_view": 0,
+   "label": "Colour"
+  },
+  {
+   "columns": 2,
+   "fieldname": "consumption_per_pc",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Usage / Pc",
+   "precision": "4",
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "default": "0",
+   "description": "Wastage in percent.",
+   "fieldname": "wastage_percent",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "Waste"
+  },
+  {
+   "columns": 1,
+   "fieldname": "cutting_qty",
+   "fieldtype": "Int",
+   "in_list_view": 0,
+   "label": "Cutting Qty",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "required_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Required",
+   "precision": "3",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fetch_from": "fabric_item.stock_uom",
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "in_list_view": 0,
+   "label": "UOM",
+   "options": "UOM",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-11-14 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Velocity CTP",
+ "name": "Material Plan Fabric",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
