@@ -15,7 +15,7 @@
  ],
  "fields": [
   {
-   "columns": 2,
+   "columns": 3,
    "fieldname": "datetime",
    "fieldtype": "Datetime",
    "in_list_view": 1,
@@ -27,7 +27,7 @@
    "fieldname": "from_process",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "From Process",
+   "label": "From",
    "options": "Process",
    "read_only": 1
   },
@@ -36,7 +36,7 @@
    "fieldname": "to_process",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "To Process",
+   "label": "To",
    "options": "Process",
    "read_only": 1
   },
@@ -44,7 +44,7 @@
    "columns": 2,
    "fieldname": "document_type",
    "fieldtype": "Link",
-   "in_list_view": 1,
+   "in_list_view": 0,
    "label": "Document Type",
    "options": "DocType",
    "read_only": 1
@@ -67,7 +67,7 @@
    "read_only": 1
   },
   {
-   "columns": 1,
+   "columns": 2,
    "fieldname": "user",
    "fieldtype": "Link",
    "in_list_view": 1,

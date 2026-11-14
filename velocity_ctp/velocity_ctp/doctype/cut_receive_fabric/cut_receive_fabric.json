@@ -13,7 +13,7 @@
  ],
  "fields": [
   {
-   "columns": 3,
+   "columns": 2,
    "fieldname": "fabric_item",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -35,7 +35,7 @@
    "fieldname": "required_qty",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Required",
+   "label": "Required (m)",
    "read_only": 1
   },
   {
@@ -43,10 +43,10 @@
    "fieldname": "used_qty",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Used Qty"
+   "label": "Used (m)"
   },
   {
-   "columns": 1,
+   "columns": 2,
    "fieldname": "available_qty",
    "fieldtype": "Float",
    "in_list_view": 1,

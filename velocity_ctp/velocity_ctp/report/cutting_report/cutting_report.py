@@ -40,22 +40,22 @@ def execute(filters: dict | None = None):
 
 def get_columns() -> list[dict]:
 	return [
-		{"fieldname": "job_map", "label": _("Job Map"), "fieldtype": "Link", "options": "Job Map", "width": 130},
-		{"fieldname": "garment_order", "label": _("Garment Order"), "fieldtype": "Link", "options": "Garment Order", "width": 130},
-		{"fieldname": "style", "label": _("Style"), "fieldtype": "Link", "options": "Style", "width": 110},
-		{"fieldname": "colour", "label": _("Colour"), "fieldtype": "Data", "width": 100},
-		{"fieldname": "fabric_item", "label": _("Fabric"), "fieldtype": "Link", "options": "Item", "width": 130},
-		{"fieldname": "batch_no", "label": _("Batch"), "fieldtype": "Link", "options": "Batch", "width": 120},
-		{"fieldname": "fabric_issued", "label": _("Fabric Issued"), "fieldtype": "Float", "precision": 2, "width": 105},
-		{"fieldname": "fabric_used", "label": _("Fabric Used"), "fieldtype": "Float", "precision": 2, "width": 100},
-		{"fieldname": "fabric_returned", "label": _("Fabric Returned"), "fieldtype": "Float", "precision": 2, "width": 115},
-		{"fieldname": "fabric_balance", "label": _("Balance in Cutting WIP"), "fieldtype": "Float", "precision": 2, "width": 150},
-		{"fieldname": "planned_pcs", "label": _("Planned Pcs"), "fieldtype": "Int", "width": 100},
-		{"fieldname": "cut_pcs", "label": _("Cut Pcs"), "fieldtype": "Int", "width": 85},
-		{"fieldname": "rejected_pcs", "label": _("Rejected Pcs"), "fieldtype": "Int", "width": 105},
-		{"fieldname": "wastage_percent", "label": _("Wastage %"), "fieldtype": "Percent", "width": 95},
-		{"fieldname": "marker_efficiency", "label": _("Marker Efficiency %"), "fieldtype": "Percent", "width": 140},
-		{"fieldname": "contractor_amount", "label": _("Contractor Amount"), "fieldtype": "Currency", "width": 140},
+		{"fieldname": "job_map", "label": _("Job Map"), "fieldtype": "Link", "options": "Job Map", "width": 150},
+		{"fieldname": "garment_order", "label": _("Garment Order"), "fieldtype": "Link", "options": "Garment Order", "width": 135},
+		{"fieldname": "style", "label": _("Style"), "fieldtype": "Link", "options": "Style", "width": 130},
+		{"fieldname": "colour", "label": _("Colour"), "fieldtype": "Data", "width": 115},
+		{"fieldname": "fabric_item", "label": _("Fabric"), "fieldtype": "Link", "options": "Item", "width": 150},
+		{"fieldname": "batch_no", "label": _("Batch"), "fieldtype": "Link", "options": "Batch", "width": 145},
+		{"fieldname": "fabric_issued", "label": _("Fabric Issued"), "fieldtype": "Float", "precision": 2, "width": 125},
+		{"fieldname": "fabric_used", "label": _("Fabric Used"), "fieldtype": "Float", "precision": 2, "width": 120},
+		{"fieldname": "fabric_returned", "label": _("Fabric Returned"), "fieldtype": "Float", "precision": 2, "width": 140},
+		{"fieldname": "fabric_balance", "label": _("Balance in Cutting WIP"), "fieldtype": "Float", "precision": 2, "width": 175},
+		{"fieldname": "planned_pcs", "label": _("Planned Pcs"), "fieldtype": "Int", "width": 110},
+		{"fieldname": "cut_pcs", "label": _("Cut Pcs"), "fieldtype": "Int", "width": 95},
+		{"fieldname": "rejected_pcs", "label": _("Rejected Pcs"), "fieldtype": "Int", "width": 120},
+		{"fieldname": "wastage_percent", "label": _("Wastage %"), "fieldtype": "Percent", "width": 110},
+		{"fieldname": "marker_efficiency", "label": _("Marker Efficiency %"), "fieldtype": "Percent", "width": 165},
+		{"fieldname": "contractor_amount", "label": _("Contractor Amount"), "fieldtype": "Currency", "width": 165},
 	]  # fmt: skip
 
 

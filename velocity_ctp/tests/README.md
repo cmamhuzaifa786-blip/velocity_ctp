@@ -16,8 +16,9 @@ node velocity_ctp/tests/quantity_matrix.test.js
 
 `screenshots/run.js` opens the Velocity pages in a headless Chromium and saves full-page screenshots.
 
-**Covers:** Velocity Home, Order Tracker, the latest Garment Order (plus its Cutting Qty view) and the latest
-Job Map, in light and dark theme, at 1920px, 1366px and 820px (tablet) width.
+**Covers:** Velocity Home, Order Tracker, the latest Garment Order (plus its Cutting Qty view), the latest
+Job Map, Fabric Issue, Cutting Marker, Cut Receive and Bundle, the Bundle list and the Cutting Report, in light and
+dark theme, at 1920px, 1366px and 820px (tablet) width; plus the Bundle Ticket print (A4 and thermal) at 1366px.
 
 **Reports:** JavaScript errors, cut-off text, and pages that scroll sideways. Every result is also written to
 `screenshots/output/summary.json`. Always look at the screenshots yourself as well: the automatic checks cannot
@@ -38,7 +39,7 @@ Screenshots go to `velocity_ctp/tests/screenshots/output/` (git-ignored, replace
 
 ### Test user
 
-The script creates a temporary user `vt.screenshots@example.com` with the roles **Velocity Merchandiser**
+The script creates a temporary user `vt.screenshots@example.com` with the roles **Velocity Merchandiser**, **Velocity Cutting**, **Stock User**
 and **Sales User** and a random password, and always deletes it at the end, also after an error or Ctrl+C.
 If a run is killed hard, remove the user with:
 

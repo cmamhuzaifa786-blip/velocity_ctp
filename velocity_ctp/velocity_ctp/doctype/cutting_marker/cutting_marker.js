@@ -25,6 +25,10 @@ frappe.ui.form.on("Cutting Marker", {
 		}));
 	},
 
+	onload() {
+		frappe.require("/assets/velocity_ctp/css/velocity.css");
+	},
+
 	refresh(frm) {
 		frm.trigger("load_options");
 		if (frm.doc.docstatus === 1 && frm.doc.status === "Planned") {

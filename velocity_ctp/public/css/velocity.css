@@ -578,10 +578,14 @@
 .vt-grid-total__label { margin-right: auto; font-weight: 600; color: var(--text-color); }
 .vt-grid-total__item b { margin-left: 6px; color: var(--text-color); font-variant-numeric: tabular-nums; }
 
-/* Keep every Job Map order column readable on narrow screens: scroll the grid instead. */
+/* Keep every column of the Velocity tables readable on narrow screens: scroll the table instead. */
 @media (max-width: 1199px) {
-	[data-route^="Form/Job Map"] .frappe-control[data-fieldname="jobs"] .form-grid-container { overflow-x: auto; }
-	[data-route^="Form/Job Map"] .frappe-control[data-fieldname="jobs"] .form-grid { min-width: 900px; }
+	:is([data-route^="Form/Job Map"], [data-route^="Form/Fabric Issue"], [data-route^="Form/Cut Receive"],
+		[data-route^="Form/Bundle"]) .frappe-control[data-fieldtype="Table"] .form-grid-container { overflow-x: auto; }
+	:is([data-route^="Form/Job Map"], [data-route^="Form/Fabric Issue"], [data-route^="Form/Cut Receive"],
+		[data-route^="Form/Bundle"]) .frappe-control[data-fieldtype="Table"] .form-grid { min-width: 900px; }
+	[data-route^="Form/Cutting Marker"] .frappe-control[data-fieldtype="Table"] .form-grid-container { overflow-x: auto; }
+	[data-route^="Form/Cutting Marker"] .frappe-control[data-fieldtype="Table"] .form-grid { min-width: 600px; }
 }
 
 /* ---------- Segmented toggle (Garment Order matrix) ---------- */

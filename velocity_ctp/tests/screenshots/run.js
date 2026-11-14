@@ -106,6 +106,14 @@ function pageChecks() {
 			truncated.push(text.slice(0, 60));
 		}
 	}
+	// Velocity elements that hide content vertically (for example a fixed-height ticket).
+	for (const el of document.querySelectorAll('[class*="vt-"]')) {
+		const cs = getComputedStyle(el);
+		const hidesY = ["hidden", "clip"].includes(cs.overflowY) || ["hidden", "clip"].includes(cs.overflow);
+		if (el.offsetParent && hidesY && el.scrollHeight > el.clientHeight + 2) {
+			truncated.push(`(clipped height) ${(el.innerText || "").trim().slice(0, 40)}`);
+		}
+	}
 	return {
 		truncated: [...new Set(truncated)].slice(0, 15),
 		horizontalOverflow: document.documentElement.scrollWidth - window.innerWidth,
@@ -163,11 +171,31 @@ async function main() {
 		} else {
 			console.log("No Job Map found: skipping the Job Map form.");
 		}
+		// Cutting (Phase 3)
+		const optional = [
+			["fabric_issue", { key: "fabric-issue", url: () => route("fabric-issue", info.fabric_issue), ready: '[data-fieldname="items"] .grid-body' }],
+			["cutting_marker", { key: "cutting-marker", url: () => route("cutting-marker", info.cutting_marker), ready: '[data-fieldname="size_ratio"] .grid-body' }],
+			["cut_receive", { key: "cut-receive", url: () => route("cut-receive", info.cut_receive), ready: '[data-fieldname="pieces"] .grid-body' }],
+			["bundle", { key: "bundle", url: () => route("bundle", info.bundle), ready: '[data-fieldname="history"] .grid-body' }],
+		];
+		for (const [field, page] of optional) {
+			if (info[field]) pages.push({ ...page, url: page.url() });
+			else console.log(`No ${field.replace("_", " ")} found: skipping it.`);
+		}
+		pages.push({ key: "bundle-list", url: "/desk/bundle", ready: ".list-row-container, .no-result" });
+		pages.push({ key: "cutting-report", url: "/desk/query-report/Cutting Report", ready: ".dt-row, .no-result, .report-wrapper", settle: 1500 });
+		if (info.cut_receive) {
+			for (const size of ["a4", "thermal"]) {
+				const params = new URLSearchParams({ doctype: "Cut Receive", name: info.cut_receive, format: "Bundle Ticket", no_letterhead: 1, ticket_size: size });
+				pages.push({ key: `bundle-ticket-${size}`, url: `/printview?${params}`, ready: ".vt-ticket, .vt-empty-tickets", print: true });
+			}
+		}
 
 		for (const width of WIDTHS) {
 			await page.setViewportSize({ width, height: width >= 1366 ? 1000 : 1180 });
 			for (const p of pages) {
-				for (const theme of THEMES) {
+				if (p.print && width !== 1366) continue;
+				for (const theme of p.print ? ["light"] : THEMES) {
 					errors = [];
 					await page.goto(BASE + p.url, { waitUntil: "networkidle" });
 					await page.evaluate((t) => {
@@ -175,7 +203,7 @@ async function main() {
 						document.documentElement.setAttribute("data-theme-mode", t);
 					}, theme);
 					await page.waitForSelector(p.ready, { timeout: 20000 });
-					await page.waitForTimeout(600);
+					await page.waitForTimeout(p.settle || 600);
 
 					const shots = [{ name: "", run: null }];
 					if (p.extra) shots.push({ name: p.extra.name, run: p.extra.click });

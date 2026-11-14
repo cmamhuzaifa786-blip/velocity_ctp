@@ -23,7 +23,7 @@
    "reqd": 1
   },
   {
-   "columns": 2,
+   "columns": 3,
    "fetch_from": "cutting_marker.garment_order",
    "fieldname": "garment_order",
    "fieldtype": "Link",
@@ -46,7 +46,7 @@
    "fetch_from": "cutting_marker.batch_no",
    "fieldname": "batch_no",
    "fieldtype": "Link",
-   "in_list_view": 1,
+   "in_list_view": 0,
    "label": "Batch",
    "options": "Batch",
    "read_only": 1
@@ -57,16 +57,16 @@
    "fieldname": "total_planned_pieces",
    "fieldtype": "Int",
    "in_list_view": 1,
-   "label": "Planned Pcs",
+   "label": "Pcs",
    "read_only": 1
   },
   {
-   "columns": 1,
+   "columns": 2,
    "fetch_from": "cutting_marker.fabric_required",
    "fieldname": "fabric_required",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Fabric Req.",
+   "label": "Fabric (m)",
    "read_only": 1
   }
  ],

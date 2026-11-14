@@ -408,7 +408,7 @@ def stage_approvals(orders: list[frappe._dict], context: dict) -> dict[str, Stag
 def stage_cutting(orders: list[frappe._dict], context: dict) -> dict[str, StageState]:
 	"""Cutting stage from submitted Cut Receives: cut pieces against the order's cutting quantity.
 
-	Not started: nothing cut. In progress: "x of y pcs · z%". Done: cut >= cutting quantity.
+	Not started: nothing cut. In progress: "x/y · z%" (cut of cutting quantity). Done: cut >= cutting quantity.
 	"""
 	from velocity_ctp.cutting.ledger import order_cut_totals
 
@@ -424,7 +424,7 @@ def stage_cutting(orders: list[frappe._dict], context: dict) -> dict[str, StageS
 		else:
 			result[o.name] = {
 				"state": "active",
-				"detail": _("{0} of {1} pcs · {2}%").format(done, target, percent),
+				"detail": _("{0}/{1} · {2}%").format(done, target, percent),
 			}
 	return result
 

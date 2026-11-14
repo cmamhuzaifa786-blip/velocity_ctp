@@ -22,6 +22,10 @@ frappe.ui.form.on("Fabric Issue", {
 		});
 	},
 
+	onload() {
+		frappe.require("/assets/velocity_ctp/css/velocity.css");
+	},
+
 	refresh(frm) {
 		frm.trigger("set_source_warehouse");
 		if (frm.doc.stock_entry) {

@@ -13,7 +13,7 @@ import frappe
 from frappe.utils.password import update_password
 
 EMAIL = "vt.screenshots@example.com"
-ROLES = ("Velocity Merchandiser", "Sales User")
+ROLES = ("Velocity Merchandiser", "Sales User", "Velocity Cutting", "Stock User")
 
 
 def create() -> dict:
@@ -39,6 +39,10 @@ def create() -> dict:
 		"garment_order": _latest("Garment Order", {"docstatus": 1}) or _latest("Garment Order", {}),
 		"draft_garment_order": _latest("Garment Order", {"docstatus": 0}),
 		"job_map": _latest("Job Map", {}),
+		"fabric_issue": _latest("Fabric Issue", {"docstatus": 1, "issue_type": "Issue"}),
+		"cutting_marker": _latest("Cutting Marker", {"docstatus": 1}),
+		"cut_receive": _latest("Cut Receive", {"docstatus": 1, "bundle_count": (">", 0)}),
+		"bundle": _latest("Bundle", {}),
 	}
 
 

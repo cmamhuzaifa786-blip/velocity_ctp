@@ -16,7 +16,7 @@
  ],
  "fields": [
   {
-   "columns": 2,
+   "columns": 3,
    "fieldname": "garment_order",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -67,14 +67,14 @@
    "fieldname": "rejected_qty",
    "fieldtype": "Int",
    "in_list_view": 1,
-   "label": "Rejected"
+   "label": "Rejects"
   },
   {
    "columns": 1,
    "fieldname": "good_qty",
    "fieldtype": "Int",
    "in_list_view": 1,
-   "label": "Good Qty",
+   "label": "Good",
    "read_only": 1
   }
  ],
