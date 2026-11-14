@@ -14,7 +14,6 @@ wastage and pieces are exact per marker (no allocation).
 
 from __future__ import annotations
 
-
 import frappe
 from frappe import _
 from frappe.utils import cint, flt, getdate
