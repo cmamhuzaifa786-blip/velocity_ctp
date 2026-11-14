@@ -21,6 +21,13 @@
   "current_process",
   "current_warehouse",
   "status",
+  "current_party",
+  "issued_on",
+  "open_issue",
+  "pending_repair_qty",
+  "repair_warehouse",
+  "packed_qty",
+  "cut_qty",
   "section_history",
   "history"
  ],
@@ -133,6 +140,53 @@
    "read_only": 1
   },
   {
+   "fieldname": "current_party",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Current Party",
+   "options": "Supplier",
+   "read_only": 1
+  },
+  {
+   "fieldname": "issued_on",
+   "fieldtype": "Date",
+   "label": "Issued On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "open_issue",
+   "fieldtype": "Link",
+   "label": "Open Process Issue",
+   "options": "Process Issue",
+   "read_only": 1
+  },
+  {
+   "fieldname": "pending_repair_qty",
+   "fieldtype": "Int",
+   "label": "Pending Repair Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "repair_warehouse",
+   "fieldtype": "Link",
+   "label": "Repair Warehouse",
+   "options": "Warehouse",
+   "read_only": 1
+  },
+  {
+   "fieldname": "packed_qty",
+   "fieldtype": "Int",
+   "label": "Packed Qty",
+   "read_only": 1
+  },
+  {
+   "description": "Good pieces when the bundle was created.",
+   "fieldname": "cut_qty",
+   "fieldtype": "Int",
+   "label": "Qty at Cutting",
+   "read_only": 1
+  },
+  {
    "fieldname": "section_history",
    "fieldtype": "Section Break",
    "label": "History"
@@ -177,6 +231,12 @@
    "read": 1,
    "report": 1,
    "role": "Velocity Merchandiser"
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Velocity Production"
   }
  ],
  "search_fields": "garment_order,colour,size",

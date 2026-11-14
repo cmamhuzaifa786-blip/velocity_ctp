@@ -70,6 +70,7 @@ def create_bundles(cut_receive) -> int:
 					"size": size,
 					"item_code": line["item_code"],
 					"qty": qty,
+					"cut_qty": qty,
 					"bundle_no_in_lot": number,
 					"bundles_in_lot": len(parts),
 					"current_process": CUTTING_PROCESS,

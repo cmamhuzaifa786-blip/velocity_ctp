@@ -153,7 +153,10 @@ doc_events = {
 
 # Fixtures (Velocity records only)
 fixtures = [
-	{"dt": "Role", "filters": [["name", "in", ["Velocity Merchandiser", "Velocity Cutting"]]]},
+	{
+		"dt": "Role",
+		"filters": [["name", "in", ["Velocity Merchandiser", "Velocity Cutting", "Velocity Production"]]],
+	},
 	{"dt": "Custom Field", "filters": [["name", "in", ["Sales Order-garment_order"]]]},
 ]
 
@@ -282,5 +285,7 @@ fixtures = [
 jinja = {
 	"methods": [
 		"velocity_ctp.cutting.bundles.get_bundle_tickets",
+		"velocity_ctp.production.printing.get_challan_lines",
+		"velocity_ctp.production.printing.get_packing_summary",
 	],
 }

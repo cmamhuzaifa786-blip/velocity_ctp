@@ -1,0 +1,86 @@
+{
+ "actions": [],
+ "creation": "2026-11-14 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "bundle",
+  "colour",
+  "size",
+  "qty",
+  "item_code",
+  "before_packed_qty",
+  "before_status"
+ ],
+ "fields": [
+  {
+   "columns": 3,
+   "fieldname": "bundle",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Bundle",
+   "options": "Bundle",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "colour",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Colour",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "size",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Size",
+   "read_only": 1
+  },
+  {
+   "columns": 3,
+   "fieldname": "qty",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Packed Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "label": "Item Code",
+   "options": "Item",
+   "read_only": 1
+  },
+  {
+   "fieldname": "before_packed_qty",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Packed Before",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "before_status",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Status Before",
+   "no_copy": 1,
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-11-14 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Velocity CTP",
+ "name": "Packing List Bundle",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

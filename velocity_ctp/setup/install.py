@@ -13,7 +13,9 @@ from frappe import _
 
 MERCHANDISER_ROLE = "Velocity Merchandiser"
 CUTTING_ROLE = "Velocity Cutting"
-VELOCITY_ROLES = (MERCHANDISER_ROLE, CUTTING_ROLE)
+PRODUCTION_ROLE = "Velocity Production"
+VELOCITY_ROLES = (MERCHANDISER_ROLE, CUTTING_ROLE, PRODUCTION_ROLE)
+COLOUR_CHANGE_PROCESSES = ("Washing",)
 
 ITEM_ATTRIBUTES = ("Size", "Colour")
 
@@ -77,6 +79,7 @@ def setup_masters() -> None:
 	ensure_uoms(log)
 	warehouses = ensure_warehouses(company, log)
 	ensure_wip_account(company, warehouses, log)
+	ensure_colour_change_processes(log)
 	ensure_processes(warehouses, log)
 	ensure_simple_records("Wash Type", "wash_type", WASH_TYPES, {"washing_category": "Denim"}, log)
 	ensure_simple_records("Product Category", "category_name", PRODUCT_CATEGORIES, {}, log)
@@ -312,3 +315,13 @@ def ensure_wip_account(company: str, warehouses: dict[str, str], log: list[str])
 		doc.flags.ignore_permissions = True
 		doc.save()
 		log.append(f"Warehouse {warehouse} -> account {account}")
+
+
+def ensure_colour_change_processes(log: list[str]) -> None:
+	"""Washing may receive bundles in another colour of the style (for example Dark Indigo -> Washed Light)."""
+	for name in COLOUR_CHANGE_PROCESSES:
+		if frappe.db.exists("Process", name) and not frappe.db.get_value(
+			"Process", name, "allow_colour_change"
+		):
+			frappe.db.set_value("Process", name, "allow_colour_change", 1)
+			log.append(f"Process {name}: Allow Colour Change")

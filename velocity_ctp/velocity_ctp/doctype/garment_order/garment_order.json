@@ -320,6 +320,12 @@
    "read": 1,
    "report": 1,
    "role": "Velocity Cutting"
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Velocity Production"
   }
  ],
  "search_fields": "customer,style,buyer_po_no,ship_date",

@@ -1,0 +1,262 @@
+{
+ "actions": [],
+ "creation": "2026-11-14 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "bundle",
+  "process_issue",
+  "garment_order",
+  "colour",
+  "size",
+  "issued_qty",
+  "fresh_qty",
+  "rejected_qty",
+  "repair_qty",
+  "to_colour",
+  "remarks",
+  "item_code",
+  "new_item_code",
+  "from_warehouse",
+  "piece_rate",
+  "before_process",
+  "before_warehouse",
+  "before_status",
+  "before_party",
+  "before_open_issue",
+  "before_issued_on",
+  "before_qty",
+  "before_colour",
+  "before_item_code",
+  "before_pending_repair_qty",
+  "before_repair_warehouse",
+  "before_packed_qty"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "bundle",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Bundle",
+   "options": "Bundle",
+   "reqd": 1
+  },
+  {
+   "fieldname": "process_issue",
+   "fieldtype": "Link",
+   "label": "Process Issue",
+   "options": "Process Issue",
+   "read_only": 1
+  },
+  {
+   "fieldname": "garment_order",
+   "fieldtype": "Link",
+   "label": "Garment Order",
+   "options": "Garment Order",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "colour",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Colour",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "size",
+   "fieldtype": "Data",
+   "in_list_view": 0,
+   "label": "Size",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "description": "Pieces still open on the issue for this bundle.",
+   "fieldname": "issued_qty",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Issued",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "fresh_qty",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Fresh"
+  },
+  {
+   "columns": 1,
+   "fieldname": "rejected_qty",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Rejects"
+  },
+  {
+   "columns": 1,
+   "description": "Pieces that stay at the process for repair and are received later.",
+   "fieldname": "repair_qty",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Repair"
+  },
+  {
+   "columns": 2,
+   "description": "Only for processes that allow a colour change (for example washing).",
+   "fieldname": "to_colour",
+   "fieldtype": "Autocomplete",
+   "in_list_view": 1,
+   "label": "To Colour"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Data",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "label": "Item Code",
+   "options": "Item",
+   "read_only": 1
+  },
+  {
+   "fieldname": "new_item_code",
+   "fieldtype": "Link",
+   "label": "New Item Code",
+   "options": "Item",
+   "read_only": 1
+  },
+  {
+   "fieldname": "from_warehouse",
+   "fieldtype": "Link",
+   "label": "From Warehouse",
+   "options": "Warehouse",
+   "read_only": 1
+  },
+  {
+   "fieldname": "piece_rate",
+   "fieldtype": "Currency",
+   "label": "Piece Rate",
+   "read_only": 1
+  },
+  {
+   "fieldname": "before_process",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Process Before",
+   "no_copy": 1,
+   "options": "Process",
+   "read_only": 1
+  },
+  {
+   "fieldname": "before_warehouse",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Warehouse Before",
+   "no_copy": 1,
+   "options": "Warehouse",
+   "read_only": 1
+  },
+  {
+   "fieldname": "before_status",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Status Before",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "before_party",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Party Before",
+   "no_copy": 1,
+   "options": "Supplier",
+   "read_only": 1
+  },
+  {
+   "fieldname": "before_open_issue",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Open Issue Before",
+   "no_copy": 1,
+   "options": "Process Issue",
+   "read_only": 1
+  },
+  {
+   "fieldname": "before_issued_on",
+   "fieldtype": "Date",
+   "hidden": 1,
+   "label": "Issued On Before",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "before_qty",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Qty Before",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "before_colour",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Colour Before",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "before_item_code",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Item Before",
+   "no_copy": 1,
+   "options": "Item",
+   "read_only": 1
+  },
+  {
+   "fieldname": "before_pending_repair_qty",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Pending Repair Before",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "before_repair_warehouse",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Repair Warehouse Before",
+   "no_copy": 1,
+   "options": "Warehouse",
+   "read_only": 1
+  },
+  {
+   "fieldname": "before_packed_qty",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Packed Before",
+   "no_copy": 1,
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-11-14 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Velocity CTP",
+ "name": "Process Receive Bundle",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
