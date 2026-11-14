@@ -4,8 +4,9 @@
 """Material Plan: fabric and accessory requirements of a Garment Order, availability and shortfall.
 
 Quantities come from the order's cutting quantities (order qty + excess) per colour and size.
-Shortfall = required - (free stock - reserved for other plans) - open purchase orders - open
-material requests, never below zero. A Material Request (Purchase) is created for the shortfall.
+Availability and shortfall are computed in velocity_ctp.procurement.availability (what is already
+issued, accessory allocations, other open orders, open purchase orders and requests). One Material
+Request (Purchase) is created per category (Fabric, Accessory) for the shortfall.
 """
 
 from __future__ import annotations
@@ -188,12 +189,10 @@ def free_warehouses(company: str) -> list[str]:
 
 
 def get_issued_accessory_qty(plan, item: str) -> float:
-	"""Accessory quantity already issued for the plan's order.
+	"""Accessory quantity issued for the plan's order: submitted Accessory Issues less returns."""
+	from velocity_ctp.procurement.accessories import issued_by_order
 
-	Accessory issues are built in Phase 6; until then nothing is issued, so the full requirement
-	of other open plans stays reserved.
-	"""
-	return 0.0
+	return flt(issued_by_order([plan.garment_order], [item]).get((plan.garment_order, item), 0.0))
 
 
 def job_maps_of_orders(orders: list[str]) -> dict[str, str]:
@@ -218,119 +217,13 @@ def job_maps_of_orders(orders: list[str]) -> dict[str, str]:
 	return result
 
 
-def reserved_by_other_plans(plan, items: list[str]) -> dict[str, float]:
-	"""Remaining requirement of other submitted plans of open orders, per item.
-
-	Fabric: plans on the same Job Map are taken together and the fabric already issued to that
-	Job Map (issued - returned) is deducted once, never below zero; plans without a Job Map keep
-	their full requirement. Accessories: requirement - get_issued_accessory_qty(), never below zero.
-	"""
-	from velocity_ctp.cutting.ledger import job_fabric
-
-	reserved: dict[str, float] = defaultdict(float)
-	if not items:
-		return reserved
-	others = frappe.get_all(
-		"Material Plan",
-		filters={"docstatus": 1, "name": ("!=", plan.name or ""), "company": plan.company},
-		fields=["name", "garment_order"],
-	)
-	open_orders = set(
-		frappe.get_all(
-			"Garment Order",
-			filters={
-				"name": ("in", [o.garment_order for o in others] or [""]),
-				"status": ("not in", ("Completed", "Cancelled")),
-			},
-			pluck="name",
-		)
-	)
-	others = [o for o in others if o.garment_order in open_orders]
-	if not others:
-		return reserved
-	plan_order = {o.name: o.garment_order for o in others}
-	job_maps = job_maps_of_orders(list(open_orders))
-
-	# Fabric: requirement per (job map or plan without one, item), less the net issue to that Job Map.
-	fabric_need: dict[tuple, float] = defaultdict(float)
-	for parent, item, qty in frappe.db.sql(
-		"""select parent, fabric_item, sum(required_qty) from `tabMaterial Plan Fabric`
-		where parenttype = 'Material Plan' and parent in %(p)s and fabric_item in %(i)s group by parent, fabric_item""",
-		{"p": list(plan_order), "i": items},
-	):
-		job_map = job_maps.get(plan_order[parent])
-		fabric_need[(job_map or f"plan:{parent}", item)] += flt(qty)
-	issued = job_fabric([k[0] for k in fabric_need if not k[0].startswith("plan:")])
-	for (key, item), qty in fabric_need.items():
-		net_issued = 0.0
-		if not key.startswith("plan:"):
-			net_issued = sum(
-				v["issued"] - v["returned"]
-				for (fabric, _batch), v in issued.get(key, {}).items()
-				if fabric == item
-			)
-		reserved[item] += max(qty - net_issued, 0.0)
-
-	# Accessories: requirement less what was issued for that plan's order.
-	for parent, item, qty in frappe.db.sql(
-		"""select parent, accessory_item, sum(required_qty) from `tabMaterial Plan Accessory`
-		where parenttype = 'Material Plan' and parent in %(p)s and accessory_item in %(i)s group by parent, accessory_item""",
-		{"p": list(plan_order), "i": items},
-	):
-		other = frappe._dict(name=parent, garment_order=plan_order[parent])
-		reserved[item] += max(flt(qty) - flt(get_issued_accessory_qty(other, item)), 0.0)
-	return reserved
-
-
 def availability(plan) -> list[dict]:
-	needs = plan.requirements()
-	items = list(needs) or [""]
-	warehouses = free_warehouses(plan.company) or [""]
+	"""Availability and shortfall of one plan (a draft uses its calculated requirement)."""
+	from velocity_ctp.procurement.availability import compute
 
-	stock = dict(
-		frappe.db.sql(
-			"select item_code, sum(actual_qty) from `tabBin` where item_code in %(i)s and warehouse in %(w)s group by item_code",
-			{"i": items, "w": warehouses},
-		)
-	)
-	on_order = dict(
-		frappe.db.sql(
-			"""select poi.item_code, sum(greatest(poi.qty - ifnull(poi.received_qty, 0), 0) * ifnull(poi.conversion_factor, 1))
-			from `tabPurchase Order Item` poi join `tabPurchase Order` po on po.name = poi.parent
-			where po.docstatus = 1 and po.status not in ('Closed', 'Completed', 'On Hold') and po.company = %(c)s
-			and poi.item_code in %(i)s group by poi.item_code""",
-			{"i": items, "c": plan.company},
-		)
-	)
-	requested = dict(
-		frappe.db.sql(
-			"""select mri.item_code, sum(greatest(mri.stock_qty - ifnull(mri.ordered_qty, 0), 0))
-			from `tabMaterial Request Item` mri join `tabMaterial Request` mr on mr.name = mri.parent
-			where mr.docstatus < 2 and mr.material_request_type = 'Purchase' and mr.company = %(c)s
-			and ifnull(mr.status, '') not in ('Stopped', 'Cancelled', 'Ordered', 'Received')
-			and mri.item_code in %(i)s group by mri.item_code""",
-			{"i": items, "c": plan.company},
-		)
-	)
-	reserved = reserved_by_other_plans(plan, list(needs))
-
-	result = []
-	for item, need in needs.items():
-		row = {
-			"item_code": item,
-			"item_name": frappe.db.get_value("Item", item, "item_name"),
-			"kind": need["kind"],
-			"uom": need["uom"],
-			"required": flt(need["required"], 3),
-			"in_stock": flt(stock.get(item), 3),
-			"on_order": flt(on_order.get(item), 3),
-			"requested": flt(requested.get(item), 3),
-			"reserved": flt(reserved.get(item), 3),
-		}
-		short = row["required"] - (row["in_stock"] - row["reserved"]) - row["on_order"] - row["requested"]
-		row["shortfall"] = required(max(short, 0), need["uom"])
-		result.append(row)
-	return result
+	needs = plan.requirements() if plan.docstatus == 0 else None
+	target = {"name": plan.name or "new-material-plan", "garment_order": plan.garment_order, "needs": needs}
+	return compute(plan.company, [target])[target["name"]]
 
 
 @frappe.whitelist()
@@ -355,7 +248,8 @@ def schedule_date(plan) -> str:
 
 
 @frappe.whitelist(methods=["POST"])
-def create_material_request(material_plan: str) -> str:
+def create_material_request(material_plan: str) -> list[str]:
+	"""One Material Request (Purchase) per category for the shortfall; returns their names."""
 	plan = frappe.get_doc("Material Plan", material_plan)
 	plan.check_permission("write")
 	if plan.docstatus != 1:
@@ -364,44 +258,58 @@ def create_material_request(material_plan: str) -> str:
 	if not lines:
 		frappe.throw(_("There is no shortfall: stock, open purchase orders and requests cover this plan."))
 	date = schedule_date(plan)
-	fabric_store = get_warehouse("Fabric Store", plan.company)
-	trim_store = get_warehouse("Trim Store", plan.company)
-	mr = frappe.get_doc(
-		{
-			"doctype": "Material Request",
-			"material_request_type": "Purchase",
-			"company": plan.company,
-			"transaction_date": nowdate(),
-			"schedule_date": date,
-			"material_plan": plan.name,
-			"items": [
-				{
-					"item_code": r["item_code"],
-					"qty": r["shortfall"],
-					"uom": r["uom"],
-					"schedule_date": date,
-					"warehouse": fabric_store if r["kind"] == "Fabric" else trim_store,
-				}
-				for r in lines
-			],
-		}
-	)
-	mr.flags.ignore_permissions = True
-	try:
-		mr.insert()
-	except frappe.PermissionError:
-		if frappe.message_log:
-			frappe.message_log.pop()
-		frappe.throw(
-			_(
-				"The Material Request could not be created because your roles do not include purchasing or stock "
-				"access in ERPNext. Please ask your administrator for a standard role such as Purchase User or Stock User."
-			),
-			frappe.PermissionError,
+	stores = {
+		"Fabric": get_warehouse("Fabric Store", plan.company),
+		"Accessory": get_warehouse("Trim Store", plan.company),
+	}
+	created = []
+	for kind in ("Fabric", "Accessory"):
+		rows = [r for r in lines if r["kind"] == kind]
+		if not rows:
+			continue
+		mr = frappe.get_doc(
+			{
+				"doctype": "Material Request",
+				"material_request_type": "Purchase",
+				"company": plan.company,
+				"transaction_date": nowdate(),
+				"schedule_date": date,
+				"material_plan": plan.name,
+				"request_category": kind,
+				"purpose": _("{0} shortfall for Garment Order {1} (Material Plan {2})").format(
+					_(kind), plan.garment_order, plan.name
+				),
+				"items": [
+					{
+						"item_code": r["item_code"],
+						"qty": r["shortfall"],
+						"uom": r["uom"],
+						"schedule_date": date,
+						"warehouse": stores[kind],
+					}
+					for r in rows
+				],
+			}
 		)
-	plan.db_set("material_request", mr.name)
-	plan.add_comment("Info", _("Material Request {0} created for the shortfall.").format(mr.name))
-	return mr.name
+		mr.flags.ignore_permissions = True
+		try:
+			mr.insert()
+		except frappe.PermissionError:
+			if frappe.message_log:
+				frappe.message_log.pop()
+			frappe.throw(
+				_(
+					"The Material Request could not be created because your roles do not include purchasing or stock "
+					"access in ERPNext. Please ask your administrator for a standard role such as Purchase User or Stock User."
+				),
+				frappe.PermissionError,
+			)
+		created.append(mr.name)
+	plan.db_set("material_request", created[-1])
+	plan.add_comment(
+		"Info", _("Material Request(s) {0} created for the shortfall.").format(", ".join(created))
+	)
+	return created
 
 
 @frappe.whitelist()

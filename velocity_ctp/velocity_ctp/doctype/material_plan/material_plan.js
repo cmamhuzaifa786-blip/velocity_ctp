@@ -33,7 +33,11 @@ frappe.ui.form.on("Material Plan", {
 			frm.add_custom_button(__("Create Material Request"), () =>
 				frappe
 					.call({ method: MP_METHOD + "create_material_request", args: { material_plan: frm.doc.name }, freeze: true })
-					.then((r) => r.message && frappe.set_route("Form", "Material Request", r.message))
+					.then((r) => {
+						const names = r.message || [];
+						if (names.length === 1) frappe.set_route("Form", "Material Request", names[0]);
+						else if (names.length) frappe.set_route("List", "Material Request", { material_plan: frm.doc.name });
+					})
 			).addClass("btn-primary");
 		}
 		if (frm.doc.material_request) {
@@ -113,18 +117,20 @@ function check_availability(frm) {
 			frm.get_field("availability_html").$wrapper.html(
 				rows.length
 					? `<div class="vt-table-wrap" style="margin:0"><table class="vt-table">
-						<thead><tr><th>${__("Item")}</th><th>${__("UOM")}</th><th class="vt-num">${__("Required")}</th><th class="vt-num">${__("In Stock")}</th>
-							<th class="vt-num">${__("On Purchase Order")}</th><th class="vt-num">${__("Requested")}</th><th class="vt-num">${__("Reserved by Other Plans")}</th>
+						<thead><tr><th>${__("Item")}</th><th>${__("UOM")}</th><th class="vt-num">${__("Required")}</th><th class="vt-num">${__("Issued")}</th>
+							<th class="vt-num">${__("Allocated to This Order")}</th><th class="vt-num">${__("In Stock")}</th><th class="vt-num">${__("Reserved for Other Orders")}</th>
+							<th class="vt-num">${__("On Purchase Order")}</th><th class="vt-num">${__("Requested")}</th>
 							<th class="vt-num">${__("Shortfall")}</th></tr></thead>
 						<tbody>${rows
 							.map(
 								(x) => `<tr class="vt-row--plain"><td><b>${esc(x.item_code)}</b><div class="vt-muted small">${esc(x.item_name || "")} · ${__(x.kind)}</div></td>
-									<td>${esc(x.uom || "")}</td><td class="vt-num">${n(x.required)}</td><td class="vt-num">${n(x.in_stock)}</td>
-									<td class="vt-num">${n(x.on_order)}</td><td class="vt-num">${n(x.requested)}</td><td class="vt-num">${n(x.reserved)}</td>
+									<td>${esc(x.uom || "")}</td><td class="vt-num">${n(x.required)}</td><td class="vt-num">${n(x.issued)}</td>
+									<td class="vt-num">${n(x.allocated)}</td><td class="vt-num">${n(x.in_stock)}</td><td class="vt-num">${n(x.reserved)}</td>
+									<td class="vt-num">${n(x.on_order)}</td><td class="vt-num">${n(x.requested)}</td>
 									<td class="vt-num">${flt(x.shortfall) > 0 ? `<span class="vt-short">${n(x.shortfall)}</span>` : `<span class="vt-covered">${__("Covered")}</span>`}</td></tr>`
 							)
 							.join("")}</tbody></table></div>
-						<p class="vt-muted small" style="margin-top:8px">${__("Stock counts company warehouses except process WIP, contractor and rejection warehouses. Checked {0}.", [frappe.datetime.now_datetime()])}</p>`
+						<p class="vt-muted small" style="margin-top:8px">${__("Shortfall = required − issued − allocated to this order − free stock not held by other orders − on purchase order − requested. Stock counts company warehouses except process WIP, contractor and rejection warehouses. Checked {0}.", [frappe.datetime.now_datetime()])}</p>`
 					: `<div class="vt-empty">${__("Add fabric or accessory lines first.")}</div>`
 			);
 		});

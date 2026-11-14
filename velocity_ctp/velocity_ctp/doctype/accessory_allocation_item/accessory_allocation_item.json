@@ -1,0 +1,116 @@
+{
+ "actions": [],
+ "creation": "2026-11-15 10:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item",
+  "item_name",
+  "colour",
+  "size",
+  "column_break_qty",
+  "qty",
+  "uom",
+  "available_unallocated",
+  "issued_qty",
+  "released_qty"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Accessory Item",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "fetch_from": "item.item_name",
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Item Name",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "colour",
+   "fieldtype": "Autocomplete",
+   "in_list_view": 1,
+   "label": "Colour"
+  },
+  {
+   "columns": 1,
+   "fieldname": "size",
+   "fieldtype": "Autocomplete",
+   "in_list_view": 1,
+   "label": "Size"
+  },
+  {
+   "fieldname": "column_break_qty",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 1,
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Qty",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "fetch_from": "item.stock_uom",
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "label": "UOM",
+   "options": "UOM",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "description": "Stock in the warehouse less the unissued quantity allocated to other jobs.",
+   "fieldname": "available_unallocated",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Available (Unallocated)",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "columns": 1,
+   "fieldname": "issued_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Issued",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "columns": 1,
+   "fieldname": "released_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Released",
+   "no_copy": 1,
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-11-15 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Velocity CTP",
+ "name": "Accessory Allocation Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

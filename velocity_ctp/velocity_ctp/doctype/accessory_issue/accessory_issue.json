@@ -1,0 +1,212 @@
+{
+ "actions": [],
+ "autoname": "AIS-.YY.-.#####",
+ "creation": "2026-11-15 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "issue_type",
+  "job_map",
+  "garment_order",
+  "to_process",
+  "column_break_1",
+  "posting_date",
+  "company",
+  "store",
+  "wip_warehouse",
+  "stock_entry",
+  "section_items",
+  "items",
+  "total_qty",
+  "remarks",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "default": "Issue",
+   "description": "Issue moves accessories from the store to the process's WIP warehouse. Return moves them back.",
+   "fieldname": "issue_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Issue Type",
+   "options": "Issue\nReturn",
+   "reqd": 1
+  },
+  {
+   "fieldname": "job_map",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Job Map",
+   "options": "Job Map",
+   "reqd": 1
+  },
+  {
+   "fieldname": "garment_order",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Garment Order",
+   "options": "Garment Order",
+   "reqd": 1
+  },
+  {
+   "description": "The department receiving the accessories, for example Stitching, Finishing or Packing.",
+   "fieldname": "to_process",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "To Process",
+   "options": "Process",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Today",
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "remember_last_selected_value": 1,
+   "reqd": 1
+  },
+  {
+   "description": "Default Trim Store.",
+   "fieldname": "store",
+   "fieldtype": "Link",
+   "label": "Store",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "to_process.wip_warehouse",
+   "fieldname": "wip_warehouse",
+   "fieldtype": "Link",
+   "label": "Process WIP Warehouse",
+   "options": "Warehouse",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "stock_entry",
+   "fieldtype": "Link",
+   "label": "Stock Entry",
+   "no_copy": 1,
+   "options": "Stock Entry",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_items",
+   "fieldtype": "Section Break",
+   "label": "Accessories"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Accessories",
+   "options": "Accessory Issue Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "total_qty",
+   "fieldtype": "Float",
+   "label": "Total Qty",
+   "read_only": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Accessory Issue",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-11-15 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Velocity CTP",
+ "name": "Accessory Issue",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock User",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Velocity Merchandiser"
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Velocity Production"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
