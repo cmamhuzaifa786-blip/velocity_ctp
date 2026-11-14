@@ -18,7 +18,9 @@ node velocity_ctp/tests/quantity_matrix.test.js
 
 **Covers:** Velocity Home, Order Tracker, the latest Garment Order (plus its Cutting Qty view), the latest
 Job Map, Fabric Issue, Cutting Marker, Cut Receive and Bundle, the Bundle list and the Cutting Report, in light and
-dark theme, at 1920px, 1366px and 820px (tablet) width; plus the Bundle Ticket print (A4 and thermal) at 1366px.
+dark theme, at 1920px, 1366px and 820px (tablet) width; the Scan Station, Production Control Tower, Process Issue,
+Process Receive, Packing List and the Process Movement Report likewise; plus the Bundle Ticket (A4 and thermal), Process
+Challan and Packing List prints at 1366px.
 
 **Reports:** JavaScript errors, cut-off text, and pages that scroll sideways. Every result is also written to
 `screenshots/output/summary.json`. Always look at the screenshots yourself as well: the automatic checks cannot

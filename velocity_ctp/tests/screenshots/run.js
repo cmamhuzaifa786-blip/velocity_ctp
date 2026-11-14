@@ -189,6 +189,27 @@ async function main() {
 			else console.log(`No ${field.replace("_", " ")} found: skipping it.`);
 		}
 		pages.push({ key: "bundle-list", url: "/desk/bundle", ready: ".list-row-container, .no-result" });
+		// Production (Phase 4)
+		pages.push({ key: "scan-station", url: "/desk/scan-station", ready: ".vt-choice" });
+		pages.push({ key: "control-tower", url: "/desk/production-control", ready: ".vt-kpi, .vt-empty" });
+		pages.push({ key: "movement-report", url: "/desk/query-report/Process Movement Report", ready: ".dt-row, .no-result, .report-wrapper", settle: 1500 });
+		const production = [
+			["process_issue", "process-issue", '[data-fieldname="bundles"] .grid-body', "Process Challan"],
+			["process_receive", "process-receive", '[data-fieldname="bundles"] .grid-body', null],
+			["packing_list", "packing-list", '[data-fieldname="cartons"] .grid-body', "Packing List"],
+		];
+		for (const [field, slug, ready, format] of production) {
+			if (!info[field]) {
+				console.log(`No ${field.replace("_", " ")} found: skipping it.`);
+				continue;
+			}
+			pages.push({ key: slug, url: route(slug, info[field]), ready });
+			if (format) {
+				const doctype = slug.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
+				const params = new URLSearchParams({ doctype, name: info[field], format, no_letterhead: 1 });
+				pages.push({ key: `print-${slug}`, url: `/printview?${params}`, ready: ".vt-doc", print: true });
+			}
+		}
 		pages.push({ key: "cutting-report", url: "/desk/query-report/Cutting Report", ready: ".dt-row, .no-result, .report-wrapper", settle: 1500 });
 		if (info.cut_receive) {
 			for (const size of ["a4", "thermal"]) {
