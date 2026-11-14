@@ -19,6 +19,8 @@ const BASE = (process.env.BASE_URL || `http://${SITE}:8000`).replace(/\/$/, "");
 const OUT = process.env.OUT_DIR || path.join(HERE, "output");
 const LIBS = path.join(HERE, ".browser-libs", "usr", "lib", "x86_64-linux-gnu");
 const WIDTHS = [1920, 1366, 820];
+// ONLY=key1,key2 limits the run to pages whose key contains one of the given parts (for example ONLY=purchase,po-).
+const ONLY = (process.env.ONLY || "").split(",").map((k) => k.trim()).filter(Boolean);
 const THEMES = ["light", "dark"];
 
 // ---------------------------------------------------------------- bench helpers
@@ -235,6 +237,47 @@ async function main() {
 				const params = new URLSearchParams({ doctype: "Cut Receive", name: info.cut_receive, format: "Bundle Ticket", no_letterhead: 1, ticket_size: size });
 				pages.push({ key: `bundle-ticket-${size}`, url: `/printview?${params}`, ready: ".vt-ticket, .vt-empty-tickets", print: true });
 			}
+		}
+
+		// Procurement (Phase 6)
+		const procurement = [
+			["material_request", "material-request", '[data-fieldname="items"] .grid-body'],
+			["purchase_order", "purchase-order", '[data-fieldname="items"] .grid-body'],
+			["pending_purchase_order", "purchase-order", '[data-fieldname="items"] .grid-body', "pending-purchase-order"],
+			["purchase_receipt", "purchase-receipt", '[data-fieldname="items"] .grid-body'],
+			["quality_inspection", "quality-inspection", '[data-fieldname="item_code"]'],
+			["purchase_invoice", "purchase-invoice", '[data-fieldname="items"] .grid-body'],
+			["accessory_allocation", "accessory-allocation", '[data-fieldname="items"] .grid-body'],
+			["accessory_issue", "accessory-issue", '[data-fieldname="items"] .grid-body'],
+			["department_issue", "department-issue", '[data-fieldname="items"] .grid-body'],
+		];
+		for (const [field, slug, ready, key] of procurement) {
+			if (!info[field]) {
+				console.log(`No ${field.replace(/_/g, " ")} found: skipping it.`);
+				continue;
+			}
+			pages.push({ key: key || slug, url: route(slug, info[field]), ready });
+		}
+		for (const [field, key] of [["purchase_order", "print-purchase-order"], ["pending_purchase_order", "print-purchase-order-unapproved"]]) {
+			if (!info[field]) continue;
+			const params = new URLSearchParams({ doctype: "Purchase Order", name: info[field], format: "Velocity Purchase Order", no_letterhead: 1 });
+			pages.push({ key, url: `/printview?${params}`, ready: ".vt-doc", print: true });
+		}
+		pages.push({ key: "material-request-list", url: "/desk/material-request", ready: ".list-row-container, .no-result" });
+		pages.push({ key: "purchase-order-list", url: "/desk/purchase-order", ready: ".list-row-container, .no-result" });
+		for (const report of ["PO Status", "GRN Register", "Job Accessory Balance", "Supplier Performance"]) {
+			pages.push({
+				key: "report-" + report.toLowerCase().replace(/ /g, "-"),
+				url: `/desk/query-report/${report}`,
+				ready: ".dt-row, .no-result, .report-wrapper",
+				settle: 1500,
+			});
+		}
+		if (ONLY.length) {
+			const keep = pages.filter((p) => ONLY.some((k) => p.key.includes(k)));
+			pages.length = 0;
+			pages.push(...keep);
+			console.log(`ONLY=${ONLY.join(",")}: ${pages.length} pages.`);
 		}
 
 		for (const width of WIDTHS) {

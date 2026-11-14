@@ -21,6 +21,9 @@ ROLES = (
 	"Velocity Costing",
 	"Velocity Costing Approver",
 	"Stock User",
+	"Purchase User",
+	"Quality Manager",
+	"Accounts User",
 )
 
 
@@ -59,6 +62,20 @@ def create() -> dict:
 		"cost_sheet": _latest("Cost Sheet", {"status": "Approved", "revision_no": (">", 0)})
 		or _latest("Cost Sheet", {"status": "Approved"}),
 		"material_plan": _latest("Material Plan", {"docstatus": 1}),
+		# Procurement (Phase 6)
+		"material_request": _latest("Material Request", {"docstatus": 1, "request_category": ("is", "set")}),
+		"purchase_order": _latest("Purchase Order", {"docstatus": 1, "l2_approved_by": ("is", "set")})
+		or _latest("Purchase Order", {"docstatus": 1, "po_category": ("is", "set")}),
+		"pending_purchase_order": _latest(
+			"Purchase Order", {"docstatus": 0, "workflow_state": ("like", "Pending%")}
+		),
+		"purchase_receipt": _latest_receipt_with_lots(),
+		"quality_inspection": _latest("Quality Inspection", {"docstatus": 1, "status": "Rejected"})
+		or _latest("Quality Inspection", {"docstatus": 1}),
+		"purchase_invoice": _latest("Purchase Invoice", {"docstatus": 1}),
+		"accessory_allocation": _latest("Accessory Allocation", {"docstatus": 1}),
+		"accessory_issue": _latest("Accessory Issue", {"docstatus": 1, "issue_type": "Issue"}),
+		"department_issue": _latest("Department Issue", {"docstatus": 1, "issue_type": "Issue"}),
 	}
 
 
@@ -76,3 +93,15 @@ def delete() -> dict:
 def _latest(doctype: str, filters: dict) -> str | None:
 	names = frappe.get_all(doctype, filters=filters, pluck="name", order_by="creation desc", limit=1)
 	return names[0] if names else None
+
+
+def _latest_receipt_with_lots() -> str | None:
+	"""The latest submitted Purchase Receipt with a fabric lot on a row (else the latest one)."""
+	names = frappe.get_all(
+		"Purchase Receipt Item",
+		filters={"parenttype": "Purchase Receipt", "supplier_lot_no": ("is", "set"), "docstatus": 1},
+		pluck="parent",
+		order_by="creation desc",
+		limit=1,
+	)
+	return names[0] if names else _latest("Purchase Receipt", {"docstatus": 1})

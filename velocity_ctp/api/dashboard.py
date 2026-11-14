@@ -13,6 +13,7 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, cint, date_diff, flt, getdate, nowdate
 
+from velocity_ctp.api.procurement import get_procurement_summary
 from velocity_ctp.setup.install import get_default_company
 
 OPEN_STATUSES = ("Open", "In Production")
@@ -200,6 +201,7 @@ def get_home_data() -> dict:
 		"margin_watch": get_margin_watch(),
 		"cutting": get_cutting_status() if frappe.has_permission("Cut Receive", "read") else None,
 		"pipeline": get_approval_pipeline() if can_read_job_map else None,
+		"procurement": get_procurement_summary(),
 	}
 
 
@@ -465,6 +467,13 @@ def stage_approvals(orders: list[frappe._dict], context: dict) -> dict[str, Stag
 	return result
 
 
+def stage_material(orders: list[frappe._dict], context: dict) -> dict[str, StageState]:
+	"""Material stage: Not planned / Planned (shortfall) / Covered / Issued, from the Material Plan."""
+	from velocity_ctp.api.procurement import stage_material as material
+
+	return material(orders, context)
+
+
 def stage_cutting(orders: list[frappe._dict], context: dict) -> dict[str, StageState]:
 	"""Cutting stage from submitted Cut Receives: cut pieces against the order's cutting quantity.
 
@@ -526,6 +535,7 @@ def stage_shipped(orders: list[frappe._dict], context: dict) -> dict[str, StageS
 TRACKER_STAGES: tuple[tuple[str, str, StageProvider], ...] = (
 	("order", "Order", stage_order),
 	("approvals", "Approvals", stage_approvals),
+	("material", "Material", stage_material),
 	("cutting", "Cutting", stage_cutting),
 	("stitching", "Stitching", stage_stitching),
 	("washing", "Washing", stage_washing),

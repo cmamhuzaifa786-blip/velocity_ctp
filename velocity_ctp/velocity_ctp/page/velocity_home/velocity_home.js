@@ -70,6 +70,7 @@ class VelocityHome {
 				</div>
 				<div class="vt-stack">
 					${data.pipeline ? this.pipeline_html(data.pipeline) : ""}
+					${data.procurement ? this.procurement_html(data.procurement) : ""}
 					<div class="vt-card">
 						<div class="vt-card__title">${__("Quick Actions")}</div>
 						<div class="vt-quick">
@@ -285,7 +286,33 @@ class VelocityHome {
 		</div>`;
 	}
 
+	procurement_html(procurement) {
+		const cards = procurement.cards || [];
+		const waiting = cards.reduce((t, c) => t + (c.value || 0), 0);
+		const list = cards
+			.map(
+				(c, i) => `<li data-proc="${i}" title="${frappe.utils.escape_html(c.sub || "")}">
+					<span class="vt-dot vt-tone--${c.tone}"></span>
+					<span class="vt-stage-list__label">${c.label}<span class="vt-muted small vt-proc__sub">${c.sub || ""}</span></span>
+					<span class="vt-stage-list__count ${c.value ? "vt-proc__count--" + c.tone : "vt-muted"}">${format_number(c.value || 0, null, 0)}</span>
+				</li>`
+			)
+			.join("");
+		return `<div class="vt-card">
+			<div class="vt-card__title">
+				<span>${__("Procurement")}</span>
+				<span class="vt-card__hint">${waiting ? __("{0} waiting for action", [waiting]) : __("Nothing waiting")}</span>
+			</div>
+			<ul class="vt-stage-list vt-proc">${list}</ul>
+		</div>`;
+	}
+
 	bind(data) {
+		this.$body.find("[data-proc]").on("click", (e) => {
+			const card = data.procurement.cards[cint(e.currentTarget.dataset.proc)];
+			frappe.route_options = card.filters;
+			frappe.set_route("List", card.doctype);
+		});
 		const kpis = Object.fromEntries((data.kpis || []).map((k) => [k.key, k]));
 		this.$body.find("[data-kpi]").on("click", (e) => {
 			const k = kpis[e.currentTarget.dataset.kpi];

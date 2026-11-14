@@ -31,7 +31,13 @@ Job Map, Fabric Issue, Cutting Marker, Cut Receive and Bundle, the Bundle list a
 dark theme, at 1920px, 1366px and 820px (tablet) width; the Scan Station, Production Control Tower, Process Issue,
 Process Receive, Packing List and the Process Movement Report likewise; plus the Bundle Ticket (A4 and thermal), Process
 Challan and Packing List prints at 1366px; and the Cost Sheet (with its Summary tab), Material Plan (with availability),
-Order Costing report and Cost Head list in both themes and all widths.
+Order Costing report and Cost Head list in both themes and all widths. Procurement (Phase 6): Material Request, Purchase
+Order (approved and pending), Purchase Receipt, Quality Inspection, Purchase Invoice, Accessory Allocation, Accessory
+Issue, Department Issue, the Material Request and Purchase Order lists and the PO Status, GRN Register, Job Accessory
+Balance and Supplier Performance reports; plus the Velocity Purchase Order print (approved and UNAPPROVED) at 1366px.
+
+`ONLY=key1,key2` runs only the pages whose key contains one of the parts, for example
+`ONLY=purchase,report-po node velocity_ctp/tests/screenshots/run.js`.
 
 **Reports:** JavaScript errors, cut-off text, and pages that scroll sideways. Every result is also written to
 `screenshots/output/summary.json`. Always look at the screenshots yourself as well: the automatic checks cannot
@@ -52,8 +58,8 @@ Screenshots go to `velocity_ctp/tests/screenshots/output/` (git-ignored, replace
 
 ### Test user
 
-The script creates a temporary user `vt.screenshots@example.com` with the roles **Velocity Merchandiser**, **Velocity Cutting**, **Stock User**
-and **Sales User** and a random password, and always deletes it at the end, also after an error or Ctrl+C.
+The script creates a temporary user `vt.screenshots@example.com` with the roles **Velocity Merchandiser**, **Velocity Cutting**, **Stock User**,
+**Sales User**, **Purchase User**, **Quality Manager** and **Accounts User** and a random password, and always deletes it at the end, also after an error or Ctrl+C.
 If a run is killed hard, remove the user with:
 
 ```bash

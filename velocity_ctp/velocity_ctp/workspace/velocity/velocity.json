@@ -1,7 +1,7 @@
 {
  "app": "velocity_ctp",
  "charts": [],
- "content": "[{\"id\": \"vt-head-1\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Today</b></span>\", \"col\": 12}}, {\"id\": \"vt-sc-0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Open Garment Orders\", \"col\": 4}}, {\"id\": \"vt-sc-1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Jobs Pending Approvals\", \"col\": 4}}, {\"id\": \"vt-sc-2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Jobs Ready to Cut\", \"col\": 4}}, {\"id\": \"vt-spacer-1\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"vt-head-2\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Production &amp; Masters</b></span>\", \"col\": 12}}, {\"id\": \"vt-card-1\", \"type\": \"card\", \"data\": {\"card_name\": \"Orders\", \"col\": 4}}, {\"id\": \"vt-card-2\", \"type\": \"card\", \"data\": {\"card_name\": \"Masters\", \"col\": 4}}, {\"id\": \"vt-card-3\", \"type\": \"card\", \"data\": {\"card_name\": \"Cutting\", \"col\": 4}}, {\"id\": \"vt-card-4\", \"type\": \"card\", \"data\": {\"card_name\": \"Production\", \"col\": 4}}, {\"id\": \"vt-card-5\", \"type\": \"card\", \"data\": {\"card_name\": \"Costing & Planning\", \"col\": 4}}]",
+ "content": "[{\"id\": \"vt-head-1\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Today</b></span>\", \"col\": 12}}, {\"id\": \"vt-sc-0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Open Garment Orders\", \"col\": 4}}, {\"id\": \"vt-sc-1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Jobs Pending Approvals\", \"col\": 4}}, {\"id\": \"vt-sc-2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Jobs Ready to Cut\", \"col\": 4}}, {\"id\": \"vt-spacer-1\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"vt-head-2\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Production &amp; Masters</b></span>\", \"col\": 12}}, {\"id\": \"vt-card-1\", \"type\": \"card\", \"data\": {\"card_name\": \"Orders\", \"col\": 4}}, {\"id\": \"vt-card-2\", \"type\": \"card\", \"data\": {\"card_name\": \"Masters\", \"col\": 4}}, {\"id\": \"vt-card-3\", \"type\": \"card\", \"data\": {\"card_name\": \"Cutting\", \"col\": 4}}, {\"id\": \"vt-card-4\", \"type\": \"card\", \"data\": {\"card_name\": \"Production\", \"col\": 4}}, {\"id\": \"vt-card-5\", \"type\": \"card\", \"data\": {\"card_name\": \"Costing & Planning\", \"col\": 4}}, {\"id\": \"vt-card-6\", \"type\": \"card\", \"data\": {\"card_name\": \"Procurement\", \"col\": 4}}]",
  "creation": "2026-11-14 04:20:46.543881",
  "custom_blocks": [],
  "docstatus": 0,
@@ -328,9 +328,142 @@
    "link_type": "Report",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Procurement",
+   "link_count": 12,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Material Request",
+   "link_count": 0,
+   "link_to": "Material Request",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Purchase Order",
+   "link_count": 0,
+   "link_to": "Purchase Order",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Purchase Receipt",
+   "link_count": 0,
+   "link_to": "Purchase Receipt",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Quality Inspection",
+   "link_count": 0,
+   "link_to": "Quality Inspection",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Purchase Invoice",
+   "link_count": 0,
+   "link_to": "Purchase Invoice",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Accessory Allocation",
+   "link_count": 0,
+   "link_to": "Accessory Allocation",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Accessory Issue",
+   "link_count": 0,
+   "link_to": "Accessory Issue",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Department Issue",
+   "link_count": 0,
+   "link_to": "Department Issue",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "PO Status",
+   "link_count": 0,
+   "link_to": "PO Status",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": null,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "GRN Register",
+   "link_count": 0,
+   "link_to": "GRN Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": null,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Job Accessory Balance",
+   "link_count": 0,
+   "link_to": "Job Accessory Balance",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": null,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Supplier Performance",
+   "link_count": 0,
+   "link_to": "Supplier Performance",
+   "link_type": "Report",
+   "onboard": 0,
+   "report_ref_doctype": null,
+   "type": "Link"
   }
  ],
- "modified": "2026-11-14 18:27:21.785549",
+ "modified": "2026-11-15 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Velocity CTP",
  "name": "Velocity",

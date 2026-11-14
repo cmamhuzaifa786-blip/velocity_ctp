@@ -17,7 +17,7 @@
  ],
  "fields": [
   {
-   "columns": 2,
+   "columns": 3,
    "fieldname": "item",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -26,11 +26,9 @@
    "reqd": 1
   },
   {
-   "columns": 2,
    "fetch_from": "item.item_name",
    "fieldname": "item_name",
    "fieldtype": "Data",
-   "in_list_view": 1,
    "label": "Item Name",
    "read_only": 1
   },
@@ -70,17 +68,17 @@
    "read_only": 1
   },
   {
-   "columns": 1,
+   "columns": 2,
    "description": "Unissued quantity allocated to this job. Blank when the job has no allocation.",
    "fieldname": "allocated_balance",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Allocated Balance",
+   "label": "Allocated Left",
    "no_copy": 1,
    "read_only": 1
   },
   {
-   "columns": 1,
+   "columns": 2,
    "fieldname": "available_qty",
    "fieldtype": "Float",
    "in_list_view": 1,
@@ -92,7 +90,7 @@
  "index_web_pages_for_search": 0,
  "istable": 1,
  "links": [],
- "modified": "2026-11-15 10:00:00.000000",
+ "modified": "2026-11-15 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Velocity CTP",
  "name": "Accessory Issue Item",
