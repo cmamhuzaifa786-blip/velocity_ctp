@@ -8,6 +8,7 @@
   "cutting_marker",
   "garment_order",
   "colour",
+  "cut_colour",
   "size",
   "item_code",
   "planned_qty",
@@ -45,6 +46,12 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Colour",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cut_colour",
+   "fieldtype": "Data",
+   "label": "Cut Colour",
    "read_only": 1
   },
   {
@@ -134,7 +141,7 @@
  "index_web_pages_for_search": 0,
  "istable": 1,
  "links": [],
- "modified": "2026-11-16 10:00:00.000000",
+ "modified": "2026-11-17 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Velocity CTP",
  "name": "Cut Receive Piece",

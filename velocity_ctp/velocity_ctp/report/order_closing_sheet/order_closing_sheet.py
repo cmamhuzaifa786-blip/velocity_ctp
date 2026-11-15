@@ -15,6 +15,8 @@ Costs per piece are split so that actual and estimated figures are never mixed s
   insurance, sample, service charges).
 - Other Costs (Estimate): the Cost Sheet's remaining per-piece heads outside production (courier,
   clearing, transport, pocketing and similar).
+Each order has detail rows per order colour (quantities only; the cut colour is shown when the colour
+is cut from another one). Costs are per order.
 Margins: Production Margin % = (quoted - production - rejection) / quoted; Full Margin % = (quoted -
 total) / quoted. Quoted is the Cost Sheet's quoted FOB in PKR.
 """
@@ -65,6 +67,14 @@ def columns():
 		col("garment_order", _("Garment Order"), "Link", 125, _("The order."), options="Garment Order"),
 		col("customer", _("Customer"), "Link", 130, _("Customer of the order."), options="Customer"),
 		col("status", _("Status"), "Data", 110, _("Order status.")),
+		col("order_colour", _("Order Colour"), "Data", 120, _("Detail rows: the colour the buyer ordered.")),
+		col(
+			"cut_colour",
+			_("Cut Colour"),
+			"Data",
+			110,
+			_("Detail rows: the colour it is cut in, when different."),
+		),
 		col("ordered", _("Ordered"), "Int", 80, _("Order quantity.")),
 		col("cut", _("Cut (Good)"), "Int", 90, _("Good pieces of submitted Cut Receives.")),
 		col("rejected", _("Rejected"), "Int", 85, _("Pieces rejected at cutting and at the processes.")),
@@ -231,6 +241,7 @@ def data(filters):
 		)
 	)
 
+	colour_rows = colour_quantities([o.name for o in orders])
 	rows = []
 	for o in orders:
 		e = est.get(o.cost_sheet)
@@ -289,6 +300,84 @@ def data(filters):
 				"estimated_margin_percent": e["margin"] if e else None,
 				"actual_basis": ", ".join(_(label) for key, label in CATEGORIES if actual[key] is not None)
 				or _("No actuals yet"),
+				"row_id": o.name,
+				"parent_row": None,
+				"indent": 0,
 			}
 		)
+		for line in colour_rows.get(o.name, []):
+			rows.append(
+				{
+					**line,
+					"garment_order": o.name,
+					"row_id": f"{o.name}|{line['order_colour']}",
+					"parent_row": o.name,
+					"indent": 1,
+				}
+			)
 	return rows
+
+
+def colour_quantities(orders: list[str]) -> dict[str, list[dict]]:
+	"""Per order and order colour: ordered, cut, rejected, packed and shipped pieces."""
+	from velocity_ctp.cutting.colours import colour_maps
+
+	if not orders:
+		return {}
+	values: dict[tuple[str, str], dict] = {}
+
+	def line(order, colour):
+		key = (order, (colour or "").lower())
+		return values.setdefault(
+			key, {"order_colour": colour, "ordered": 0, "cut": 0, "rejected": 0, "packed": 0, "shipped": 0}
+		)
+
+	o = {"o": orders}
+	for order, colour, qty in frappe.db.sql(
+		"""select parent, colour, sum(order_qty) from `tabGarment Order Item`
+		where parenttype = 'Garment Order' and parent in %(o)s group by parent, colour""",
+		o,
+	):
+		line(order, colour)["ordered"] += cint(qty)
+	for order, colour, good, rejected in frappe.db.sql(
+		"""select crp.garment_order, crp.colour, sum(crp.good_qty), sum(crp.rejected_qty) from `tabCut Receive Piece` crp
+		join `tabCut Receive` cr on cr.name = crp.parent where cr.docstatus = 1 and crp.garment_order in %(o)s
+		group by crp.garment_order, crp.colour""",
+		o,
+	):
+		entry = line(order, colour)
+		entry["cut"] += cint(good)
+		entry["rejected"] += cint(rejected)
+	for order, colour, rejected in frappe.db.sql(
+		"""select prb.garment_order, ifnull(b.order_colour, prb.colour), sum(prb.rejected_qty) from `tabProcess Receive Bundle` prb
+		join `tabProcess Receive` pr on pr.name = prb.parent left join `tabBundle` b on b.name = prb.bundle
+		where pr.docstatus = 1 and prb.garment_order in %(o)s group by prb.garment_order, ifnull(b.order_colour, prb.colour)""",
+		o,
+	):
+		line(order, colour)["rejected"] += cint(rejected)
+	for order, colour, qty in frappe.db.sql(
+		"""select pl.garment_order, plc.colour, sum(plc.total_pcs) from `tabPacking List Carton` plc
+		join `tabPacking List` pl on pl.name = plc.parent where pl.docstatus = 1 and pl.garment_order in %(o)s
+		group by pl.garment_order, plc.colour""",
+		o,
+	):
+		line(order, colour)["packed"] += cint(qty)
+	for order, colour, qty in frappe.db.sql(
+		"""select dn.garment_order, va.attribute_value, sum(dni.stock_qty) from `tabDelivery Note Item` dni
+		join `tabDelivery Note` dn on dn.name = dni.parent
+		join `tabItem Variant Attribute` va on va.parent = dni.item_code and va.attribute = 'Colour'
+		where dn.docstatus = 1 and dn.garment_order in %(o)s group by dn.garment_order, va.attribute_value""",
+		o,
+	):
+		line(order, colour)["shipped"] += cint(qty)
+	cut_of = colour_maps(orders)
+	result: dict[str, list[dict]] = {}
+	for (order, key), v in sorted(values.items()):
+		v["cut_colour"] = cut_of.get((order, key)) or ""
+		v["short_excess_percent"] = (
+			flt((v["shipped"] - v["ordered"]) / v["ordered"] * 100, 2)
+			if v["ordered"] and v["shipped"]
+			else None
+		)
+		result.setdefault(order, []).append(v)
+	return result

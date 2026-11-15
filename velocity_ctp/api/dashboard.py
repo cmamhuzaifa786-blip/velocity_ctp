@@ -530,22 +530,49 @@ def stage_cutting(orders: list[frappe._dict], context: dict) -> dict[str, StageS
 	"""Cutting stage from submitted Cut Receives: cut pieces against the order's cutting quantity.
 
 	Not started: nothing cut. In progress: "x/y · z%" (cut of cutting quantity). Done: cut >= cutting quantity.
+	The tooltip shows each order colour (with the cut colour when it is cut in another colour).
 	"""
-	from velocity_ctp.cutting.ledger import order_cut_totals
+	from velocity_ctp.cutting.colours import colour_maps
+	from velocity_ctp.cutting.ledger import cut_quantities, order_cut_totals
 
-	cut = order_cut_totals([o.name for o in orders])
+	names = [o.name for o in orders]
+	cut = order_cut_totals(names)
+	by_colour: dict[tuple[str, str], int] = {}
+	for (order, colour, _size), values in cut_quantities(names).items():
+		by_colour[(order, colour)] = by_colour.get((order, colour), 0) + cint(values["cut"])
+	targets: dict[tuple[str, str], list] = {}
+	for order, colour, qty in frappe.db.sql(
+		"""select parent, colour, sum(cutting_qty) from `tabGarment Order Item`
+		where parenttype = 'Garment Order' and parent in %(o)s group by parent, colour""",
+		{"o": names or [""]},
+	):
+		targets[(order, (colour or "").lower())] = [colour, cint(qty)]
+	cut_of = colour_maps(names)
 	result: dict[str, StageState] = {}
 	for o in orders:
 		done, target = cint(cut.get(o.name)), cint(o.total_cutting_qty)
 		percent = round(done / target * 100) if target else 0
+		parts = []
+		for (order, key), (colour, qty) in targets.items():
+			if order != o.name:
+				continue
+			mapped = cut_of.get((order, key))
+			name = _("{0} (cut {1})").format(colour, mapped) if mapped else colour
+			parts.append(f"{name}: {by_colour.get((order, key), 0)}/{qty}")
+		hint = " · ".join(parts)
 		if not done:
-			result[o.name] = {"state": "pending", "detail": _("Not started")}
+			result[o.name] = {"state": "pending", "detail": _("Not started"), "hint": hint}
 		elif target and done >= target:
-			result[o.name] = {"state": "done", "detail": _("{0} pcs · {1}%").format(done, percent)}
+			result[o.name] = {
+				"state": "done",
+				"detail": _("{0} pcs · {1}%").format(done, percent),
+				"hint": hint,
+			}
 		else:
 			result[o.name] = {
 				"state": "active",
 				"detail": _("{0}/{1} · {2}%").format(done, target, percent),
+				"hint": hint,
 			}
 	return result
 

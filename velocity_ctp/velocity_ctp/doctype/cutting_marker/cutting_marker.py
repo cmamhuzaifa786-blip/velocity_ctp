@@ -61,6 +61,9 @@ class CuttingMarker(Document):
 				)
 			)
 		self.colour = colours[colour.lower()]
+		from velocity_ctp.cutting.colours import cut_colour
+
+		self.cut_colour = cut_colour(self.garment_order, self.colour)
 
 	def validate_sizes(self) -> None:
 		if not self.size_ratio:

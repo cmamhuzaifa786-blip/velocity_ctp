@@ -12,6 +12,7 @@
   "style",
   "column_break_1",
   "colour",
+  "order_colour",
   "size",
   "item_code",
   "qty",
@@ -73,6 +74,14 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Colour",
+   "read_only": 1
+  },
+  {
+   "description": "The colour ordered. Colour is the pieces' current colour: the cut colour until a colour-change process (washing) turns it into the order colour.",
+   "fieldname": "order_colour",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Order Colour",
    "read_only": 1
   },
   {
@@ -202,7 +211,7 @@
  "in_create": 1,
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-11-14 12:00:00.000000",
+ "modified": "2026-11-17 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Velocity CTP",
  "name": "Bundle",

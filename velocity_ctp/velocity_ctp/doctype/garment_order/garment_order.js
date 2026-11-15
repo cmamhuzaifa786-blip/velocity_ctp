@@ -547,3 +547,25 @@ function cost_sheet_notice(frm) {
 			frm.dashboard.wrapper.find(".vt-switch-cs").on("click", () => frm.set_value("cost_sheet", current));
 		});
 }
+
+// Cut Colours: order colours come from the quantity matrix, cut colours from the Style.
+frappe.ui.form.on("Garment Order", {
+	refresh: (frm) => vt_colour_map_options(frm),
+	style: (frm) => vt_colour_map_options(frm),
+});
+
+frappe.ui.form.on("Garment Order Colour Map", {
+	colour_map_add: (frm) => vt_colour_map_options(frm),
+});
+
+function vt_colour_map_options(frm) {
+	const grid = frm.fields_dict.colour_map && frm.fields_dict.colour_map.grid;
+	if (!grid) return;
+	const ordered = [...new Set((frm.doc.items || []).map((r) => r.colour).filter(Boolean))];
+	grid.update_docfield_property("order_colour", "options", ordered);
+	if (!frm.doc.style) return;
+	frappe.db
+		.get_doc("Style", frm.doc.style)
+		.then((style) => grid.update_docfield_property("cut_colour", "options", (style.colours || []).map((r) => r.colour)))
+		.catch(() => {});
+}

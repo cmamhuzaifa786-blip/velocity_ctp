@@ -2,6 +2,10 @@
 // For license information, please see license.txt
 
 frappe.query_reports["Order Closing Sheet"] = {
+	tree: true,
+	name_field: "row_id",
+	parent_field: "parent_row",
+	initial_depth: 0,
 	filters: [
 		{ fieldname: "customer", label: __("Customer"), fieldtype: "Link", options: "Customer" },
 		{ fieldname: "garment_order", label: __("Garment Order"), fieldtype: "Link", options: "Garment Order" },

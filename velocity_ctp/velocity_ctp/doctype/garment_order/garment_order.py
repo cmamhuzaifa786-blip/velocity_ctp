@@ -27,6 +27,7 @@ class GarmentOrder(Document):
 		self.validate_dates()
 		self.validate_style()
 		self.validate_items()
+		self.validate_colour_map()
 		self.set_item_codes()
 		self.calculate_totals()
 		self.validate_against_cut()
@@ -41,6 +42,8 @@ class GarmentOrder(Document):
 
 	def before_update_after_submit(self) -> None:
 		self.validate_cost_sheet()
+		self.validate_colour_map()
+		self.ensure_variants(self.cut_colour_keys())
 		before = self.get_doc_before_save()
 		if before and getdate(before.ship_date) != getdate(self.ship_date):
 			check_hold_role(_("Only a System Manager or Velocity Merchandiser can change the ship date."))
@@ -285,12 +288,76 @@ class GarmentOrder(Document):
 					)
 				)
 
-	def set_item_codes(self) -> None:
-		"""Link every row to the Style variant for its colour and size, creating variants if needed."""
+	def validate_colour_map(self) -> None:
+		"""Cut Colours: each order colour once, a colour of the order; the cut colour a Style colour.
+		A mapping cannot change once pieces of that order colour have been cut."""
+		style = self.get_style_doc()
+		style_colours = {c.colour.lower(): c.colour for c in style.colours}
+		ordered = {row.colour.lower(): row.colour for row in self.items if row.colour}
+		seen, rows = set(), []
+		for row in self.get("colour_map") or []:
+			order_colour = (row.order_colour or "").strip()
+			cut_colour = (row.cut_colour or "").strip()
+			label = _("Cut Colours row {0}").format(row.idx)
+			if order_colour.lower() not in ordered:
+				frappe.throw(
+					_("{0}: {1} is not a colour of this order ({2}).").format(
+						label, frappe.bold(order_colour), ", ".join(sorted(ordered.values()))
+					)
+				)
+			if cut_colour.lower() not in style_colours:
+				frappe.throw(
+					_("{0}: cut colour {1} is not a colour of Style {2} ({3}).").format(
+						label, frappe.bold(cut_colour), self.style, ", ".join(style_colours.values())
+					)
+				)
+			if order_colour.lower() in seen:
+				frappe.throw(_("{0}: {1} is mapped more than once.").format(label, frappe.bold(order_colour)))
+			seen.add(order_colour.lower())
+			row.order_colour, row.cut_colour = (
+				ordered[order_colour.lower()],
+				style_colours[cut_colour.lower()],
+			)
+			if row.cut_colour.lower() != row.order_colour.lower():
+				rows.append(row)
+		self.set("colour_map", rows)
+		self.check_colour_map_after_cutting()
+
+	def check_colour_map_after_cutting(self) -> None:
+		before = self.get_doc_before_save()
+		if not before or self.is_new():
+			return
+		old = {(r.order_colour or "").lower(): r.cut_colour for r in before.get("colour_map") or []}
+		new = {(r.order_colour or "").lower(): r.cut_colour for r in self.get("colour_map") or []}
+		names = {row.colour.lower(): row.colour for row in self.items if row.colour}
+		changed = {c for c in set(old) | set(new) if (old.get(c) or "").lower() != (new.get(c) or "").lower()}
+		if not changed:
+			return
+		from velocity_ctp.cutting.ledger import cut_quantities
+
+		cut = {colour for (_order, colour, _size), v in cut_quantities([self.name]).items() if v["cut"]}
+		locked = sorted(c for c in changed if c in cut)
+		if locked:
+			frappe.throw(
+				_(
+					"The cut colour of {0} cannot change: pieces of this order colour have already been cut."
+				).format(", ".join(frappe.bold(names.get(c, c)) for c in locked)),
+				title=_("Already Cut"),
+			)
+
+	def cut_colour_keys(self) -> list[tuple[str, str]]:
+		"""(cut colour, size) in lower case for every mapped order colour."""
+		cut_of = {(r.order_colour or "").lower(): r.cut_colour for r in self.get("colour_map") or []}
+		return [
+			(cut_of[row.colour.lower()].lower(), row.size.lower())
+			for row in self.items
+			if row.colour and row.colour.lower() in cut_of
+		]
+
+	def ensure_variants(self, keys: list[tuple[str, str]]):
+		"""Create missing Style variants for the given (colour, size) keys; returns the variant map."""
 		style = self.get_style_doc()
 		variant_map = style.get_variant_map()
-		keys = [(row.colour.lower(), row.size.lower()) for row in self.items]
-
 		if any(key not in variant_map for key in keys):
 			if not frappe.has_permission("Style", "write", style):
 				frappe.throw(
@@ -304,6 +371,13 @@ class GarmentOrder(Document):
 			style.create_item_variants()
 			style.reload()
 			variant_map = style.get_variant_map()
+		return variant_map
+
+	def set_item_codes(self) -> None:
+		"""Link every row to the Style variant for its colour and size, creating variants if needed
+		(also for the cut colours of mapped order colours)."""
+		keys = [(row.colour.lower(), row.size.lower()) for row in self.items]
+		variant_map = self.ensure_variants(keys + self.cut_colour_keys())
 
 		for row, key in zip(self.items, keys, strict=True):
 			row.item_code = variant_map.get(key)

@@ -27,6 +27,8 @@
   "section_quantities",
   "quantity_matrix",
   "items",
+  "section_colour_map",
+  "colour_map",
   "section_totals",
   "total_order_qty",
   "total_excess_qty",
@@ -209,6 +211,21 @@
   },
   {
    "collapsible": 1,
+   "collapsible_depends_on": "eval:(doc.colour_map||[]).length",
+   "description": "Optional. When an order colour is cut from a base colour (for example Washed Light cut from Dark Indigo), map it here. Unmapped colours are cut in the order colour.",
+   "fieldname": "section_colour_map",
+   "fieldtype": "Section Break",
+   "label": "Cut Colours"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "colour_map",
+   "fieldtype": "Table",
+   "label": "Cut Colours",
+   "options": "Garment Order Colour Map"
+  },
+  {
+   "collapsible": 1,
    "fieldname": "section_totals",
    "fieldtype": "Section Break",
    "label": "Totals"
@@ -339,7 +356,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-11-14 12:00:00.000000",
+ "modified": "2026-11-17 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Velocity CTP",
  "name": "Garment Order",

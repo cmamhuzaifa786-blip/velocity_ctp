@@ -77,7 +77,34 @@ class PackingList(Document):
 		if frappe.db.get_value("Garment Order", self.garment_order, "docstatus") != 1:
 			frappe.throw(_("Garment Order {0} must be submitted.").format(frappe.bold(self.garment_order)))
 		self.validate_cartons()
+		self.validate_sales_order_items()
 		self.validate_available()
+
+	def validate_sales_order_items(self) -> None:
+		"""Every packed variant must be on the order's Sales Order (when there is one), so it can be delivered."""
+		so = self.sales_order or frappe.db.get_value("Garment Order", self.garment_order, "sales_order")
+		if not so or frappe.db.get_value("Sales Order", so, "docstatus") not in (0, 1):
+			return
+		on_order = set(
+			frappe.get_all(
+				"Sales Order Item", filters={"parent": so, "parenttype": "Sales Order"}, pluck="item_code"
+			)
+		)
+		missing = sorted(
+			{
+				(r.colour, r.size, r.item_code)
+				for r in self.cartons
+				if r.item_code and r.item_code not in on_order
+			}
+		)
+		if missing:
+			frappe.throw(
+				_(
+					"{0} is packed but not on Sales Order {1}, so it could not be delivered. Pack the order colours "
+					"of the Sales Order, or add the variant to the Sales Order first."
+				).format(", ".join(f"{c} / {s} ({i})" for c, s, i in missing), frappe.bold(so)),
+				title=_("Not on the Sales Order"),
+			)
 
 	def validate_cartons(self) -> None:
 		if not self.cartons:

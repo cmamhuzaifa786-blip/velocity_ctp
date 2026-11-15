@@ -40,7 +40,8 @@ def get_columns() -> list[dict]:
 		{"fieldname": "job_map", "label": _("Job Map"), "fieldtype": "Link", "options": "Job Map", "width": 150},
 		{"fieldname": "garment_order", "label": _("Garment Order"), "fieldtype": "Link", "options": "Garment Order", "width": 135},
 		{"fieldname": "style", "label": _("Style"), "fieldtype": "Link", "options": "Style", "width": 130},
-		{"fieldname": "colour", "label": _("Colour"), "fieldtype": "Data", "width": 115},
+		{"fieldname": "colour", "label": _("Order Colour"), "fieldtype": "Data", "width": 115},
+		{"fieldname": "cut_colour", "label": _("Cut Colour"), "fieldtype": "Data", "width": 115},
 		{"fieldname": "fabric_item", "label": _("Fabric"), "fieldtype": "Link", "options": "Item", "width": 150},
 		{"fieldname": "batch_no", "label": _("Batch"), "fieldtype": "Link", "options": "Batch", "width": 145},
 		{"fieldname": "fabric_issued", "label": _("Fabric Issued"), "fieldtype": "Float", "precision": 2, "width": 125},
@@ -109,7 +110,7 @@ def get_data(filters: frappe._dict) -> list[dict]:
 		m.name: m
 		for m in frappe.get_all(
 			"Cutting Marker", filters=marker_filters,
-			fields=["name", "job_map", "garment_order", "style", "colour", "fabric_item", "batch_no",
+			fields=["name", "job_map", "garment_order", "style", "colour", "cut_colour", "fabric_item", "batch_no",
 			        "fabric_required", "total_planned_pieces", "marker_efficiency"],
 		)
 	}  # fmt: skip
@@ -134,6 +135,7 @@ def get_data(filters: frappe._dict) -> list[dict]:
 			children[key] = {
 				"job_map": marker.job_map, "fabric_item": marker.fabric_item, "batch_no": marker.batch_no,
 				"garment_order": marker.garment_order, "style": marker.style, "colour": marker.colour,
+				"cut_colour": marker.cut_colour if (marker.cut_colour or marker.colour) != marker.colour else "",
 				**dict.fromkeys(NUMERIC_FIELDS, 0.0),
 			}  # fmt: skip
 		return children[key]

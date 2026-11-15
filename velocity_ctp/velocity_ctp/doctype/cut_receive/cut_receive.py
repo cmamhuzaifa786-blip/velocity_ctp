@@ -241,11 +241,17 @@ class CutReceive(Document):
 			sizes_by_marker[s.parent].append(s)
 
 		# One piece row per marker and size, one fabric row per marker: fabric cost stays with its marker.
+		# Pieces keep the order colour (planning key) and are produced in the order's cut colour.
+		from velocity_ctp.cutting.colours import colour_maps
+
+		cut_of = colour_maps(list({m.garment_order for m in markers}))
 		lines = [
 			{
 				"cutting_marker": marker.name,
 				"garment_order": marker.garment_order,
 				"colour": marker.colour,
+				"cut_colour": cut_of.get((marker.garment_order, (marker.colour or "").lower()))
+				or marker.colour,
 				"size": s.size,
 				"qty": cint(s.planned_pieces),
 			}
@@ -262,6 +268,7 @@ class CutReceive(Document):
 					"cutting_marker": line["cutting_marker"],
 					"garment_order": line["garment_order"],
 					"colour": line["colour"],
+					"cut_colour": line["cut_colour"],
 					"size": line["size"],
 					"item_code": item_codes.get(
 						ledger.piece_key(line["garment_order"], line["colour"], line["size"])
@@ -293,7 +300,7 @@ class CutReceive(Document):
 
 	@staticmethod
 	def variant_codes(lines) -> dict[tuple, str]:
-		"""{piece key: variant item code} using each order's Style variant map."""
+		"""{piece key (order colour): variant item code of the cut colour} using each order's Style variant map."""
 		lines = list(lines)
 		order_styles = dict(
 			frappe.get_all(
@@ -310,7 +317,8 @@ class CutReceive(Document):
 		for line in lines:
 			key = ledger.piece_key(line["garment_order"], line["colour"], line["size"])
 			variant_map = maps.get(order_styles.get(line["garment_order"]), {})
-			codes[key] = variant_map.get((line["colour"].lower(), line["size"].lower()))
+			colour = line.get("cut_colour") or line["colour"]
+			codes[key] = variant_map.get((colour.lower(), line["size"].lower()))
 		return codes
 
 	# ------------------------------------------------------------------

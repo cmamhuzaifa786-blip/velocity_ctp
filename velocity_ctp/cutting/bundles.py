@@ -49,8 +49,10 @@ def create_bundles(cut_receive) -> int:
 		good = cint(row.cut_qty) - cint(row.rejected_qty)
 		if good <= 0:
 			continue
-		key = (row.garment_order, row.colour, row.size)
-		line = lines.setdefault(key, {"item_code": row.item_code, "qty": 0})
+		key = (row.garment_order, row.colour, row.size)  # order colour
+		line = lines.setdefault(
+			key, {"item_code": row.item_code, "cut_colour": row.get("cut_colour") or row.colour, "qty": 0}
+		)
 		line["qty"] += good
 
 	created = 0
@@ -66,7 +68,8 @@ def create_bundles(cut_receive) -> int:
 					"job_map": cut_receive.job_map,
 					"garment_order": order,
 					"style": styles.get(order),
-					"colour": colour,
+					"colour": line["cut_colour"],
+					"order_colour": colour,
 					"size": size,
 					"item_code": line["item_code"],
 					"qty": qty,

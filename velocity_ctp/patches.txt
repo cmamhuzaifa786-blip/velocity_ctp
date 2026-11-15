@@ -14,3 +14,4 @@ velocity_ctp.patches.v0_1.save_contractor_settings_defaults
 velocity_ctp.patches.v0_1.velocity_absorption_entry_type
 velocity_ctp.patches.v0_1.save_shipment_settings_defaults
 velocity_ctp.patches.v0_1.store_process_receive_rejected_value
+velocity_ctp.patches.v0_1.set_order_and_cut_colours

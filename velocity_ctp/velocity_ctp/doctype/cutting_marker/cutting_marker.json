@@ -9,6 +9,7 @@
   "garment_order",
   "style",
   "colour",
+  "cut_colour",
   "cutting_party",
   "column_break_1",
   "fabric_item",
@@ -59,6 +60,13 @@
    "in_list_view": 1,
    "label": "Colour",
    "reqd": 1
+  },
+  {
+   "description": "The colour the pieces are cut in (from the order's Cut Colours); same as the colour when not mapped.",
+   "fieldname": "cut_colour",
+   "fieldtype": "Data",
+   "label": "Cut Colour",
+   "read_only": 1
   },
   {
    "fieldname": "cutting_party",
@@ -171,7 +179,7 @@
  "index_web_pages_for_search": 0,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-11-14 12:00:00.000000",
+ "modified": "2026-11-17 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Velocity CTP",
  "name": "Cutting Marker",

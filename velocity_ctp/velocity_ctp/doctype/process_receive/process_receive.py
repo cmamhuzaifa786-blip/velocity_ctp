@@ -79,11 +79,24 @@ class ProcessReceive(Document):
 			)
 
 	def validate_colour(self, row, bundle) -> None:
+		"""At a colour-change process (washing) a bundle cut in a base colour turns into its order colour
+		automatically. Another colour is allowed only when it is another order colour of the same order."""
+		from velocity_ctp.cutting.colours import order_colours
+
 		row.new_item_code = None
-		if not row.to_colour or row.to_colour == bundle.colour:
+		label = _("Bundle {0}").format(row.bundle)
+		target = bundle.get("order_colour") or bundle.colour
+		current = (bundle.colour or "").lower()
+		if (
+			self._process_info.allow_colour_change
+			and not row.to_colour
+			and current != (target or "").lower()
+			and not cint(row.repair_qty)
+		):
+			row.to_colour = target  # automatic conversion to the order colour
+		if not row.to_colour or row.to_colour.lower() == current:
 			row.to_colour = None
 			return
-		label = _("Bundle {0}").format(row.bundle)
 		if not self._process_info.allow_colour_change:
 			frappe.throw(_("{0}: {1} does not allow a colour change.").format(label, self.production_process))
 		if cint(row.repair_qty):
@@ -92,15 +105,21 @@ class ProcessReceive(Document):
 					"{0}: the colour can only change when no pieces are left for repair (all good pieces change colour together)."
 				).format(label)
 			)
-		style = frappe.get_doc("Style", bundle.style)
-		colours = {c.colour.lower(): c.colour for c in style.colours}
-		if row.to_colour.lower() not in colours:
+		ordered = order_colours(bundle.garment_order)
+		if row.to_colour.lower() not in ordered:
 			frappe.throw(
-				_("{0}: colour {1} is not a colour of Style {2}. Style colours: {3}.").format(
-					label, frappe.bold(row.to_colour), bundle.style, ", ".join(colours.values())
-				)
+				_(
+					"{0}: {1} is not a colour of Garment Order {2}. A bundle can change only to an order colour: {3}."
+				).format(
+					label,
+					frappe.bold(row.to_colour),
+					bundle.garment_order,
+					", ".join(sorted(ordered.values())),
+				),
+				title=_("Not an Order Colour"),
 			)
-		row.to_colour = colours[row.to_colour.lower()]
+		row.to_colour = ordered[row.to_colour.lower()]
+		style = frappe.get_doc("Style", bundle.style)
 		variant = style.get_variant_map().get((row.to_colour.lower(), (bundle.size or "").lower()))
 		if not variant:
 			frappe.throw(
@@ -255,17 +274,18 @@ class ProcessReceive(Document):
 
 @frappe.whitelist()
 def get_colour_options(bundles: list | str) -> dict:
-	"""{bundle: [style colours]} for the To Colour picker."""
+	"""{bundle: [order colours of its Garment Order]} for the To Colour picker."""
+	from velocity_ctp.cutting.colours import order_colours
+
 	frappe.has_permission("Process Receive", "read", throw=True)
 	bundles = frappe.parse_json(bundles) if isinstance(bundles, str) else bundles
-	styles = dict(
+	orders = dict(
 		frappe.get_all(
-			"Bundle", filters={"name": ("in", bundles or [""])}, fields=["name", "style"], as_list=True
+			"Bundle",
+			filters={"name": ("in", bundles or [""])},
+			fields=["name", "garment_order"],
+			as_list=True,
 		)
 	)
-	colours = {}
-	for style in set(styles.values()):
-		colours[style] = frappe.get_all(
-			"Style Colour", filters={"parent": style, "parenttype": "Style"}, pluck="colour"
-		)
-	return {b: colours.get(s, []) for b, s in styles.items()}
+	colours = {order: sorted(order_colours(order).values()) for order in set(orders.values())}
+	return {b: colours.get(o, []) for b, o in orders.items()}
