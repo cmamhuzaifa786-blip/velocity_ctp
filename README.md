@@ -71,6 +71,16 @@ Standard Frappe workflows (fixtures), self-approval off on every approve and rej
 Approvers also need the standard role that may submit the document (Purchase User for requests and POs). On an
 approved PO, only Velocity PO Approver L1 may change items, rates or quantities with Update Items.
 
+## Development rules
+
+- Site `velocity.local` only; run `bench --site velocity.local ...` (never a plain `bench migrate` or `bench update`).
+- No custom permissions on core ERPNext DocTypes: use standard ERPNext roles for core access (custom fields via
+  fixtures are fine).
+- `setup_masters()` only creates missing records; it never changes existing values.
+- **Real data:** never delete submitted or numbered documents (to reuse a number or to tidy up). Cancel them
+  instead, and amend if a corrected document is needed. Numbers stay unique and the audit trail stays complete.
+- Do not leave `bench start` running after a task that started it.
+
 ## Development checks
 
 A git pre-commit hook runs `ruff check` and `ruff format --check` on `velocity_ctp` and blocks the commit on any
