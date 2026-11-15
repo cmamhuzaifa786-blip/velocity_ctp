@@ -19,6 +19,9 @@ import frappe
 from frappe import _
 from frappe.utils import flt
 
+# Custom Stock Entry Type (purpose Repack) of the absorption entries: value only, no physical movement,
+# so stock movement reports can leave these entries out.
+ABSORPTION_ENTRY_TYPE = "Velocity Absorption"
 CONTRACTOR_ACCRUAL = "Contractor Charges Accrued"
 OVERHEADS_ABSORBED = "Production Overheads Absorbed"
 
@@ -88,7 +91,7 @@ def make_absorption_repack(
 	if not merged or sum(flt(v) for v in charges.values()) <= 0:
 		return None, {}
 
-	entry = _new_entry("Repack", company, posting_date, remarks)
+	entry = _new_entry("Repack", company, posting_date, remarks, entry_type=ABSORPTION_ENTRY_TYPE)
 	pairs = []
 	for (item, warehouse), v in merged.items():
 		entry.append("items", {"item_code": item, "qty": v["qty"], "s_warehouse": warehouse})

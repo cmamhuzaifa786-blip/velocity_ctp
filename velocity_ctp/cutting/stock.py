@@ -78,9 +78,10 @@ def validate_fabric_batch(row_label: str, item_code: str, batch_no: str) -> None
 		)
 
 
-def _new_entry(purpose: str, company: str, posting_date, remarks: str):
+def _new_entry(purpose: str, company: str, posting_date, remarks: str, entry_type: str | None = None):
+	"""A Stock Entry of the standard purpose; `entry_type` names a custom Stock Entry Type of that purpose."""
 	entry = frappe.new_doc("Stock Entry")
-	entry.stock_entry_type = purpose
+	entry.stock_entry_type = entry_type or purpose
 	entry.purpose = purpose
 	entry.company = company
 	entry.set_posting_time = 1

@@ -157,6 +157,7 @@ def setup_masters(commit: bool = True) -> list[str]:
 	)
 	ensure_account(company, OVERHEADS_ABSORBED_ACCOUNT_NAME, "Direct Expenses", "Expense", log, warnings)
 	ensure_service_items(company, accrual, log)
+	ensure_stock_entry_types(log)
 
 	if commit:
 		frappe.db.commit()
@@ -532,3 +533,19 @@ def ensure_service_items(company: str, accrual_account: str | None, log: list[st
 			values["item_defaults"] = [{"company": company, "expense_account": accrual_account}]
 		frappe.get_doc(values).insert(ignore_permissions=True)
 		log.append(f"Item {name}")
+
+
+# (name, purpose): custom Stock Entry Types used by the app
+STOCK_ENTRY_TYPES = (("Velocity Absorption", "Repack"),)
+
+
+def ensure_stock_entry_types(log: list[str]) -> None:
+	"""Custom Stock Entry Types (for example "Velocity Absorption", purpose Repack, for the value-only
+	absorption entries) if missing."""
+	for name, purpose in STOCK_ENTRY_TYPES:
+		if frappe.db.exists("Stock Entry Type", name):
+			continue
+		frappe.get_doc(
+			{"doctype": "Stock Entry Type", "name": name, "__newname": name, "purpose": purpose}
+		).insert(ignore_permissions=True)
+		log.append(f"Stock Entry Type {name}")

@@ -11,3 +11,4 @@ velocity_ctp.patches.v0_1.store_cut_receive_fabric_cost
 velocity_ctp.patches.v0_1.save_procurement_settings_defaults
 velocity_ctp.patches.v0_1.set_quality_inspection_rejected_qty
 velocity_ctp.patches.v0_1.save_contractor_settings_defaults
+velocity_ctp.patches.v0_1.velocity_absorption_entry_type
