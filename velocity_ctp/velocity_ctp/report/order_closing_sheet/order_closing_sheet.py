@@ -159,7 +159,7 @@ def columns():
 			"actual_basis",
 			_("Actual Covers"),
 			"Data",
-			300,
+			420,
 			_("Production categories with actual figures; the others use the estimate."),
 		),
 	]
