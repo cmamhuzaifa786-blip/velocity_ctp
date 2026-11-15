@@ -509,3 +509,68 @@ def validate_inspection_rejections(doc) -> None:
 				),
 				title=_("Rejected Quantity Mismatch"),
 			)
+
+
+# ----------------------------------------------------------------------------------------------
+# Purchase Invoice: contractor work (Contractor Bill Run)
+# ----------------------------------------------------------------------------------------------
+
+
+def purchase_invoice_validate(doc, method=None) -> None:
+	"""Contractor work rows: a work document is billed once; the rate may differ from the accrued
+	(service order) rate only within the Contractor Rate Tolerance, unless the user is PO Approver L2."""
+	rows = [r for r in doc.items if r.get("velocity_source_name")]
+	if not rows or doc.get("is_return"):
+		return
+	from velocity_ctp.cutting.settings import get_settings
+	from velocity_ctp.procurement import contractor_billing
+
+	sources = list({r.velocity_source_name for r in rows})
+	for other, source in frappe.db.sql(
+		"""select pi.name, pii.velocity_source_name from `tabPurchase Invoice Item` pii
+		join `tabPurchase Invoice` pi on pi.name = pii.parent
+		where pi.docstatus < 2 and pi.name != %s and pii.velocity_source_name in %s""",
+		(doc.name or "", sources),
+	):
+		frappe.throw(
+			_("{0} is already billed on Purchase Invoice {1}. Cancel that invoice to bill it again.").format(
+				frappe.bold(source), frappe.bold(other)
+			),
+			title=_("Already Billed"),
+		)
+
+	work = {
+		(w.source_doctype, w.source_name, w.garment_order): w
+		for w in contractor_billing.work_rows(supplier=doc.supplier, company=doc.company)
+	}
+	tolerance = flt(get_settings().contractor_rate_tolerance_percent)
+	approver = PO_APPROVER_L2 in frappe.get_roles()
+	for row in rows:
+		w = work.get((row.velocity_source_doctype, row.velocity_source_name, row.get("garment_order")))
+		if not w or not w.rate:
+			continue
+		rate = flt(row.base_rate or row.rate)
+		difference = abs(rate - w.rate) / w.rate * 100
+		if difference > tolerance + 1e-9 and not approver:
+			frappe.throw(
+				_(
+					"Row {0}: rate {1} differs from the service rate {2} of {3} by {4}% (tolerance {5}%). "
+					"Only a user with the role {6} can submit it."
+				).format(
+					row.idx,
+					qty_text(rate),
+					qty_text(w.rate),
+					row.velocity_source_name,
+					flt(difference, 2),
+					flt(tolerance, 2),
+					frappe.bold(PO_APPROVER_L2),
+				),
+				title=_("Rate Above Tolerance"),
+			)
+
+
+def purchase_invoice_on_cancel(doc, method=None) -> None:
+	"""Cancelling a contractor invoice releases its work for billing; the submitted Contractor Bill Run that
+	created it keeps pointing to it (the run itself can then be cancelled)."""
+	if doc.get("contractor_bill_run"):
+		doc.ignore_linked_doctypes = (*tuple(doc.get("ignore_linked_doctypes") or ()), "Contractor Bill Run")

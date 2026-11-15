@@ -165,6 +165,10 @@ doc_events = {
 	"Quality Inspection": {
 		"validate": BUYING + "quality_inspection_validate",
 	},
+	"Purchase Invoice": {
+		"validate": BUYING + "purchase_invoice_validate",
+		"on_cancel": BUYING + "purchase_invoice_on_cancel",
+	},
 	"Purchase Receipt": {
 		"before_validate": BUYING + "purchase_receipt_before_validate",
 		"validate": BUYING + "purchase_receipt_validate",
@@ -210,6 +214,14 @@ VELOCITY_CUSTOM_FIELDS = [
 	"Batch-shade",
 	"Quality Inspection-rejected_qty",
 	"Quality Inspection-rejection_reason",
+	"Purchase Order Item-production_process",
+	"Purchase Order Item-colour",
+	"Purchase Order Item-size",
+	"Purchase Invoice-contractor_bill_run",
+	"Purchase Invoice Item-velocity_source_doctype",
+	"Purchase Invoice Item-velocity_source_name",
+	"Purchase Invoice Item-garment_order",
+	"Purchase Invoice Item-production_process",
 ]
 
 VELOCITY_WORKFLOWS = ["Velocity Material Request Approval", "Velocity Purchase Order Approval"]
@@ -379,5 +391,6 @@ jinja = {
 		"velocity_ctp.production.printing.get_challan_lines",
 		"velocity_ctp.production.printing.get_packing_summary",
 		"velocity_ctp.procurement.printing.get_po_approval",
+		"velocity_ctp.velocity_ctp.doctype.contractor_bill_run.contractor_bill_run.get_statement",
 	],
 }

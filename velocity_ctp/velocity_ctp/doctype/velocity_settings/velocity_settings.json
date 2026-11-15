@@ -21,6 +21,7 @@
   "po_second_approval_limit",
   "column_break_procurement",
   "department_consumption_account",
+  "contractor_rate_tolerance_percent",
   "section_department_cost_centers",
   "department_cost_centers"
  ],
@@ -133,6 +134,14 @@
    "options": "Account"
   },
   {
+   "default": "2",
+   "description": "A contractor invoice rate may differ from the service order rate by this much. Beyond it, only Velocity PO Approver L2 can submit.",
+   "fieldname": "contractor_rate_tolerance_percent",
+   "fieldtype": "Percent",
+   "label": "Contractor Rate Tolerance %",
+   "non_negative": 1
+  },
+  {
    "description": "Department Issues use the cost center mapped to their department here, else the company's default cost center.",
    "fieldname": "section_department_cost_centers",
    "fieldtype": "Section Break",
@@ -148,7 +157,7 @@
  "index_web_pages_for_search": 0,
  "issingle": 1,
  "links": [],
- "modified": "2026-11-15 10:00:00.000000",
+ "modified": "2026-11-16 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Velocity CTP",
  "name": "Velocity Settings",
