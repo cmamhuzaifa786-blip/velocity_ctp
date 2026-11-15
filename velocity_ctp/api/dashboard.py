@@ -102,6 +102,12 @@ def get_home_data() -> dict:
 			)[0].qty
 		)
 
+	unbilled_work = None
+	if frappe.has_permission("Contractor Bill Run", "read"):
+		from velocity_ctp.procurement.contractor_billing import unbilled_total
+
+		unbilled_work = unbilled_total(get_default_company(throw=False))
+
 	return {
 		"company": get_default_company(throw=False),
 		"today": str(today),
@@ -185,6 +191,15 @@ def get_home_data() -> dict:
 				"doctype": "Cut Receive",
 				"filters": {"docstatus": 1, "posting_date": str(today)},
 				"hidden": cut_today is None,
+			},
+			{
+				"key": "unbilled_contractor_work",
+				"label": _("Unbilled Contractor Work"),
+				"sub": _("PKR accrued, not invoiced yet"),
+				"value": unbilled_work,
+				"tone": "warn",
+				"route": "query-report/Accrued Contractor Charges",
+				"hidden": unbilled_work is None,
 			},
 			{
 				"key": "on_hold",

@@ -8,6 +8,7 @@
   "head_name",
   "section",
   "calculation",
+  "conversion_type",
   "column_break_1",
   "default_value",
   "sequence",
@@ -42,6 +43,15 @@
    "reqd": 1
   },
   {
+   "default": "Contractor",
+   "depends_on": "eval:doc.section=='Processing'",
+   "description": "For Processing heads: whether Order Costing compares this estimate with contractor charges or with in-house conversion (labour and overheads).",
+   "fieldname": "conversion_type",
+   "fieldtype": "Select",
+   "label": "Conversion Type",
+   "options": "Contractor\nIn-house"
+  },
+  {
    "fieldname": "column_break_1",
    "fieldtype": "Column Break",
    "label": ""
@@ -69,7 +79,7 @@
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-11-14 12:00:00.000000",
+ "modified": "2026-11-16 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Velocity CTP",
  "name": "Cost Head",

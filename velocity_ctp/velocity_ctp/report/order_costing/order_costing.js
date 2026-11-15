@@ -16,12 +16,15 @@ frappe.query_reports["Order Costing"] = {
 	formatter(value, row, column, data, default_formatter) {
 		value = default_formatter(value, row, column, data);
 		if (!data) return value;
-		if (column.fieldname === "estimated_profit_percent" && data.estimated_profit_percent !== null && data.estimated_profit_percent !== undefined) {
-			const ok = data.estimated_profit_percent >= data.target_margin;
+		if (["estimated_margin_percent", "actual_margin_percent"].includes(column.fieldname) && data[column.fieldname] !== null && data[column.fieldname] !== undefined) {
+			const ok = data[column.fieldname] >= data.target_margin;
 			value = `<span style="font-weight:600;color:var(--${ok ? "green" : "red"}-600)">${value}</span>`;
 		}
-		if (column.fieldname === "fabric_variance" && data.fabric_variance) {
-			value = `<span style="color:var(--${data.fabric_variance > 0 ? "red" : "green"}-600)">${value}</span>`;
+		if (column.fieldname === "variance" && data.variance) {
+			value = `<span style="color:var(--${data.variance > 0 ? "red" : "green"}-600)">${value}</span>`;
+		}
+		if (column.fieldname.endsWith("_actual") && (data[column.fieldname] === null || data[column.fieldname] === undefined)) {
+			value = `<span class="text-muted">${__("Not yet")}</span>`;
 		}
 		return value;
 	},
