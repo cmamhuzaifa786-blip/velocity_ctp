@@ -3,6 +3,10 @@
 
 frappe.ui.form.on("Process Issue", {
 	setup(frm) {
+		frm.set_query("service_order", () => ({
+			query: "velocity_ctp.procurement.services.service_order_query",
+			filters: { supplier: frm.doc.party },
+		}));
 		frm.set_query("production_process", () => ({
 			filters: { is_active: 1, name: ["not in", ["Cutting", "Packing"]] },
 		}));
@@ -51,9 +55,15 @@ frappe.ui.form.on("Process Issue", {
 
 	toggle_party(frm) {
 		const type = frm.doc.process_type;
+		const outsourced = type === "Outsourced" || (type === "Both" && !!frm.doc.party);
 		frm.toggle_reqd("party", type === "Outsourced");
 		frm.toggle_display("party", type !== "In-house");
+		frm.toggle_display("service_order", outsourced);
+		frm.toggle_reqd("service_order", outsourced);
+		frm.set_df_property("piece_rate", "read_only", outsourced ? 1 : 0);
 	},
+
+	party: (frm) => frm.trigger("toggle_party"),
 });
 
 function open_challan(frm) {

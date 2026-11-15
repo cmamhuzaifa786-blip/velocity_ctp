@@ -25,6 +25,8 @@
   "column_break_2",
   "rejection_percent",
   "contractor_amount",
+  "absorbed_amount",
+  "absorption_entry",
   "remarks",
   "amended_from"
  ],
@@ -169,6 +171,25 @@
    "read_only": 1
   },
   {
+   "allow_on_submit": 1,
+   "description": "Fresh pieces x rate added to the pieces' value (contractor charges or in-house conversion).",
+   "fieldname": "absorbed_amount",
+   "fieldtype": "Currency",
+   "label": "Cost Absorbed",
+   "no_copy": 1,
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "absorption_entry",
+   "fieldtype": "Link",
+   "label": "Absorption Entry",
+   "no_copy": 1,
+   "options": "Stock Entry",
+   "read_only": 1
+  },
+  {
    "fieldname": "remarks",
    "fieldtype": "Small Text",
    "label": "Remarks"
@@ -186,7 +207,7 @@
  "index_web_pages_for_search": 0,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-11-14 12:00:00.000000",
+ "modified": "2026-11-16 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Velocity CTP",
  "name": "Process Receive",

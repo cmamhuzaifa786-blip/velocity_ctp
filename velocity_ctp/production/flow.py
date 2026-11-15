@@ -73,7 +73,8 @@ def is_outsourced(process_type: str | None, party: str | None) -> bool:
 def validate_process_party(process: str, party: str | None) -> frappe._dict:
 	info = frappe.db.get_value(
 		"Process", process,
-		["name", "process_type", "wip_warehouse", "allow_rejection", "allow_colour_change", "default_piece_rate", "is_active"],
+		["name", "process_type", "wip_warehouse", "allow_rejection", "allow_colour_change", "default_piece_rate", "is_active",
+		 "absorption_rate_per_pc"],
 		as_dict=True,
 	)  # fmt: skip
 	if not info or not info.is_active:

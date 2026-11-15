@@ -25,9 +25,77 @@ class CutReceive(Document):
 		self.sync_from_markers(markers)
 		self.validate_pieces()
 		self.validate_fabric()
+		self.set_rates()
 		self.calculate_totals()
 
+	# ------------------------------------------------------------------
+	# Cutting cost: contractor (service order or piece rate) or in-house absorption
+	# ------------------------------------------------------------------
+
+	def set_rates(self) -> None:
+		"""Rate per garment order: from the Service Order row when one is given, else the piece rate.
+		Without a cutting party the Cutting process's absorption rate is used (in-house)."""
+		from velocity_ctp.procurement.services import find_row
+
+		self._rates: dict[str, float] = {}
+		self._rows: dict[str, frappe._dict] = {}
+		orders = sorted({p.garment_order for p in self.pieces if p.garment_order})
+		if self.service_order:
+			if not self.cutting_party:
+				frappe.throw(_("A Service Order needs a cutting party (the contractor)."))
+			for order in orders:
+				row = find_row(self.service_order, self.cutting_party, stock.CUTTING_PROCESS, order)
+				self._rows[order] = row
+				self._rates[order] = flt(row.base_rate)
+			rates = set(self._rates.values())
+			if len(rates) == 1:
+				self.piece_rate = rates.pop()
+			self.service_order_item = self._rows[orders[0]].name if len(orders) == 1 else None
+		else:
+			self.service_order_item = None
+			rate = (
+				flt(self.piece_rate)
+				if self.cutting_party
+				else flt(frappe.db.get_value("Process", stock.CUTTING_PROCESS, "absorption_rate_per_pc"))
+			)
+			self._rates = {order: rate for order in orders}
+
+	def rate_for(self, garment_order: str) -> float:
+		if not hasattr(self, "_rates"):
+			self.set_rates()
+		return flt(self._rates.get(garment_order))
+
+	def validate_service_quantities(self) -> None:
+		from velocity_ctp.procurement.services import validate_capacity
+
+		if not self.service_order:
+			return
+		good: dict[str, int] = defaultdict(int)
+		for p in self.pieces:
+			good[p.garment_order] += cint(p.good_qty)
+		for order, qty in good.items():
+			validate_capacity(
+				self._rows[order], qty, (self.doctype, self.name), _("Garment Order {0}").format(order)
+			)
+
+	def absorption(self, groups: list[dict]) -> tuple[list[dict[str, float]], dict[str, float]]:
+		"""Per marker group {item: good qty x rate}, and the charge per account."""
+		from velocity_ctp.production.absorption import CONTRACTOR_ACCRUAL, OVERHEADS_ABSORBED
+
+		per_group = []
+		for group in groups:
+			amounts: dict[str, float] = defaultdict(float)
+			for p in self.pieces:
+				if p.cutting_marker == group["marker"] and cint(p.good_qty) > 0:
+					amounts[p.item_code] += cint(p.good_qty) * self.rate_for(p.garment_order)
+			per_group.append(dict(amounts))
+		total = flt(sum(sum(g.values()) for g in per_group), 2)
+		account = CONTRACTOR_ACCRUAL if self.cutting_party else OVERHEADS_ABSORBED
+		return per_group, ({account: total} if total > 0 else {})
+
 	def before_submit(self) -> None:
+		self.set_rates()
+		self.validate_service_quantities()
 		if cint(self.total_good_qty) <= 0:
 			frappe.throw(_("There are no good pieces to receive. Enter the cut quantities first."))
 		if flt(self.total_fabric_used) <= 0:
@@ -49,9 +117,11 @@ class CutReceive(Document):
 	def on_submit(self) -> None:
 		self.warn_on_wastage()
 		groups = self.marker_groups()
-		entry, valuation = stock.make_cut_repack(self, groups)
+		absorption, charges = self.absorption(groups)
+		entry, valuation = stock.make_cut_repack(self, groups, absorption, charges)
 		self.db_set("stock_entry", entry)
 		self.store_fabric_cost(groups, valuation)
+		self.store_absorbed_cost()
 		for row in self.markers:
 			frappe.db.set_value("Cutting Marker", row.cutting_marker, "status", "Cut")
 		self.db_set("bundle_count", bundles.create_bundles(self))
@@ -68,7 +138,16 @@ class CutReceive(Document):
 			frappe.db.set_value("Cutting Marker", row.cutting_marker, "status", "Planned")
 		self.db_set("bundle_count", 0)
 		for row in self.pieces:
-			row.db_set({"fabric_cost_per_pc": 0, "fabric_cost_amount": 0}, update_modified=False)
+			row.db_set(
+				{
+					"fabric_cost_per_pc": 0,
+					"fabric_cost_amount": 0,
+					"contractor_cost_amount": 0,
+					"conversion_cost_amount": 0,
+				},
+				update_modified=False,
+			)
+		self.db_set("absorbed_amount", 0)
 
 	def store_fabric_cost(self, groups: list[dict], valuation: list[dict[str, dict]]) -> None:
 		"""Store the fabric value posted to each piece row (marker + variant) by the Repack."""
@@ -76,13 +155,26 @@ class CutReceive(Document):
 		for row in self.pieces:
 			posted = by_marker.get(row.cutting_marker, {}).get(row.item_code)
 			if posted and cint(row.good_qty):
+				fabric = flt(posted.get("fabric", posted["amount"]))
 				row.db_set(
 					{
-						"fabric_cost_per_pc": flt(posted["rate"], 2),
-						"fabric_cost_amount": flt(posted["amount"], 2),
+						"fabric_cost_per_pc": flt(fabric / flt(posted["qty"]), 2)
+						if flt(posted["qty"])
+						else 0,
+						"fabric_cost_amount": flt(fabric, 2),
 					},
 					update_modified=False,
 				)
+
+	def store_absorbed_cost(self) -> None:
+		"""Cutting cost per piece row: contractor charges or in-house conversion (good pieces x rate)."""
+		field = "contractor_cost_amount" if self.cutting_party else "conversion_cost_amount"
+		total = 0.0
+		for row in self.pieces:
+			amount = flt(cint(row.good_qty) * self.rate_for(row.garment_order), 2)
+			total += amount
+			row.db_set(field, amount, update_modified=False)
+		self.db_set("absorbed_amount", flt(total, 2))
 
 	# ------------------------------------------------------------------
 	# Markers -> pieces and fabric
@@ -360,8 +452,13 @@ class CutReceive(Document):
 			if self.total_fabric_required
 			else 0
 		)
-		self.contractor_amount = flt(
-			self.total_cut_qty * flt(self.piece_rate), self.precision("contractor_amount")
+		self.contractor_amount = (
+			flt(
+				sum(cint(p.good_qty) * self.rate_for(p.garment_order) for p in self.pieces),
+				self.precision("contractor_amount"),
+			)
+			if self.cutting_party
+			else 0
 		)
 
 	def marker_groups(self) -> list[dict]:

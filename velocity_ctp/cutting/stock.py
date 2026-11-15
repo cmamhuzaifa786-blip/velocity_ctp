@@ -142,16 +142,26 @@ def make_fabric_transfer(doc) -> str:
 	return _post(entry)
 
 
-def make_cut_repack(doc, groups: list[dict]) -> tuple[str, list[dict[str, dict]]]:
+def make_cut_repack(
+	doc, groups: list[dict], absorption: list[dict[str, float]] | None = None, charges: dict | None = None
+) -> tuple[str, list[dict[str, dict]]]:
 	"""Repack: consume fabric batches from Cutting WIP, produce the variants into Cutting WIP.
 
 	`groups` come from Cut Receive.marker_groups(): per marker, its fabric rows and its good
 	pieces. Each marker's fabric value (as ERPNext values that batch) is split only across that
 	marker's good pieces, in proportion to quantity; the marker's last row takes the rounding.
 
-	Returns (stock entry name, valuation): valuation[i] is {item_code: {"rate", "amount", "qty"}}
-	for groups[i], read from the posted rows, so the cost can be stored on the Cut Receive.
+	`absorption` (optional, per group {item_code: amount}) adds the cutting cost (good pieces x rate)
+	to those pieces through the entry's Additional Costs, credited to `charges` ({account name:
+	amount}); see velocity_ctp.production.absorption for how the amounts stay exact per variant.
+
+	Returns (stock entry name, valuation): valuation[i] is {item_code: {"rate", "amount", "qty",
+	"fabric", "absorbed"}} for groups[i], read from the posted rows, so the cost can be stored on the
+	Cut Receive.
 	"""
+	from velocity_ctp.production.absorption import additional_cost_rows, set_finished_values
+
+	absorption = absorption or [{} for _g in groups]
 	wip = get_cutting_wip(doc.company)
 	entry = _new_entry(
 		"Repack",
@@ -188,19 +198,37 @@ def make_cut_repack(doc, groups: list[dict]) -> tuple[str, list[dict[str, dict]]
 			)
 			piece_rows.append(len(entry.items) - 1)
 		positions.append((fabric_rows, piece_rows))
+	if charges:
+		entry.set("additional_costs", additional_cost_rows(doc.company, charges, doc.name))
+
+	fabric_values: dict[int, float] = {}
+
+	def distribute(e):
+		# Fabric value per piece row (per marker), then the cutting cost on top, exact per row.
+		distribute_fabric_value(e, positions)
+		finished, targets = [], []
+		for (_fabric, piece_rows), extra in zip(positions, absorption, strict=True):
+			for i in piece_rows:
+				fabric_values[i] = flt(e.items[i].basic_amount)
+				finished.append(e.items[i])
+				targets.append(fabric_values[i] + flt(extra.get(e.items[i].item_code)))
+		if e.get("additional_costs"):
+			set_finished_values(e, finished, targets)
 
 	# The first save lets ERPNext value the consumed batches; then each marker's value is distributed.
-	name = _post(entry, distribute=lambda e: distribute_fabric_value(e, positions))
+	name = _post(entry, distribute=distribute)
 	valuation = [
 		{
 			entry.items[i].item_code: {
-				"rate": flt(entry.items[i].basic_rate),
-				"amount": flt(entry.items[i].basic_amount),
+				"rate": flt(entry.items[i].valuation_rate),
+				"amount": flt(entry.items[i].amount),
 				"qty": flt(entry.items[i].transfer_qty),
+				"fabric": flt(fabric_values.get(i)),
+				"absorbed": flt(extra.get(entry.items[i].item_code)),
 			}
 			for i in piece_rows
 		}
-		for _fabric_rows, piece_rows in positions
+		for (_fabric_rows, piece_rows), extra in zip(positions, absorption, strict=True)
 	]
 	return name, valuation
 

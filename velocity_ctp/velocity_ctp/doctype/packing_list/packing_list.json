@@ -22,6 +22,9 @@
   "total_pcs",
   "section_bundles",
   "packed_bundles",
+  "section_accessories",
+  "accessories",
+  "accessory_amount",
   "remarks",
   "amended_from"
  ],
@@ -146,6 +149,30 @@
    "read_only": 1
   },
   {
+   "collapsible": 1,
+   "fieldname": "section_accessories",
+   "fieldtype": "Section Break",
+   "label": "Accessories Consumed"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "accessories",
+   "fieldtype": "Table",
+   "label": "Accessories Consumed",
+   "no_copy": 1,
+   "options": "Packing List Accessory",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "accessory_amount",
+   "fieldtype": "Currency",
+   "label": "Accessory Value",
+   "no_copy": 1,
+   "options": "Company:company:default_currency",
+   "read_only": 1
+  },
+  {
    "fieldname": "remarks",
    "fieldtype": "Small Text",
    "label": "Remarks"
@@ -163,7 +190,7 @@
  "index_web_pages_for_search": 0,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-11-14 12:00:00.000000",
+ "modified": "2026-11-16 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Velocity CTP",
  "name": "Packing List",

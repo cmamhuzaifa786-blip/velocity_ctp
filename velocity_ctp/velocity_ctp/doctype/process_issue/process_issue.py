@@ -23,7 +23,37 @@ class ProcessIssue(Document):
 		self.validate_bundles()
 		self.total_bundles = len(self.bundles)
 		self.total_qty = sum(cint(r.qty) for r in self.bundles)
+		self.set_service_order(info)
 		self.amount = flt(self.total_qty * flt(self.piece_rate), self.precision("amount"))
+
+	def set_service_order(self, info) -> None:
+		"""Outsourced work needs an approved Service Order row for this process and garment order;
+		the piece rate comes from that row."""
+		from velocity_ctp.procurement.services import find_row
+
+		if not flow.is_outsourced(info.process_type, self.party):
+			self.service_order = self.service_order_item = None
+			return
+		if not self.service_order:
+			frappe.throw(
+				_(
+					"{0} is outsourced to {1}: please select the approved Service Order (Purchase Order with "
+					"category Service) for this work."
+				).format(self.production_process, frappe.bold(self.party)),
+				title=_("Service Order Required"),
+			)
+		orders = sorted({r.garment_order for r in self.bundles if r.garment_order})
+		if len(orders) > 1:
+			frappe.throw(
+				_(
+					"With a Service Order, issue the bundles of one Garment Order per Process Issue. This issue has "
+					"{0}."
+				).format(", ".join(orders))
+			)
+		row = find_row(self.service_order, self.party, self.production_process, orders[0])
+		self.service_order_item = row.name
+		self.piece_rate = flt(row.base_rate)
+		self._service_row = row
 
 	def validate_bundles(self) -> None:
 		if not self.bundles:
@@ -51,6 +81,15 @@ class ProcessIssue(Document):
 			)
 
 	def before_submit(self) -> None:
+		if self.service_order_item:
+			from velocity_ctp.procurement.services import validate_capacity
+
+			row = getattr(self, "_service_row", None) or frappe._dict(
+				frappe.db.get_value(
+					"Purchase Order Item", self.service_order_item, ["name", "qty", "idx"], as_dict=True
+				)
+			)
+			validate_capacity(row, self.total_qty, (self.doctype, self.name), _("Process Issue"))
 		# Bundle states may have changed since the draft was saved: check again.
 		for row in self.bundles:
 			bundle = frappe.get_doc("Bundle", row.bundle)

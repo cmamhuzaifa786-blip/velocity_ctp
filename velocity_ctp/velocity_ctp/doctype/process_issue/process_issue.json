@@ -12,6 +12,8 @@
   "posting_date",
   "company",
   "piece_rate",
+  "service_order",
+  "service_order_item",
   "target_warehouse",
   "stock_entry",
   "section_transport",
@@ -80,6 +82,21 @@
    "fieldname": "piece_rate",
    "fieldtype": "Currency",
    "label": "Piece Rate"
+  },
+  {
+   "description": "Approved Service Purchase Order of the contractor with a row for this process and garment order. Required when the process is outsourced; the piece rate comes from it.",
+   "fieldname": "service_order",
+   "fieldtype": "Link",
+   "label": "Service Order",
+   "options": "Purchase Order"
+  },
+  {
+   "fieldname": "service_order_item",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Service Order Row",
+   "no_copy": 1,
+   "read_only": 1
   },
   {
    "fieldname": "target_warehouse",
@@ -178,7 +195,7 @@
  "index_web_pages_for_search": 0,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-11-14 12:00:00.000000",
+ "modified": "2026-11-16 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Velocity CTP",
  "name": "Process Issue",

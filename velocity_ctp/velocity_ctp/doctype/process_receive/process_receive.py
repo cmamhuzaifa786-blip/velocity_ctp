@@ -41,7 +41,14 @@ class ProcessReceive(Document):
 					bundle.repair_warehouse if cint(bundle.pending_repair_qty) else bundle.current_warehouse
 				)
 				row.item_code = bundle.item_code
-				row.piece_rate = flt(frappe.db.get_value("Process Issue", bundle.open_issue, "piece_rate"))
+				issue = frappe.db.get_value(
+					"Process Issue",
+					bundle.open_issue,
+					["piece_rate", "service_order", "service_order_item"],
+					as_dict=True,
+				)
+				row.piece_rate = flt(issue.piece_rate)
+				row.service_order, row.service_order_item = issue.service_order, issue.service_order_item
 			row.garment_order, row.colour, row.size = bundle.garment_order, bundle.colour, bundle.size
 			self.validate_quantities(row)
 			self.validate_colour(row, bundle)
@@ -169,12 +176,41 @@ class ProcessReceive(Document):
 			self.name, self.production_process, f" ({self.party})" if self.party else ""
 		)
 		self.db_set("stock_entry", stock.make_transfer(self.company, self.posting_date, remarks, transfers))
+		self.absorb(wip, remarks)
 		self.db_set(
 			"repack_entry",
 			stock.make_colour_repack(
 				self.company, self.posting_date, _("Colour change on {0}").format(self.name), changes
 			),
 		)
+
+	def absorb(self, wip: str, remarks: str) -> None:
+		"""Add fresh pieces x rate to the received pieces: contractor charges (outsourced, rate from the
+		issue / Service Order) or in-house conversion (the process's absorption rate)."""
+		from velocity_ctp.production.absorption import (
+			CONTRACTOR_ACCRUAL,
+			OVERHEADS_ABSORBED,
+			make_absorption_repack,
+		)
+
+		outsourced = flow.is_outsourced(self._process_info.process_type, self.party)
+		rate_in_house = flt(self._process_info.absorption_rate_per_pc)
+		field = "contractor_cost_amount" if outsourced else "conversion_cost_amount"
+		lines, total = [], 0.0
+		for row in self.bundles:
+			rate = flt(row.piece_rate) if outsourced else rate_in_house
+			amount = flt(cint(row.fresh_qty) * rate, 2)
+			row.db_set(field, amount, update_modified=False)
+			total += amount
+			if amount:
+				lines.append(
+					{"item_code": row.item_code, "warehouse": wip, "qty": row.fresh_qty, "amount": amount}
+				)
+		account = CONTRACTOR_ACCRUAL if outsourced else OVERHEADS_ABSORBED
+		entry, _posted = make_absorption_repack(
+			self.company, self.posting_date, _("{0} (cost absorbed)").format(remarks), lines, {account: total}
+		)
+		self.db_set({"absorbed_amount": flt(total, 2), "absorption_entry": entry})
 
 	def before_cancel(self) -> None:
 		used = flow.later_use([r.bundle for r in self.bundles], self.doctype, self.name, self.creation)
@@ -190,6 +226,7 @@ class ProcessReceive(Document):
 		from velocity_ctp.cutting.stock import cancel_stock_entry
 
 		cancel_stock_entry(self.repack_entry)
+		cancel_stock_entry(self.absorption_entry)
 		cancel_stock_entry(self.stock_entry)
 		for row in self.bundles:
 			flow.restore(frappe.get_doc("Bundle", row.bundle), row, self.doctype, self.name)

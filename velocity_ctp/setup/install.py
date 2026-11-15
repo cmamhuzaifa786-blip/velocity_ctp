@@ -37,6 +37,19 @@ VELOCITY_ROLES = (
 )
 
 CONSUMPTION_ACCOUNT_NAME = "Production Consumables"
+CONTRACTOR_ACCRUAL_ACCOUNT_NAME = "Contractor Charges Accrued"
+OVERHEADS_ABSORBED_ACCOUNT_NAME = "Production Overheads Absorbed"
+
+# Service items (non-stock, Services group) used on Service Purchase Orders and contractor invoices.
+SERVICE_ITEMS = (
+	"Cutting Charges",
+	"Stitching Charges (CMT)",
+	"Washing Charges",
+	"Finishing Charges",
+	"Hangtag Cord Attachment",
+	"Embroidery Charges",
+	"Print Charges",
+)
 
 # (head, section, calculation) in sequence order
 COST_HEADS = (
@@ -139,6 +152,11 @@ def setup_masters(commit: bool = True) -> list[str]:
 	ensure_cost_heads(log)
 	ensure_material_request_field(log)
 	ensure_consumption_account(company, log, warnings)
+	accrual = ensure_account(
+		company, CONTRACTOR_ACCRUAL_ACCOUNT_NAME, "Current Liabilities", "Liability", log, warnings
+	)
+	ensure_account(company, OVERHEADS_ABSORBED_ACCOUNT_NAME, "Direct Expenses", "Expense", log, warnings)
+	ensure_service_items(company, accrual, log)
 
 	if commit:
 		frappe.db.commit()
@@ -454,3 +472,63 @@ def ensure_consumption_account(company: str, log: list[str], warnings: list[str]
 		frappe.db.set_single_value("Velocity Settings", "department_consumption_account", account)
 		frappe.clear_document_cache("Velocity Settings", "Velocity Settings")
 		log.append(f"Velocity Settings Department Consumption Account: {account}")
+
+
+def ensure_account(
+	company: str, name: str, parent_name: str, root_type: str, log: list[str], warnings: list[str]
+) -> str | None:
+	"""Create a ledger account under the given group if it is missing. Returns its name."""
+	account = frappe.db.get_value(
+		"Account", {"company": company, "account_name": name, "is_group": 0}, "name"
+	)
+	if account:
+		return account
+	parent = frappe.db.get_value(
+		"Account", {"company": company, "account_name": parent_name, "is_group": 1}, "name"
+	)
+	if not parent:
+		warnings.append(
+			f"Account group {parent_name} was not found for {company}; create the {name} account."
+		)
+		return None
+	doc = frappe.get_doc(
+		{
+			"doctype": "Account",
+			"account_name": name,
+			"parent_account": parent,
+			"company": company,
+			"is_group": 0,
+			"root_type": root_type,
+			"report_type": "Balance Sheet"
+			if root_type in ("Asset", "Liability", "Equity")
+			else "Profit and Loss",
+		}
+	)
+	doc.flags.ignore_permissions = True
+	doc.insert()
+	log.append(f"Account {doc.name}")
+	return doc.name
+
+
+def ensure_service_items(company: str, accrual_account: str | None, log: list[str]) -> None:
+	"""Non-stock service items in the Services group; new items default to the contractor accrual account."""
+	group = "Services" if frappe.db.exists("Item Group", "Services") else None
+	uom = "Nos" if frappe.db.exists("UOM", "Nos") else "Pcs"
+	for name in SERVICE_ITEMS:
+		if frappe.db.exists("Item", name):
+			continue
+		values = {
+			"doctype": "Item",
+			"item_code": name,
+			"item_name": name,
+			"item_group": group,
+			"stock_uom": uom,
+			"is_stock_item": 0,
+			"include_item_in_manufacturing": 0,
+			"is_purchase_item": 1,
+			"is_sales_item": 0,
+		}
+		if accrual_account:
+			values["item_defaults"] = [{"company": company, "expense_account": accrual_account}]
+		frappe.get_doc(values).insert(ignore_permissions=True)
+		log.append(f"Item {name}")

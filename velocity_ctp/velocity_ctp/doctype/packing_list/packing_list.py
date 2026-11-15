@@ -9,7 +9,7 @@ from itertools import pairwise
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import cint
+from frappe.utils import cint, flt
 
 from velocity_ctp.production import flow, stock
 from velocity_ctp.setup.install import get_default_company
@@ -153,8 +153,11 @@ class PackingList(Document):
 				)
 
 	def on_submit(self) -> None:
+		from velocity_ctp.production import packing_cost
+
 		fg_store = stock.get_finished_goods_store(self.company)
 		need = self.packed_by_key()
+		left_before = packing_cost.pieces_left_to_pack(self.garment_order)
 		transfers = []
 		self.set("packed_bundles", [])
 		for b in finished_bundles(self.garment_order):
@@ -195,12 +198,30 @@ class PackingList(Document):
 			)
 		for row in self.packed_bundles:
 			row.db_insert()
-		self.db_set(
-			"stock_entry",
-			stock.make_transfer(
-				self.company, self.packing_date, _("Packing List {0}").format(self.name), transfers
-			),
+		remarks = _("Packing List {0}").format(self.name)
+		accessories = packing_cost.consumption(
+			self.garment_order, sum(cint(t["qty"]) for t in transfers), left_before, exclude=self.name
 		)
+		if not accessories:
+			self.db_set(
+				"stock_entry", stock.make_transfer(self.company, self.packing_date, remarks, transfers)
+			)
+			return
+		entry, values = packing_cost.make_packing_repack(
+			self.company,
+			self.packing_date,
+			_("{0}: pieces and accessories consumed").format(remarks),
+			transfers,
+			accessories,
+			fg_store,
+		)
+		self.db_set("stock_entry", entry)
+		self.set("accessories", [])
+		for index, a in enumerate(accessories):
+			rate, amount = values.get(index, (0, 0))
+			row = self.append("accessories", {**a, "rate": rate, "amount": amount})
+			row.db_insert()
+		self.db_set("accessory_amount", flt(sum(flt(r.amount) for r in self.accessories), 2))
 
 	def before_cancel(self) -> None:
 		# Shipping (a later phase) will add its own checks here.

@@ -17,6 +17,7 @@
   "allow_rejection",
   "allow_colour_change",
   "default_piece_rate",
+  "absorption_rate_per_pc",
   "is_active"
  ],
  "fields": [
@@ -94,6 +95,13 @@
    "label": "Default Piece Rate"
   },
   {
+   "description": "In-house conversion cost (labour and overheads) added to each fresh piece received in this process, credited to Production Overheads Absorbed.",
+   "fieldname": "absorption_rate_per_pc",
+   "fieldtype": "Currency",
+   "label": "Absorption Rate per Piece",
+   "non_negative": 1
+  },
+  {
    "default": "1",
    "fieldname": "is_active",
    "fieldtype": "Check",
@@ -104,7 +112,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-11-14 12:00:00.000000",
+ "modified": "2026-11-16 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Velocity CTP",
  "name": "Process",

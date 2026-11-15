@@ -6,6 +6,10 @@ const CR_METHOD = "velocity_ctp.velocity_ctp.doctype.cut_receive.cut_receive.";
 frappe.ui.form.on("Cut Receive", {
 	setup(frm) {
 		frm.set_query("job_map", () => ({ filters: { status: "Ready to Cut" } }));
+		frm.set_query("service_order", () => ({
+			query: "velocity_ctp.procurement.services.service_order_query",
+			filters: { supplier: frm.doc.cutting_party },
+		}));
 		frm.set_query("cutting_marker", "markers", () => ({
 			filters: { job_map: frm.doc.job_map || "", docstatus: 1, status: "Planned" },
 		}));
@@ -41,6 +45,10 @@ frappe.ui.form.on("Cut Receive", {
 	},
 
 	piece_rate: (frm) => calculate(frm),
+	service_order(frm) {
+		frm.set_df_property("piece_rate", "read_only", frm.doc.service_order ? 1 : 0);
+		if (frm.doc.service_order) frappe.show_alert({ message: __("The rate comes from the Service Order when you save."), indicator: "blue" });
+	},
 
 	sync_markers(frm) {
 		if (!(frm.doc.markers || []).some((r) => r.cutting_marker)) return;
@@ -99,7 +107,7 @@ function calculate(frm) {
 		total_fabric_required: flt(required, 3),
 		total_fabric_used: flt(used, 3),
 		wastage_percent: required ? flt(((used - required) / required) * 100, 2) : 0,
-		contractor_amount: flt(cut * flt(frm.doc.piece_rate), 2),
+		contractor_amount: frm.doc.cutting_party ? flt(good * flt(frm.doc.piece_rate), 2) : 0,
 	});
 	frm.refresh_fields([
 		"pieces", "total_planned_qty", "total_cut_qty", "total_rejected_qty", "total_good_qty",

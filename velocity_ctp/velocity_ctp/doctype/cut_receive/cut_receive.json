@@ -8,6 +8,9 @@
   "job_map",
   "cutting_party",
   "piece_rate",
+  "service_order",
+  "service_order_item",
+  "absorbed_amount",
   "column_break_1",
   "posting_date",
   "company",
@@ -53,6 +56,32 @@
    "fieldname": "piece_rate",
    "fieldtype": "Currency",
    "label": "Piece Rate"
+  },
+  {
+   "depends_on": "eval:doc.cutting_party",
+   "description": "Optional. When given, the cutting rate comes from this approved Service Purchase Order.",
+   "fieldname": "service_order",
+   "fieldtype": "Link",
+   "label": "Service Order",
+   "options": "Purchase Order"
+  },
+  {
+   "fieldname": "service_order_item",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Service Order Row",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "description": "Fresh pieces x cutting rate added to the pieces' value (contractor or in-house).",
+   "fieldname": "absorbed_amount",
+   "fieldtype": "Currency",
+   "label": "Cutting Cost Absorbed",
+   "no_copy": 1,
+   "options": "Company:company:default_currency",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_1",
@@ -201,7 +230,7 @@
  "index_web_pages_for_search": 0,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-11-14 12:00:00.000000",
+ "modified": "2026-11-16 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Velocity CTP",
  "name": "Cut Receive",
