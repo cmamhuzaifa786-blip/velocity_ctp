@@ -145,3 +145,29 @@ def get_invoice_lines(doc) -> list[dict]:
 		line["sizes"] = ", ".join(line["sizes"])
 		result.append(line)
 	return result
+
+
+# Full currency names for the amount in words on export documents (ERPNext writes the ISO code).
+CURRENCY_WORDS = {
+	"USD": ("US Dollars", "Cents"),
+	"EUR": ("Euros", "Cents"),
+	"GBP": ("Pounds Sterling", "Pence"),
+	"AED": ("UAE Dirhams", "Fils"),
+	"PKR": ("Pak Rupees", "Paisa"),
+}
+
+
+def amount_in_words(amount, currency: str) -> str:
+	"""For example "US Dollars Two Thousand, One Hundred And Ninety Eight and Twenty Five Cents only"."""
+	from frappe.utils import in_words
+
+	amount = flt(amount, 2)
+	main, fraction = CURRENCY_WORDS.get(
+		currency, (currency, frappe.db.get_value("Currency", currency, "fraction") or "")
+	)
+	whole = int(amount)
+	cents = round((amount - whole) * 100)
+	words = f"{main} {in_words(whole).title()}"
+	if cents:
+		words += f" and {in_words(cents).title()} {fraction}"
+	return f"{words} only."

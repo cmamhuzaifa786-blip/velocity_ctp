@@ -176,6 +176,8 @@ doc_events = {
 		"before_validate": SHIPPING + "invoice.sales_invoice_before_validate",
 		"validate": SHIPPING + "invoice.sales_invoice_validate",
 		"before_submit": SHIPPING + "invoice.sales_invoice_before_submit",
+		"on_submit": SHIPPING + "commission.sales_invoice_on_submit",
+		"on_cancel": SHIPPING + "commission.sales_invoice_on_cancel",
 	},
 	"Purchase Invoice": {
 		"validate": BUYING + "purchase_invoice_validate",
@@ -263,6 +265,8 @@ VELOCITY_CUSTOM_FIELDS = [
 	"Sales Invoice-net_weight",
 	"Sales Invoice-gross_weight",
 	"Sales Invoice-packing_lists",
+	"Sales Invoice-commission_journal_entry",
+	"Sales Partner-commission_supplier",
 ]
 
 VELOCITY_WORKFLOWS = [
@@ -440,6 +444,7 @@ jinja = {
 		"velocity_ctp.production.printing.get_packing_summary",
 		"velocity_ctp.procurement.printing.get_po_approval",
 		"velocity_ctp.shipping.invoice.get_invoice_lines",
+		"velocity_ctp.shipping.invoice.amount_in_words",
 		"velocity_ctp.velocity_ctp.doctype.contractor_bill_run.contractor_bill_run.get_statement",
 	],
 }

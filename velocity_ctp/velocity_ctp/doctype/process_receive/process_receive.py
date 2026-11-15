@@ -176,6 +176,7 @@ class ProcessReceive(Document):
 			self.name, self.production_process, f" ({self.party})" if self.party else ""
 		)
 		self.db_set("stock_entry", stock.make_transfer(self.company, self.posting_date, remarks, transfers))
+		self.store_rejected_value(rejection)
 		self.absorb(wip, remarks)
 		self.db_set(
 			"repack_entry",
@@ -183,6 +184,26 @@ class ProcessReceive(Document):
 				self.company, self.posting_date, _("Colour change on {0}").format(self.name), changes
 			),
 		)
+
+	def store_rejected_value(self, rejection: str | None) -> None:
+		"""Value of each bundle's rejected pieces, at the rate they moved to the Rejection Store."""
+		if not rejection or not self.stock_entry:
+			return
+		rates = {
+			r.item_code: flt(r.valuation_rate)
+			for r in frappe.get_all(
+				"Stock Entry Detail",
+				filters={"parent": self.stock_entry, "t_warehouse": rejection},
+				fields=["item_code", "valuation_rate"],
+			)
+		}
+		for row in self.bundles:
+			if cint(row.rejected_qty):
+				row.db_set(
+					"rejected_value",
+					flt(cint(row.rejected_qty) * rates.get(row.item_code, 0), 2),
+					update_modified=False,
+				)
 
 	def absorb(self, wip: str, remarks: str) -> None:
 		"""Add fresh pieces x rate to the received pieces: contractor charges (outsourced, rate from the

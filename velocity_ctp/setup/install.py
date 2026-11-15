@@ -162,6 +162,7 @@ def setup_masters(commit: bool = True) -> list[str]:
 	ensure_account(company, OVERHEADS_ABSORBED_ACCOUNT_NAME, "Direct Expenses", "Expense", log, warnings)
 	ensure_service_items(company, accrual, log)
 	ensure_stock_entry_types(log)
+	ensure_account(company, "Commission on Sales", "Indirect Expenses", "Expense", log, warnings)
 
 	if commit:
 		frappe.db.commit()
