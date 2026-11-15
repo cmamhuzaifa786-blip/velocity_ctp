@@ -162,6 +162,9 @@ doc_events = {
 		"before_validate": BUYING + "purchase_order_before_validate",
 		"validate": BUYING + "purchase_order_validate",
 	},
+	"Quality Inspection": {
+		"validate": BUYING + "quality_inspection_validate",
+	},
 	"Purchase Receipt": {
 		"before_validate": BUYING + "purchase_receipt_before_validate",
 		"validate": BUYING + "purchase_receipt_validate",
@@ -205,6 +208,8 @@ VELOCITY_CUSTOM_FIELDS = [
 	"Purchase Receipt Item-shade",
 	"Batch-supplier_lot_no",
 	"Batch-shade",
+	"Quality Inspection-rejected_qty",
+	"Quality Inspection-rejection_reason",
 ]
 
 VELOCITY_WORKFLOWS = ["Velocity Material Request Approval", "Velocity Purchase Order Approval"]

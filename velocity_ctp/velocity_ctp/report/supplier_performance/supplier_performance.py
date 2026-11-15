@@ -8,8 +8,10 @@
   the PO row's required-by date, of all receipt rows
 - Average delay: days late per receipt row (0 when on time), averaged over all receipt rows
 - Overdue open rows: PO rows past their required-by date and not fully received
-- Rejection %: rejected quantity of received quantity on those receipts; inspection rejection %: rejected
-  quality inspections of all submitted incoming inspections on those receipts
+- Rejected qty comes from the submitted incoming Quality Inspections on those receipts (rejected_qty):
+  Accepted inspections reject part of a lot, Rejected inspections refuse the whole lot (which is then not
+  received). Rejection % = rejected qty / (received qty + refused lots)
+- Lots refused %: Rejected inspections of all submitted incoming inspections on those receipts
 """
 
 from __future__ import annotations
@@ -49,18 +51,23 @@ def columns():
 		},
 		{"fieldname": "overdue_rows", "label": _("Overdue Open Rows"), "fieldtype": "Int", "width": 130},
 		{"fieldname": "received_qty", "label": _("Received Qty"), "fieldtype": "Float", "width": 110},
-		{"fieldname": "rejected_qty", "label": _("Rejected Qty"), "fieldtype": "Float", "width": 105},
+		{
+			"fieldname": "rejected_qty",
+			"label": _("Rejected Qty (Inspections)"),
+			"fieldtype": "Float",
+			"width": 175,
+		},
 		{"fieldname": "rejection_pct", "label": _("Rejection %"), "fieldtype": "Percent", "width": 100},
-		{"fieldname": "inspections", "label": _("Inspections"), "fieldtype": "Int", "width": 95},
+		{"fieldname": "inspections", "label": _("Inspected Lots"), "fieldtype": "Int", "width": 110},
 		{
 			"fieldname": "rejected_inspections",
-			"label": _("Rejected Inspections"),
+			"label": _("Lots Refused"),
 			"fieldtype": "Int",
 			"width": 140,
 		},
 		{
 			"fieldname": "inspection_rejection_pct",
-			"label": _("Inspection Rejection %"),
+			"label": _("Lots Refused %"),
 			"fieldtype": "Percent",
 			"width": 155,
 		},
@@ -123,18 +130,21 @@ def data(filters):
 		s["on_time"] += 1 if delay == 0 else 0
 		s["delay_total"] += delay
 		s["received_qty"] += flt(r.received_qty)
-		s["rejected_qty"] += flt(r.rejected_qty)
 		receipt_supplier[r.receipt] = r.supplier
 
 	if receipt_supplier:
-		for receipt, status in frappe.db.sql(
-			"""select reference_name, status from `tabQuality Inspection`
-			where docstatus = 1 and reference_type = 'Purchase Receipt' and reference_name in %(r)s""",
+		for receipt, status, rejected in frappe.db.sql(
+			"""select reference_name, status, ifnull(rejected_qty, 0) from `tabQuality Inspection`
+			where docstatus = 1 and reference_type = 'Purchase Receipt' and inspection_type = 'Incoming'
+			and reference_name in %(r)s""",
 			{"r": list(receipt_supplier)},
 		):
 			s = stats[receipt_supplier[receipt]]
 			s["inspections"] += 1
-			s["rejected_inspections"] += 1 if status == "Rejected" else 0
+			s["rejected_qty"] += flt(rejected)
+			if status == "Rejected":
+				s["rejected_inspections"] += 1
+				s["refused_qty"] += flt(rejected)  # the whole lot was refused, so it is not in received_qty
 
 	result = []
 	for supplier, s in sorted(stats.items()):
@@ -150,8 +160,8 @@ def data(filters):
 				"overdue_rows": int(s["overdue_rows"]),
 				"received_qty": s["received_qty"],
 				"rejected_qty": s["rejected_qty"],
-				"rejection_pct": flt(s["rejected_qty"] / s["received_qty"] * 100, 2)
-				if s["received_qty"]
+				"rejection_pct": flt(s["rejected_qty"] / (s["received_qty"] + s["refused_qty"]) * 100, 2)
+				if s["received_qty"] + s["refused_qty"]
 				else None,
 				"inspections": int(s["inspections"]),
 				"rejected_inspections": int(s["rejected_inspections"]),

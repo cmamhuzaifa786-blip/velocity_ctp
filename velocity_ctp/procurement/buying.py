@@ -8,7 +8,11 @@ Nothing here replaces ERPNext buying logic: these hooks only add the Velocity fi
   Plan); approver names and dates are recorded for the print; after submit only "Velocity PO Approver
   L1" may change items, rates or quantities (Update Items, through override_whitelisted_methods).
 - Purchase Receipt: Garment Order / Job Map from the PO row; fabric rows need the supplier lot and shade,
-  and one new Batch is created per fabric lot (ERPNext's Batch document) with shade and lot on it.
+  and one new Batch is created per fabric lot (ERPNext's Batch document) with shade and lot on it; a row
+  with an Accepted inspection must have the inspection's rejected quantity as its rejected quantity.
+- Quality Inspection (incoming, on a Purchase Receipt row): Accepted = the lot is usable, possibly with a
+  partial rejection (rejected_qty below the lot); Rejected = the whole lot is refused (rejected_qty = the
+  lot). A rejected quantity needs a reason.
 """
 
 from __future__ import annotations
@@ -318,6 +322,7 @@ def fabric_rows(doc) -> list:
 def purchase_receipt_validate(doc, method=None) -> None:
 	if doc.is_return:
 		return
+	validate_inspection_rejections(doc)
 	lots: dict[tuple[str, str], set] = defaultdict(set)
 	for row in fabric_rows(doc):
 		missing = [
@@ -407,3 +412,100 @@ def purchase_receipt_on_submit(doc, method=None) -> None:
 		}
 		if updates:
 			frappe.db.set_value("Batch", row.batch_no, updates)
+
+
+# ----------------------------------------------------------------------------------------------
+# Quality Inspection: partial rejection
+# ----------------------------------------------------------------------------------------------
+
+
+def qty_text(value) -> str:
+	"""Quantity for messages: 96, 1296, 12.5 (no trailing .0)."""
+	return f"{flt(value, 3):g}"
+
+
+def receipt_row(qi) -> frappe._dict | None:
+	if qi.reference_type != "Purchase Receipt" or not qi.child_row_reference:
+		return None
+	return frappe.db.get_value(
+		"Purchase Receipt Item",
+		{"name": qi.child_row_reference, "parent": qi.reference_name},
+		["idx", "received_qty", "uom"],
+		as_dict=True,
+	)
+
+
+def quality_inspection_validate(doc, method=None) -> None:
+	"""Accepted with a rejected quantity = partial rejection (the rest of the lot is usable);
+	Rejected = the whole lot is refused. A rejected quantity needs a reason."""
+	rejected = flt(doc.get("rejected_qty"))
+	row = receipt_row(doc)
+	lot = flt(row.received_qty) if row else 0.0
+	if doc.status == "Rejected" and not rejected and lot:
+		doc.rejected_qty = rejected = lot  # the whole lot is refused
+	if rejected < 0:
+		frappe.throw(_("Rejected Qty cannot be negative."))
+	if rejected and not (doc.get("rejection_reason") or "").strip():
+		frappe.throw(
+			_("Please enter the reason for rejecting {0} {1}.").format(
+				qty_text(rejected), (row.uom if row else "") or _("units")
+			),
+			title=_("Reason Required"),
+		)
+	if not row or not lot:
+		return
+	if rejected > lot + 1e-9:
+		frappe.throw(
+			_("Rejected Qty {0} is more than the {1} received on row {2} of {3}.").format(
+				qty_text(rejected), qty_text(lot), row.idx, doc.reference_name
+			)
+		)
+	if doc.status == "Accepted" and rejected >= lot - 1e-9:
+		frappe.throw(
+			_(
+				"The whole lot ({0}) is rejected, so the status must be Rejected. Keep Accepted only when part of "
+				"the lot is rejected and the rest is usable."
+			).format(qty_text(lot)),
+			title=_("Whole Lot Rejected"),
+		)
+	if doc.status == "Rejected" and rejected < lot - 1e-9:
+		frappe.throw(
+			_(
+				"Rejected means the whole lot ({0}) is refused, but {1} is entered. For a partial rejection keep the "
+				"status Accepted and enter the rejected quantity."
+			).format(qty_text(lot), qty_text(rejected)),
+			title=_("Partial Rejection"),
+		)
+
+
+def validate_inspection_rejections(doc) -> None:
+	"""A row with an Accepted inspection must reject exactly the inspection's rejected quantity."""
+	names = [r.quality_inspection for r in doc.items if r.get("quality_inspection")]
+	if not names:
+		return
+	inspections = {
+		q.name: q
+		for q in frappe.get_all(
+			"Quality Inspection",
+			filters={"name": ("in", names), "docstatus": ("<", 2)},
+			fields=["name", "status", "rejected_qty"],
+		)
+	}
+	for row in doc.items:
+		qi = inspections.get(row.get("quality_inspection"))
+		if not qi or qi.status != "Accepted":
+			continue  # a Rejected inspection stops the receipt in ERPNext (whole lot refused)
+		if abs(flt(row.rejected_qty) - flt(qi.rejected_qty)) > 1e-9:
+			frappe.throw(
+				_(
+					"Row {0}: {1} has Rejected Quantity {2} on the receipt, but Quality Inspection {3} rejected {4}. "
+					"They must be the same: correct the receipt row or the inspection."
+				).format(
+					row.idx,
+					frappe.bold(row.item_code),
+					qty_text(row.rejected_qty),
+					frappe.bold(qi.name),
+					qty_text(qi.rejected_qty),
+				),
+				title=_("Rejected Quantity Mismatch"),
+			)
