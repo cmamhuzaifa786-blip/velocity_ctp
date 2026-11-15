@@ -56,6 +56,27 @@ It prints every value it changes (old -> new) and leaves values that are already
 | Stock Settings | Role allowed to over-deliver/receive | Stock Manager |
 | Accounts Settings | Over Billing Allowance | 2 % (so a receipt within the 2 % tolerance can be invoiced in full) |
 
+### Demo site
+
+The demo runs on its own site, `velocity-demo.local`; `velocity.local` stays the development sandbox. To create
+it from scratch (or recreate it before a demo, so all dates are current):
+
+```bash
+cd ~/frappe-bench
+# only when recreating: removes the old demo site and its database (asks for the MariaDB root password)
+bench drop-site velocity-demo.local --force
+# new site with ERPNext and Velocity CTP (asks for the MariaDB root password)
+bench new-site velocity-demo.local --install-app erpnext --install-app velocity_ctp --admin-password 'Velocity@2026'
+# company, masters, recommended procurement settings and the letter head
+bench --site velocity-demo.local execute velocity_ctp.demo.setup_site.run
+# demo data (safe to run again)
+bench --site velocity-demo.local execute velocity_ctp.demo.seed.run
+```
+
+Add `127.0.0.1 velocity-demo.local` to `/etc/hosts` (and to the Windows hosts file when browsing from Windows) to
+open it at `http://velocity-demo.local:8000`. The letter head "Velocity Textiles" has a placeholder for the logo:
+upload the logo and replace the `vt-lh-logo` block in the Letter Head with an `<img>` of it.
+
 ### Approval workflows
 
 Standard Frappe workflows (fixtures), self-approval off on every approve and reject step:
