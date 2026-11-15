@@ -8,10 +8,10 @@
   the PO row's required-by date, of all receipt rows
 - Average delay: days late per receipt row (0 when on time), averaged over all receipt rows
 - Overdue open rows: PO rows past their required-by date and not fully received
-- Rejected qty comes from the submitted incoming Quality Inspections on those receipts (rejected_qty):
-  Accepted inspections reject part of a lot, Rejected inspections refuse the whole lot (which is then not
-  received). Rejection % = rejected qty / (received qty + refused lots)
-- Lots refused %: Rejected inspections of all submitted incoming inspections on those receipts
+- Rejection % by value: rejected quantity of the submitted incoming Quality Inspections on those receipts,
+  valued at the receipt rate, of the value received (received qty x receipt rate, plus the value of lots
+  refused at inspection, which are not received). Quantities are never added across items or UOMs.
+- Lots with rejection %: inspected lots with any rejection (partial or fully refused) of all inspected lots
 """
 
 from __future__ import annotations
@@ -26,7 +26,11 @@ from frappe.utils import add_months, date_diff, flt, getdate, nowdate
 def execute(filters=None):
 	filters = frappe._dict(filters or {})
 	frappe.has_permission("Purchase Order", "read", throw=True)
-	return columns(), data(filters)
+	message = _(
+		"Rejection % by Value = rejected quantity on incoming inspections x receipt rate / value received. "
+		"Lots with Rejection % = inspected lots with any rejection (partial or fully refused) / inspected lots."
+	)
+	return columns(), data(filters), message
 
 
 def columns():
@@ -50,26 +54,55 @@ def columns():
 			"width": 140,
 		},
 		{"fieldname": "overdue_rows", "label": _("Overdue Open Rows"), "fieldtype": "Int", "width": 130},
-		{"fieldname": "received_qty", "label": _("Received Qty"), "fieldtype": "Float", "width": 110},
 		{
-			"fieldname": "rejected_qty",
-			"label": _("Rejected Qty (Inspections)"),
-			"fieldtype": "Float",
-			"width": 175,
+			"fieldname": "received_value",
+			"label": _("Received Value"),
+			"fieldtype": "Currency",
+			"width": 130,
+			"description": _(
+				"Received quantity x receipt rate, plus lots refused at inspection (at their rate)."
+			),
 		},
-		{"fieldname": "rejection_pct", "label": _("Rejection %"), "fieldtype": "Percent", "width": 100},
-		{"fieldname": "inspections", "label": _("Inspected Lots"), "fieldtype": "Int", "width": 110},
 		{
-			"fieldname": "rejected_inspections",
-			"label": _("Lots Refused"),
+			"fieldname": "rejected_value",
+			"label": _("Rejected Value"),
+			"fieldtype": "Currency",
+			"width": 125,
+			"description": _(
+				"Rejected quantity on submitted incoming inspections x the receipt rate of that row."
+			),
+		},
+		{
+			"fieldname": "rejection_value_pct",
+			"label": _("Rejection % by Value"),
+			"fieldtype": "Percent",
+			"width": 145,
+			"description": _(
+				"Rejected Value / Received Value. Values, so items in different units are comparable."
+			),
+		},
+		{
+			"fieldname": "inspections",
+			"label": _("Inspected Lots"),
+			"fieldtype": "Int",
+			"width": 110,
+			"description": _("Submitted incoming Quality Inspections on this supplier's receipts."),
+		},
+		{
+			"fieldname": "lots_with_rejection",
+			"label": _("Lots with Rejection"),
 			"fieldtype": "Int",
 			"width": 140,
+			"description": _(
+				"Inspected lots with any rejection: a partial rejection or a fully refused lot."
+			),
 		},
 		{
-			"fieldname": "inspection_rejection_pct",
-			"label": _("Lots Refused %"),
+			"fieldname": "lots_with_rejection_pct",
+			"label": _("Lots with Rejection %"),
 			"fieldtype": "Percent",
 			"width": 155,
+			"description": _("Lots with Rejection / Inspected Lots."),
 		},
 	]
 
@@ -113,7 +146,8 @@ def data(filters):
 			stats[supplier]["overdue_rows"] += 1
 
 	receipts = frappe.db.sql(
-		f"""select po.supplier, pr.name as receipt, pr.posting_date, poi.schedule_date, pri.received_qty, pri.rejected_qty
+		f"""select po.supplier, pr.name as receipt, pr.posting_date, poi.schedule_date, pri.name as row_name,
+			pri.item_code, pri.received_qty, pri.base_rate
 		from `tabPurchase Receipt Item` pri
 		join `tabPurchase Receipt` pr on pr.name = pri.parent
 		join `tabPurchase Order Item` poi on poi.name = pri.purchase_order_item
@@ -123,28 +157,38 @@ def data(filters):
 		as_dict=True,
 	)
 	receipt_supplier = {}
+	row_rate: dict[str, float] = {}
+	item_rate: dict[tuple[str, str], float] = {}
 	for r in receipts:
 		s = stats[r.supplier]
 		delay = max(date_diff(r.posting_date, r.schedule_date), 0) if r.schedule_date else 0
 		s["receipts"] += 1
 		s["on_time"] += 1 if delay == 0 else 0
 		s["delay_total"] += delay
-		s["received_qty"] += flt(r.received_qty)
+		s["received_value"] += flt(r.received_qty) * flt(r.base_rate)
 		receipt_supplier[r.receipt] = r.supplier
+		row_rate[r.row_name] = flt(r.base_rate)
+		item_rate[(r.receipt, r.item_code)] = flt(r.base_rate)
 
 	if receipt_supplier:
-		for receipt, status, rejected in frappe.db.sql(
-			"""select reference_name, status, ifnull(rejected_qty, 0) from `tabQuality Inspection`
+		for qi in frappe.db.sql(
+			"""select reference_name, child_row_reference, item_code, status, ifnull(rejected_qty, 0) as rejected
+			from `tabQuality Inspection`
 			where docstatus = 1 and reference_type = 'Purchase Receipt' and inspection_type = 'Incoming'
 			and reference_name in %(r)s""",
 			{"r": list(receipt_supplier)},
+			as_dict=True,
 		):
-			s = stats[receipt_supplier[receipt]]
+			s = stats[receipt_supplier[qi.reference_name]]
 			s["inspections"] += 1
-			s["rejected_qty"] += flt(rejected)
-			if status == "Rejected":
-				s["rejected_inspections"] += 1
-				s["refused_qty"] += flt(rejected)  # the whole lot was refused, so it is not in received_qty
+			if flt(qi.rejected) > 0 or qi.status == "Rejected":
+				s["lots_with_rejection"] += 1
+			rate = row_rate.get(qi.child_row_reference) or item_rate.get((qi.reference_name, qi.item_code))
+			if rate is None:  # a refused lot whose row was removed from the receipt: last purchase rate
+				rate = flt(frappe.get_cached_value("Item", qi.item_code, "last_purchase_rate"))
+			s["rejected_value"] += flt(qi.rejected) * rate
+			if qi.status == "Rejected" and qi.child_row_reference not in row_rate:
+				s["received_value"] += flt(qi.rejected) * rate  # refused lot: not on the receipt
 
 	result = []
 	for supplier, s in sorted(stats.items()):
@@ -158,14 +202,14 @@ def data(filters):
 				"on_time_pct": flt(s["on_time"] / receipts_count * 100, 1) if receipts_count else None,
 				"avg_delay": flt(s["delay_total"] / receipts_count, 1) if receipts_count else None,
 				"overdue_rows": int(s["overdue_rows"]),
-				"received_qty": s["received_qty"],
-				"rejected_qty": s["rejected_qty"],
-				"rejection_pct": flt(s["rejected_qty"] / (s["received_qty"] + s["refused_qty"]) * 100, 2)
-				if s["received_qty"] + s["refused_qty"]
+				"received_value": flt(s["received_value"], 2),
+				"rejected_value": flt(s["rejected_value"], 2),
+				"rejection_value_pct": flt(s["rejected_value"] / s["received_value"] * 100, 2)
+				if s["received_value"]
 				else None,
 				"inspections": int(s["inspections"]),
-				"rejected_inspections": int(s["rejected_inspections"]),
-				"inspection_rejection_pct": flt(s["rejected_inspections"] / s["inspections"] * 100, 1)
+				"lots_with_rejection": int(s["lots_with_rejection"]),
+				"lots_with_rejection_pct": flt(s["lots_with_rejection"] / s["inspections"] * 100, 1)
 				if s["inspections"]
 				else None,
 			}

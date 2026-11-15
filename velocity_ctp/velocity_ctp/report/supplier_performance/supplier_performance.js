@@ -9,6 +9,16 @@ frappe.query_reports["Supplier Performance"] = {
 		{ fieldname: "supplier", label: __("Supplier"), fieldtype: "Link", options: "Supplier" },
 		{ fieldname: "po_category", label: __("Category"), fieldtype: "Select", options: ["", "Fabric", "Accessory", "Non-Product", "Service"] },
 	],
+	after_datatable_render(datatable) {
+		// Column explanations as header tooltips.
+		(datatable.getColumns ? datatable.getColumns() : []).forEach((col) => {
+			const description = col.docfield && col.docfield.description;
+			if (!description) return;
+			$(datatable.wrapper)
+				.find(`.dt-cell--header[data-col-index="${col.colIndex}"]`)
+				.attr("title", description);
+		});
+	},
 	formatter(value, row, column, data, default_formatter) {
 		value = default_formatter(value, row, column, data);
 		if (!data) return value;
@@ -16,7 +26,7 @@ frappe.query_reports["Supplier Performance"] = {
 			const colour = data.on_time_pct >= 90 ? "green" : data.on_time_pct >= 70 ? "orange" : "red";
 			value = `<span style="font-weight:600;color:var(--${colour}-600)">${value}</span>`;
 		}
-		if (["rejection_pct", "inspection_rejection_pct"].includes(column.fieldname) && data[column.fieldname] > 0) {
+		if (["rejection_value_pct", "lots_with_rejection_pct"].includes(column.fieldname) && data[column.fieldname] > 0) {
 			value = `<span style="color:var(--red-600)">${value}</span>`;
 		}
 		if (column.fieldname === "overdue_rows" && data.overdue_rows > 0) {
