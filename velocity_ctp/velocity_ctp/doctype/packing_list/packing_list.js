@@ -13,6 +13,12 @@ frappe.ui.form.on("Packing List", {
 	},
 
 	refresh(frm) {
+		if (frm.doc.docstatus === 1 && !frm.doc.delivery_note) {
+			frm.add_custom_button(__("Create Delivery Note"), () => vt_create_delivery(frm)).addClass("btn-primary");
+		}
+		if (frm.doc.delivery_note) {
+			frm.add_custom_button(__("Delivery Note"), () => frappe.set_route("Form", "Delivery Note", frm.doc.delivery_note), __("View"));
+		}
 		load_options(frm);
 		render_summary(frm);
 		if (frm.doc.docstatus === 0 && frm.doc.garment_order) {
@@ -169,4 +175,44 @@ function pick_from_bundles(frm) {
 		});
 		dialog.show();
 	});
+}
+
+
+function vt_create_delivery(frm) {
+	// Other submitted, undelivered Packing Lists of the same order can ship on the same Delivery Note.
+	frappe.db
+		.get_list("Packing List", {
+			filters: { garment_order: frm.doc.garment_order, docstatus: 1, delivery_note: ["is", "not set"] },
+			fields: ["name", "total_pcs", "total_cartons", "packing_date"],
+			order_by: "packing_date asc",
+		})
+		.then((lists) => {
+			const dialog = new frappe.ui.Dialog({
+				title: __("Create Delivery Note"),
+				fields: [
+					{
+						fieldname: "lists",
+						fieldtype: "MultiCheck",
+						label: __("Packing Lists of {0} to ship", [frm.doc.garment_order]),
+						options: lists.map((l) => ({
+							label: `${l.name} · ${l.total_pcs} ${__("pcs")} · ${l.total_cartons} ${__("cartons")}`,
+							value: l.name,
+							checked: l.name === frm.doc.name,
+						})),
+					},
+				],
+				primary_action_label: __("Create"),
+				primary_action(values) {
+					const names = values.lists || [];
+					if (!names.length) return frappe.msgprint(__("Select at least one Packing List."));
+					frappe
+						.call({ method: "velocity_ctp.shipping.delivery.make_delivery_note", args: { packing_lists: names }, freeze: true })
+						.then((r) => {
+							dialog.hide();
+							frappe.set_route("Form", "Delivery Note", r.message);
+						});
+				},
+			});
+			dialog.show();
+		});
 }

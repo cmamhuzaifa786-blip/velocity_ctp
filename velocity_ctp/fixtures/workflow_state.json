@@ -61,5 +61,14 @@
   "name": "Cancelled",
   "style": "Inverse",
   "workflow_state_name": "Cancelled"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-11-16 01:57:02.276838",
+  "name": "Issued",
+  "style": "Success",
+  "workflow_state_name": "Issued"
  }
 ]

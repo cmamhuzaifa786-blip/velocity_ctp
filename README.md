@@ -77,6 +77,14 @@ Add `127.0.0.1 velocity-demo.local` to `/etc/hosts` (and to the Windows hosts fi
 open it at `http://velocity-demo.local:8000`. The letter head "Velocity Textiles" has a placeholder for the logo:
 upload the logo and replace the `vt-lh-logo` block in the Letter Head with an `<img>` of it.
 
+### Shipment and export documents
+
+Deliveries are standard Delivery Notes made from Packing Lists; the Commercial Invoice is the standard Sales
+Invoice with export fields (LC, Form E, vessel / BL, cartons and weights) and the "Commercial Invoice" print;
+agent commission uses ERPNext's Sales Partner. **FBR e-invoicing (Digital Invoicing) for local sales is out of
+scope** of this app: local Sales Invoices (Invoice Category "Local") are not sent to FBR by Velocity CTP; use an
+FBR-integrated solution for that.
+
 ### Approval workflows
 
 Standard Frappe workflows (fixtures), self-approval off on every approve and reject step:

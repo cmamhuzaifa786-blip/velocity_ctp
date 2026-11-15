@@ -22,6 +22,10 @@
   "column_break_procurement",
   "department_consumption_account",
   "contractor_rate_tolerance_percent",
+  "section_shipment",
+  "shipment_tolerance_percent",
+  "column_break_shipment",
+  "require_gate_outward_for_delivery",
   "section_department_cost_centers",
   "department_cost_centers"
  ],
@@ -142,6 +146,30 @@
    "non_negative": 1
   },
   {
+   "fieldname": "section_shipment",
+   "fieldtype": "Section Break",
+   "label": "Shipment and Gate"
+  },
+  {
+   "default": "5",
+   "description": "A Garment Order is Completed when the pieces shipped reach the order quantity less this percentage.",
+   "fieldname": "shipment_tolerance_percent",
+   "fieldtype": "Percent",
+   "label": "Shipment Tolerance %",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "column_break_shipment",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "When ticked, a Sales Invoice for a Delivery Note can only be submitted after a Gate Outward exists for that delivery.",
+   "fieldname": "require_gate_outward_for_delivery",
+   "fieldtype": "Check",
+   "label": "Require Gate Outward for Delivery"
+  },
+  {
    "description": "Department Issues use the cost center mapped to their department here, else the company's default cost center.",
    "fieldname": "section_department_cost_centers",
    "fieldtype": "Section Break",
@@ -157,7 +185,7 @@
  "index_web_pages_for_search": 0,
  "issingle": 1,
  "links": [],
- "modified": "2026-11-16 10:00:00.000000",
+ "modified": "2026-11-16 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "Velocity CTP",
  "name": "Velocity Settings",

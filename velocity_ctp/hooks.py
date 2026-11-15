@@ -47,6 +47,7 @@ required_apps = ["erpnext"]
 doctype_js = {
 	"Material Request": "public/js/material_request.js",
 	"Purchase Order": "public/js/purchase_order.js",
+	"Delivery Note": "public/js/delivery_note.js",
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -146,6 +147,7 @@ after_install = "velocity_ctp.setup.install.after_install"
 
 # Document Events
 BUYING = "velocity_ctp.procurement.buying."
+SHIPPING = "velocity_ctp.shipping."
 
 doc_events = {
 	"Item": {
@@ -164,6 +166,16 @@ doc_events = {
 	},
 	"Quality Inspection": {
 		"validate": BUYING + "quality_inspection_validate",
+	},
+	"Delivery Note": {
+		"validate": SHIPPING + "delivery.delivery_note_validate",
+		"on_submit": SHIPPING + "delivery.delivery_note_on_submit",
+		"on_cancel": SHIPPING + "delivery.delivery_note_on_cancel",
+	},
+	"Sales Invoice": {
+		"before_validate": SHIPPING + "invoice.sales_invoice_before_validate",
+		"validate": SHIPPING + "invoice.sales_invoice_validate",
+		"before_submit": SHIPPING + "invoice.sales_invoice_before_submit",
 	},
 	"Purchase Invoice": {
 		"validate": BUYING + "purchase_invoice_validate",
@@ -222,9 +234,42 @@ VELOCITY_CUSTOM_FIELDS = [
 	"Purchase Invoice Item-velocity_source_name",
 	"Purchase Invoice Item-garment_order",
 	"Purchase Invoice Item-production_process",
+	"Delivery Note-garment_order",
+	"Delivery Note-packing_lists",
+	"Sales Invoice-section_velocity_export",
+	"Sales Invoice-invoice_category",
+	"Sales Invoice-shipment_type",
+	"Sales Invoice-payment_mode",
+	"Sales Invoice-lc_contract_no",
+	"Sales Invoice-lc_date",
+	"Sales Invoice-draft_at",
+	"Sales Invoice-column_break_velocity_export",
+	"Sales Invoice-form_e_no",
+	"Sales Invoice-form_e_date",
+	"Sales Invoice-garment_order",
+	"Sales Invoice-notify_party",
+	"Sales Invoice-section_velocity_shipment",
+	"Sales Invoice-port_of_loading",
+	"Sales Invoice-destination",
+	"Sales Invoice-vessel_flight",
+	"Sales Invoice-vessel_date",
+	"Sales Invoice-column_break_velocity_shipment",
+	"Sales Invoice-bl_awb_no",
+	"Sales Invoice-bl_awb_date",
+	"Sales Invoice-container_no",
+	"Sales Invoice-courier_tracking_no",
+	"Sales Invoice-column_break_velocity_weights",
+	"Sales Invoice-total_cartons",
+	"Sales Invoice-net_weight",
+	"Sales Invoice-gross_weight",
+	"Sales Invoice-packing_lists",
 ]
 
-VELOCITY_WORKFLOWS = ["Velocity Material Request Approval", "Velocity Purchase Order Approval"]
+VELOCITY_WORKFLOWS = [
+	"Velocity Material Request Approval",
+	"Velocity Purchase Order Approval",
+	"Velocity Gate Outward Approval",
+]
 VELOCITY_WORKFLOW_STATES = [
 	"Draft",
 	"Pending Approval",
@@ -233,6 +278,7 @@ VELOCITY_WORKFLOW_STATES = [
 	"Approved",
 	"Rejected",
 	"Cancelled",
+	"Issued",
 ]
 VELOCITY_WORKFLOW_ACTIONS = ["Submit for Approval", "Approve", "Reject", "Revise", "Submit", "Cancel"]
 
@@ -252,6 +298,8 @@ fixtures = [
 					"Velocity Requisition Approver",
 					"Velocity PO Approver L1",
 					"Velocity PO Approver L2",
+					"Velocity Gate",
+					"Velocity Gate Approver",
 				],
 			]
 		],
@@ -391,6 +439,7 @@ jinja = {
 		"velocity_ctp.production.printing.get_challan_lines",
 		"velocity_ctp.production.printing.get_packing_summary",
 		"velocity_ctp.procurement.printing.get_po_approval",
+		"velocity_ctp.shipping.invoice.get_invoice_lines",
 		"velocity_ctp.velocity_ctp.doctype.contractor_bill_run.contractor_bill_run.get_statement",
 	],
 }
