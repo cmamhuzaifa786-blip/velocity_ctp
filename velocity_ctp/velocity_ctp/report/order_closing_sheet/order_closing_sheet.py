@@ -42,8 +42,8 @@ def columns():
 			"options": "Customer",
 			"width": 130,
 		},
-		{"fieldname": "style", "label": _("Style"), "fieldtype": "Link", "options": "Style", "width": 110},
-		{"fieldname": "status", "label": _("Status"), "fieldtype": "Data", "width": 100},
+		{"fieldname": "style", "label": _("Style"), "fieldtype": "Link", "options": "Style", "width": 130},
+		{"fieldname": "status", "label": _("Status"), "fieldtype": "Data", "width": 125},
 		{"fieldname": "ordered", "label": _("Ordered"), "fieldtype": "Int", "width": 85},
 		{"fieldname": "cut", "label": _("Cut (Good)"), "fieldtype": "Int", "width": 90},
 		{"fieldname": "rejected", "label": _("Rejected"), "fieldtype": "Int", "width": 85},
@@ -76,7 +76,7 @@ def columns():
 			"fieldtype": "Percent",
 			"width": 145,
 		},
-		{"fieldname": "actual_basis", "label": _("Actual Covers"), "fieldtype": "Data", "width": 260},
+		{"fieldname": "actual_basis", "label": _("Actual Covers"), "fieldtype": "Data", "width": 430},
 	]
 
 

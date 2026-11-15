@@ -39,6 +39,10 @@ Balance and Supplier Performance reports; plus the Velocity Purchase Order print
 Services and costing (Phase 7): the Contractor Bill Run (with its Contractor Statement print), a Service Purchase
 Order and the Contractor Ledger and Accrued Contractor Charges reports.
 
+Shipment and gate (Phase 8): Delivery Note, Sales Invoice with the Commercial Invoice print, Sales Order with the
+Proforma Invoice print, Gate Outward and Gate Inward with their slips, and the Shipment Register, Gate Balance and
+Order Closing Sheet reports.
+
 `ONLY=key1,key2` runs only the pages whose key contains one of the parts, for example
 `ONLY=purchase,report-po node velocity_ctp/tests/screenshots/run.js`.
 

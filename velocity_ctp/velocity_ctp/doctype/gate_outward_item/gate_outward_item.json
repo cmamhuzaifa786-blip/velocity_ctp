@@ -46,10 +46,8 @@
    "fieldtype": "Column Break"
   },
   {
-   "columns": 1,
    "fieldname": "rolls",
    "fieldtype": "Int",
-   "in_list_view": 1,
    "label": "Rolls / Packages"
   },
   {
@@ -66,15 +64,15 @@
    "fieldname": "returnable",
    "fieldtype": "Check",
    "in_list_view": 1,
-   "label": "Returnable"
+   "label": "Returns"
   },
   {
-   "columns": 1,
+   "columns": 2,
    "depends_on": "eval:doc.returnable",
    "fieldname": "expected_return_date",
    "fieldtype": "Date",
    "in_list_view": 1,
-   "label": "Expected Return",
+   "label": "Return By",
    "mandatory_depends_on": "eval:doc.returnable"
   },
   {
@@ -96,7 +94,7 @@
  "index_web_pages_for_search": 0,
  "istable": 1,
  "links": [],
- "modified": "2026-11-16 16:00:00.000000",
+ "modified": "2026-11-16 21:00:00.000000",
  "modified_by": "Administrator",
  "module": "Velocity CTP",
  "name": "Gate Outward Item",

@@ -24,6 +24,7 @@ ROLES = (
 	"Purchase User",
 	"Quality Manager",
 	"Accounts User",
+	"Velocity Gate",
 )
 
 
@@ -79,6 +80,13 @@ def create() -> dict:
 		# Services and costing (Phase 7)
 		"contractor_bill_run": _latest("Contractor Bill Run", {"docstatus": 1}),
 		"service_order": _latest("Purchase Order", {"docstatus": 1, "po_category": "Service"}),
+		# Shipment and gate (Phase 8)
+		"delivery_note": _latest("Delivery Note", {"docstatus": 1, "garment_order": ("is", "set")}),
+		"sales_invoice": _latest("Sales Invoice", {"docstatus": 1, "invoice_category": "Export"}),
+		"sales_order": _latest("Sales Order", {"docstatus": 1}),
+		"gate_outward": _latest("Gate Outward", {"docstatus": 1, "open_returnable_qty": (">", 0)})
+		or _latest("Gate Outward", {"docstatus": 1}),
+		"gate_inward": _latest("Gate Inward", {"docstatus": 1}),
 	}
 
 

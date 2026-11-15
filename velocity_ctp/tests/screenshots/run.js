@@ -285,6 +285,28 @@ async function main() {
 		for (const report of ["Contractor Ledger", "Accrued Contractor Charges"]) {
 			pages.push({ key: "report-" + report.toLowerCase().replace(/ /g, "-"), url: `/desk/query-report/${report}`, ready: ".dt-row, .no-result, .report-wrapper", settle: 1500 });
 		}
+		// Shipment and gate (Phase 8)
+		const shipping = [
+			["delivery_note", "delivery-note", '[data-fieldname="items"] .grid-body', "Delivery Note", null],
+			["sales_invoice", "sales-invoice", '[data-fieldname="items"] .grid-body', "Sales Invoice", "Commercial Invoice"],
+			["sales_order", "sales-order", '[data-fieldname="items"] .grid-body', "Sales Order", "Proforma Invoice"],
+			["gate_outward", "gate-outward", '[data-fieldname="items"] .grid-body', "Gate Outward", "Gate Outward Slip"],
+			["gate_inward", "gate-inward", '[data-fieldname="items"] .grid-body', "Gate Inward", "Gate Inward Slip"],
+		];
+		for (const [field, slug, ready, doctype, format] of shipping) {
+			if (!info[field]) {
+				console.log(`No ${field.replace(/_/g, " ")} found: skipping it.`);
+				continue;
+			}
+			pages.push({ key: slug, url: route(slug, info[field]), ready });
+			if (format) {
+				const params = new URLSearchParams({ doctype, name: info[field], format, no_letterhead: 1 });
+				pages.push({ key: `print-${slug}`, url: `/printview?${params}`, ready: ".vt-doc", print: true });
+			}
+		}
+		for (const report of ["Shipment Register", "Gate Balance", "Order Closing Sheet"]) {
+			pages.push({ key: "report-" + report.toLowerCase().replace(/ /g, "-"), url: `/desk/query-report/${report}`, ready: ".dt-row, .no-result, .report-wrapper", settle: 1500 });
+		}
 		if (ONLY.length) {
 			const keep = pages.filter((p) => ONLY.some((k) => p.key.includes(k)));
 			pages.length = 0;

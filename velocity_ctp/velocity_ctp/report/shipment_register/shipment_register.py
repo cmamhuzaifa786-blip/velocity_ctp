@@ -21,7 +21,7 @@ def execute(filters=None):
 
 def columns():
 	return [
-		{"fieldname": "posting_date", "label": _("Date"), "fieldtype": "Date", "width": 100},
+		{"fieldname": "posting_date", "label": _("Date"), "fieldtype": "Date", "width": 110},
 		{
 			"fieldname": "delivery_note",
 			"label": _("Delivery Note"),
@@ -48,7 +48,7 @@ def columns():
 			"label": _("Sales Order"),
 			"fieldtype": "Link",
 			"options": "Sales Order",
-			"width": 165,
+			"width": 190,
 		},
 		{"fieldname": "packing_lists", "label": _("Packing Lists"), "fieldtype": "Data", "width": 200},
 		{"fieldname": "cartons", "label": _("Cartons"), "fieldtype": "Int", "width": 80},
@@ -73,7 +73,7 @@ def columns():
 			"fieldtype": "Currency",
 			"width": 170,
 		},
-		{"fieldname": "sales_invoice", "label": _("Sales Invoice"), "fieldtype": "Data", "width": 175},
+		{"fieldname": "sales_invoice", "label": _("Sales Invoice"), "fieldtype": "Data", "width": 240},
 		{"fieldname": "invoice_status", "label": _("Invoice Status"), "fieldtype": "Data", "width": 120},
 		{"fieldname": "gate_outward", "label": _("Gate Outward"), "fieldtype": "Data", "width": 135},
 	]
