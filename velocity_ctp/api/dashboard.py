@@ -102,6 +102,19 @@ def get_home_data() -> dict:
 			)[0].qty
 		)
 
+	shipping = None
+	open_returnables = None
+	ready = None
+	if frappe.has_permission("Delivery Note", "read"):
+		from velocity_ctp.shipping.dashboard import ready_to_ship, shipped_this_month
+
+		shipping = shipped_this_month(get_default_company(throw=False))
+		ready = ready_to_ship()
+	if frappe.has_permission("Gate Outward", "read"):
+		from velocity_ctp.shipping.gate import open_returnables as returnables
+
+		open_returnables = len(returnables())
+
 	unbilled_work = None
 	if frappe.has_permission("Contractor Bill Run", "read"):
 		from velocity_ctp.procurement.contractor_billing import unbilled_total
@@ -193,6 +206,29 @@ def get_home_data() -> dict:
 				"hidden": cut_today is None,
 			},
 			{
+				"key": "shipped_this_month",
+				"label": _("Shipped This Month"),
+				"sub": _("pcs · {0} value").format(
+					frappe.format(shipping["value"], {"fieldtype": "Currency"}) if shipping else ""
+				),
+				"value": shipping["pcs"] if shipping else None,
+				"tone": "ok",
+				"doctype": "Delivery Note",
+				"filters": {"docstatus": 1, "is_return": 0, "posting_date": [">=", shipping["from"]]}
+				if shipping
+				else {},
+				"hidden": shipping is None,
+			},
+			{
+				"key": "returnables_pending",
+				"label": _("Returnable Items Pending"),
+				"sub": _("Out on gate passes, not back yet"),
+				"value": open_returnables,
+				"tone": "warn",
+				"route": "query-report/Gate Balance",
+				"hidden": open_returnables is None,
+			},
+			{
 				"key": "unbilled_contractor_work",
 				"label": _("Unbilled Contractor Work"),
 				"sub": _("PKR accrued, not invoiced yet"),
@@ -217,6 +253,7 @@ def get_home_data() -> dict:
 		"cutting": get_cutting_status() if frappe.has_permission("Cut Receive", "read") else None,
 		"pipeline": get_approval_pipeline() if can_read_job_map else None,
 		"procurement": get_procurement_summary(),
+		"ready_to_ship": ready,
 	}
 
 
@@ -542,8 +579,10 @@ def stage_packing(orders: list[frappe._dict], context: dict) -> dict[str, StageS
 
 
 def stage_shipped(orders: list[frappe._dict], context: dict) -> dict[str, StageState]:
-	"""Shipped stage. Plug in delivered quantity (Delivery Notes against the Sales Order) later."""
-	return _not_started(orders)
+	"""Shipped stage: pieces on submitted Delivery Notes of the order quantity (invoiced in the tooltip)."""
+	from velocity_ctp.shipping.dashboard import stage_shipped as shipped
+
+	return shipped(orders, context)
 
 
 # Order of this list is the order of the pipeline on the page.

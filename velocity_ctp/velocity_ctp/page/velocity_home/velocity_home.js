@@ -71,6 +71,7 @@ class VelocityHome {
 				<div class="vt-stack">
 					${data.pipeline ? this.pipeline_html(data.pipeline) : ""}
 					${data.procurement ? this.procurement_html(data.procurement) : ""}
+					${data.ready_to_ship ? this.ready_html(data.ready_to_ship) : ""}
 					<div class="vt-card">
 						<div class="vt-card__title">${__("Quick Actions")}</div>
 						<div class="vt-quick">
@@ -286,6 +287,26 @@ class VelocityHome {
 		</div>`;
 	}
 
+	ready_html(rows) {
+		const esc = frappe.utils.escape_html;
+		const body = rows.length
+			? `<div class="vt-table-wrap"><table class="vt-table">
+				<thead><tr><th>${__("Job #")}</th><th class="vt-num">${__("Pcs")}</th><th class="vt-num">${__("Cartons")}</th><th class="vt-num">${__("Ship In")}</th></tr></thead>
+				<tbody>${rows
+					.map(
+						(r) => `<tr data-ready="${esc(r.garment_order)}" class="${r.days_left !== null && r.days_left < 0 ? "vt-row--overdue" : ""}">
+							<td><span class="vt-link">${esc(r.garment_order)}</span><div class="vt-muted small">${esc(r.customer || "")} · ${r.lists} ${__("packing list(s)")}</div></td>
+							<td class="vt-num">${format_number(r.pcs || 0, null, 0)}</td><td class="vt-num">${format_number(r.cartons || 0, null, 0)}</td>
+							<td class="vt-num vt-days">${r.days_left === null ? "—" : r.days_left < 0 ? __("{0} days late", [-r.days_left]) : __("{0} days", [r.days_left])}</td></tr>`
+					)
+					.join("")}</tbody></table></div>`
+			: `<div class="vt-empty vt-empty--compact">${__("Nothing packed is waiting for shipment.")}</div>`;
+		return `<div class="vt-card">
+			<div class="vt-card__title"><span>${__("Ready to Ship")}</span><span class="vt-card__hint">${__("Packed, no Delivery Note yet")}</span></div>
+			${body}
+		</div>`;
+	}
+
 	procurement_html(procurement) {
 		const cards = procurement.cards || [];
 		const waiting = cards.reduce((t, c) => t + (c.value || 0), 0);
@@ -308,6 +329,10 @@ class VelocityHome {
 	}
 
 	bind(data) {
+		this.$body.find("tr[data-ready]").on("click", (e) => {
+			frappe.route_options = { garment_order: e.currentTarget.dataset.ready, docstatus: 1, delivery_note: ["is", "not set"] };
+			frappe.set_route("List", "Packing List");
+		});
 		this.$body.find("[data-proc]").on("click", (e) => {
 			const card = data.procurement.cards[cint(e.currentTarget.dataset.proc)];
 			frappe.route_options = card.filters;
