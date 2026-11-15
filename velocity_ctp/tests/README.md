@@ -36,6 +36,9 @@ Order (approved and pending), Purchase Receipt, Quality Inspection, Purchase Inv
 Issue, Department Issue, the Material Request and Purchase Order lists and the PO Status, GRN Register, Job Accessory
 Balance and Supplier Performance reports; plus the Velocity Purchase Order print (approved and UNAPPROVED) at 1366px.
 
+Services and costing (Phase 7): the Contractor Bill Run (with its Contractor Statement print), a Service Purchase
+Order and the Contractor Ledger and Accrued Contractor Charges reports.
+
 `ONLY=key1,key2` runs only the pages whose key contains one of the parts, for example
 `ONLY=purchase,report-po node velocity_ctp/tests/screenshots/run.js`.
 

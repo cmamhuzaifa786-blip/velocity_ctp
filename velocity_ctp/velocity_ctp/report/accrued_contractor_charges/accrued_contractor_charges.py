@@ -68,7 +68,7 @@ def columns():
 			"options": "source_doctype",
 			"width": 140,
 		},
-		{"fieldname": "posting_date", "label": _("Date"), "fieldtype": "Date", "width": 95},
+		{"fieldname": "posting_date", "label": _("Date"), "fieldtype": "Date", "width": 110},
 		{"fieldname": "process", "label": _("Process"), "fieldtype": "Data", "width": 95},
 		{
 			"fieldname": "garment_order",

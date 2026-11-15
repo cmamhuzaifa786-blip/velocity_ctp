@@ -273,6 +273,18 @@ async function main() {
 				settle: 1500,
 			});
 		}
+		// Services and costing (Phase 7)
+		if (info.contractor_bill_run) {
+			pages.push({ key: "contractor-bill-run", url: route("contractor-bill-run", info.contractor_bill_run), ready: '[data-fieldname="items"] .grid-body' });
+			const params = new URLSearchParams({ doctype: "Contractor Bill Run", name: info.contractor_bill_run, format: "Contractor Statement", no_letterhead: 1 });
+			pages.push({ key: "print-contractor-statement", url: `/printview?${params}`, ready: ".vt-doc", print: true });
+		}
+		if (info.service_order) {
+			pages.push({ key: "service-order", url: route("purchase-order", info.service_order), ready: '[data-fieldname="items"] .grid-body' });
+		}
+		for (const report of ["Contractor Ledger", "Accrued Contractor Charges"]) {
+			pages.push({ key: "report-" + report.toLowerCase().replace(/ /g, "-"), url: `/desk/query-report/${report}`, ready: ".dt-row, .no-result, .report-wrapper", settle: 1500 });
+		}
 		if (ONLY.length) {
 			const keep = pages.filter((p) => ONLY.some((k) => p.key.includes(k)));
 			pages.length = 0;

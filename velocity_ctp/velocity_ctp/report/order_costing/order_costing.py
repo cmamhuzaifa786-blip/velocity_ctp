@@ -92,7 +92,7 @@ def columns() -> list[dict]:
 			"width": 125,
 		},
 		money("variance", _("Variance / Pc (Actual - Estimate)"), 225),
-		{"fieldname": "actual_basis", "label": _("Actual Covers"), "fieldtype": "Data", "width": 260},
+		{"fieldname": "actual_basis", "label": _("Actual Covers"), "fieldtype": "Data", "width": 430},
 	]
 	return cols
 

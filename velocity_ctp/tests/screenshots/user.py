@@ -76,6 +76,9 @@ def create() -> dict:
 		"accessory_allocation": _latest("Accessory Allocation", {"docstatus": 1}),
 		"accessory_issue": _latest("Accessory Issue", {"docstatus": 1, "issue_type": "Issue"}),
 		"department_issue": _latest("Department Issue", {"docstatus": 1, "issue_type": "Issue"}),
+		# Services and costing (Phase 7)
+		"contractor_bill_run": _latest("Contractor Bill Run", {"docstatus": 1}),
+		"service_order": _latest("Purchase Order", {"docstatus": 1, "po_category": "Service"}),
 	}
 
 

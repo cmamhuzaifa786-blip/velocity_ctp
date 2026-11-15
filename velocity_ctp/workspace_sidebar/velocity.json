@@ -323,7 +323,7 @@
    "idx": 25,
    "indent": 0,
    "keep_closed": 0,
-   "label": "Service Purchase Orders",
+   "label": "Service Orders",
    "link_to": "Purchase Order",
    "link_type": "DocType",
    "route_options": "{\"po_category\": \"Service\"}",
@@ -666,7 +666,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-11-16 10:00:00.000000",
+ "modified": "2026-11-16 13:00:00.000000",
  "modified_by": "Administrator",
  "module": "Velocity CTP",
  "name": "Velocity",
