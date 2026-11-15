@@ -1,0 +1,108 @@
+{
+ "actions": [],
+ "creation": "2026-11-16 16:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item_code",
+  "description",
+  "uom",
+  "column_break_qty",
+  "rolls",
+  "qty",
+  "returnable",
+  "expected_return_date",
+  "returned_qty",
+  "reference_row"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "description": "Optional: leave empty and use the description for things that are not items.",
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item",
+   "options": "Item"
+  },
+  {
+   "columns": 3,
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Description"
+  },
+  {
+   "columns": 1,
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "UOM",
+   "options": "UOM"
+  },
+  {
+   "fieldname": "column_break_qty",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 1,
+   "fieldname": "rolls",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Rolls / Packages"
+  },
+  {
+   "columns": 1,
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Qty",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "returnable",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Returnable"
+  },
+  {
+   "columns": 1,
+   "depends_on": "eval:doc.returnable",
+   "fieldname": "expected_return_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Expected Return",
+   "mandatory_depends_on": "eval:doc.returnable"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "returned_qty",
+   "fieldtype": "Float",
+   "label": "Returned",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "reference_row",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Reference Row",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-11-16 16:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Velocity CTP",
+ "name": "Gate Outward Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -21,6 +21,14 @@ frappe.ui.form.on("Process Issue", {
 	},
 
 	refresh(frm) {
+		if (frm.doc.docstatus === 1) {
+			frm.add_custom_button(__("Gate Outward"), () =>
+				frappe.new_doc("Gate Outward", {
+					gate_pass_type: "Process Challan",
+					reference_doctype: "Process Issue",
+					reference_name: frm.doc.name,
+				}), __("Create"));
+		}
 		frm.trigger("toggle_party");
 		if (frm.doc.docstatus === 1) {
 			frm.add_custom_button(__("Print Challan"), () => open_challan(frm)).addClass("btn-primary");
