@@ -42,7 +42,7 @@ def columns():
 			"options": "Garment Order",
 			"width": 120,
 		},
-		{"fieldname": "item", "label": _("Accessory"), "fieldtype": "Link", "options": "Item", "width": 290},
+		{"fieldname": "item", "label": _("Accessory"), "fieldtype": "Link", "options": "Item", "width": 330},
 		{"fieldname": "item_name", "label": _("Item Name"), "fieldtype": "Data", "width": 150},
 		{"fieldname": "uom", "label": _("UOM"), "fieldtype": "Link", "options": "UOM", "width": 65},
 		{"fieldname": "required", "label": _("Required"), "fieldtype": "Float", "width": 95},

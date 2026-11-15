@@ -33,7 +33,7 @@ def columns():
 			"label": _("Purchase Order"),
 			"fieldtype": "Link",
 			"options": "Purchase Order",
-			"width": 180,
+			"width": 205,
 		},
 		{"fieldname": "po_category", "label": _("Category"), "fieldtype": "Data", "width": 110},
 		{"fieldname": "po_type", "label": _("Type"), "fieldtype": "Data", "width": 85},
