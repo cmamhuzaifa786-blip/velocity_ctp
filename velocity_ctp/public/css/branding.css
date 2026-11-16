@@ -1,0 +1,29 @@
+/*
+ * Velocity CTP branding, loaded on every desk and website page (hooks: app_include_css, web_include_css).
+ * The logo's black parts disappear on a dark background, so in dark mode the plain logo sits on a small
+ * white rounded tile. The *_tile.png files already have their tile.
+ */
+
+[data-theme="dark"] img[src*="/velocity_ctp/images/velocity_logo.png"],
+[data-theme="dark"] img[src*="/velocity_ctp/images/velocity_logo_mark.png"] {
+	background: #fff;
+	border-radius: 6px;
+	padding: 2px;
+	box-sizing: border-box;
+}
+
+/* Velocity Home header: the logo before the company name */
+.vt-brand {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.vt-brand__logo {
+	height: 26px;
+	width: auto;
+	flex: none;
+}
+[data-theme="dark"] .vt-brand__logo {
+	height: 30px;
+	padding: 3px;
+}

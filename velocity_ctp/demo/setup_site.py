@@ -9,7 +9,8 @@ It refuses to run on a site whose name does not contain "demo". Steps (each is s
    1 July - 30 June, standard chart of accounts
 2. velocity_ctp.setup.install.setup_masters()
 3. velocity_ctp.setup.procurement_settings.apply()
-4. Letter head "Velocity Textiles" (default), with a placeholder for the logo
+4. Branding: letter head "Velocity Textiles" with the logo (default), app logo and favicon
+   (velocity_ctp.setup.branding.apply)
 """
 
 from __future__ import annotations
@@ -19,28 +20,6 @@ from frappe.utils import getdate, nowdate
 
 COMPANY = "Velocity Textiles (Pvt.) Ltd."
 ABBR = "VT"
-LETTER_HEAD = "Velocity Textiles"
-
-# The logo placeholder: upload the logo, then replace the <div class="vt-lh-logo"> ... </div> block in the
-# Letter Head's HTML with <img src="/files/<your-logo>.png" style="max-height:20mm">.
-LETTER_HEAD_HTML = """<table style="width:100%; border-collapse:collapse; font-family:Inter, Arial, sans-serif; color:#111;">
-	<tr>
-		<td style="width:32mm; vertical-align:middle;">
-			<div class="vt-lh-logo" style="width:28mm; height:18mm; border:1.5px dashed #9aa4b2; border-radius:2mm;
-				display:flex; align-items:center; justify-content:center; color:#6b7480; font-size:8pt; text-align:center;">
-				LOGO<br>(replace in Letter Head)
-			</div>
-		</td>
-		<td style="vertical-align:middle; padding-left:4mm;">
-			<div style="font-size:15pt; font-weight:700; letter-spacing:.01em;">Velocity Textiles (Pvt.) Ltd.</div>
-			<div style="font-size:8.5pt; color:#444; line-height:1.45;">
-				F-235, S.I.T.E., Near Fire Brigade, Sindh Industrial Trading Estate, Karachi<br>
-				Tel 021-32580120-2 &nbsp;·&nbsp; info@velocitytex.com &nbsp;·&nbsp; NTN 4046558-6
-			</div>
-		</td>
-	</tr>
-</table>
-<div style="border-bottom:1.5px solid #111; margin:2mm 0 1mm;"></div>"""
 
 
 def check_demo_site() -> None:
@@ -86,21 +65,6 @@ def setup_company() -> bool:
 	return True
 
 
-def ensure_letter_head() -> bool:
-	if frappe.db.exists("Letter Head", LETTER_HEAD):
-		return False
-	frappe.get_doc(
-		{
-			"doctype": "Letter Head",
-			"letter_head_name": LETTER_HEAD,
-			"source": "HTML",
-			"content": LETTER_HEAD_HTML,
-			"is_default": 1,
-		}
-	).insert(ignore_permissions=True)
-	return True
-
-
 def run() -> None:
 	check_demo_site()
 	print("Company setup:", "done" if setup_company() else "already set up")
@@ -109,5 +73,7 @@ def run() -> None:
 
 	setup_masters()
 	procurement_settings.apply()
-	print("Letter head:", "created" if ensure_letter_head() else "already exists")
+	from velocity_ctp.setup import branding
+
+	branding.apply()
 	frappe.db.commit()

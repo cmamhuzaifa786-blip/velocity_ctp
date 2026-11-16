@@ -10,6 +10,14 @@ app_license = "mit"
 
 required_apps = ["erpnext"]
 
+# Branding (see velocity_ctp/setup/branding.py): the app icon is the logo on a white tile, so it shows in
+# light and dark themes; the favicon is the same tile.
+app_logo_url = "/assets/velocity_ctp/images/velocity_logo_tile.png"
+website_context = {
+	"favicon": "/assets/velocity_ctp/images/velocity_favicon.png",
+	"splash_image": "/assets/velocity_ctp/images/velocity_logo.png",
+}
+
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
 # 	{
@@ -26,10 +34,13 @@ required_apps = ["erpnext"]
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/velocity_ctp/css/velocity_ctp.css"
+# The logo on a white tile in dark mode (bump ?v= when the file changes)
+app_include_css = ["/assets/velocity_ctp/css/branding.css?v=1"]
 # app_include_js = "/assets/velocity_ctp/js/velocity_ctp.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/velocity_ctp/css/velocity_ctp.css"
+web_include_css = ["/assets/velocity_ctp/css/branding.css?v=1"]
 # web_include_js = "/assets/velocity_ctp/js/velocity_ctp.js"
 
 # include custom scss in every website theme (without file extension ".scss")
@@ -439,6 +450,7 @@ fixtures = [
 # Jinja helpers for print formats (Bundle Ticket)
 jinja = {
 	"methods": [
+		"velocity_ctp.setup.branding.velocity_logo_src",
 		"velocity_ctp.cutting.bundles.get_bundle_tickets",
 		"velocity_ctp.production.printing.get_challan_lines",
 		"velocity_ctp.production.printing.get_packing_summary",

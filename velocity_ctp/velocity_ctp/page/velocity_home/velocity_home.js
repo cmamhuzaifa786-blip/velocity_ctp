@@ -40,7 +40,10 @@ class VelocityHome {
 		this.$body.html(`
 			<div class="vt-header">
 				<div>
-					<div class="vt-header__eyebrow">${esc(data.company || __("No default company"))}</div>
+					<div class="vt-brand">
+						<img class="vt-brand__logo" src="/assets/velocity_ctp/images/velocity_logo.png" alt="">
+						<div class="vt-header__eyebrow">${esc(data.company || __("No default company"))}</div>
+					</div>
 					<h2 class="vt-header__title">${__("Production overview")}</h2>
 					<div class="vt-header__meta">${weekday}, ${today}</div>
 				</div>

@@ -11,7 +11,7 @@
  "label": "Velocity",
  "link_to": "Velocity",
  "link_type": "Workspace Sidebar",
- "modified": "2026-11-14 18:27:23.313644",
+ "modified": "2026-11-16 22:00:00.000000",
  "modified_by": "Administrator",
  "name": "Velocity",
  "owner": "Administrator",
@@ -36,5 +36,6 @@
    "role": "Velocity Costing Approver"
   }
  ],
- "standard": 1
+ "standard": 1,
+ "logo_url": "/assets/velocity_ctp/images/velocity_logo_tile.png"
 }

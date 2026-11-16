@@ -79,8 +79,21 @@ nothing new. `--kwargs "{'dry_run': True}"` runs it and rolls everything back. I
 order numbers and the best record for each feature to `velocity_ctp/demo/DEMO_DATA.md`.
 
 Add `127.0.0.1 velocity-demo.local` to `/etc/hosts` (and to the Windows hosts file when browsing from Windows) to
-open it at `http://velocity-demo.local:8000`. The letter head "Velocity Textiles" has a placeholder for the logo:
-upload the logo and replace the `vt-lh-logo` block in the Letter Head with an `<img>` of it.
+open it at `http://velocity-demo.local:8000`.
+
+### Branding (logo)
+
+The client logo is `velocity_ctp/public/images/velocity_logo.png` (with a cropped copy, a white-tile copy for
+icons and dark backgrounds, and a favicon made from it). It is used for the app icon, desktop icon, sidebar,
+Velocity Home header, login page, favicon, the letter head "Velocity Textiles" and the thermal bundle ticket.
+On an existing site run once (it only fills in what is missing and never replaces a logo someone has set):
+
+```bash
+bench --site <site> execute velocity_ctp.setup.branding.apply
+```
+
+New demo sites get it from `velocity_ctp.demo.setup_site.run`. In dark mode the logo sits on a small white tile
+(`public/css/branding.css`).
 
 ### Shipment and export documents
 
