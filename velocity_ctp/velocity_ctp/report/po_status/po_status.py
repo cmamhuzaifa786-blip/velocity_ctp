@@ -26,7 +26,7 @@ def columns():
 			"label": _("Supplier"),
 			"fieldtype": "Link",
 			"options": "Supplier",
-			"width": 170,
+			"width": 280,
 		},
 		{
 			"fieldname": "purchase_order",
@@ -37,7 +37,7 @@ def columns():
 		},
 		{"fieldname": "po_category", "label": _("Category"), "fieldtype": "Data", "width": 110},
 		{"fieldname": "po_type", "label": _("Type"), "fieldtype": "Data", "width": 85},
-		{"fieldname": "item_code", "label": _("Item"), "fieldtype": "Link", "options": "Item", "width": 190},
+		{"fieldname": "item_code", "label": _("Item"), "fieldtype": "Link", "options": "Item", "width": 210},
 		{
 			"fieldname": "garment_order",
 			"label": _("Garment Order"),
@@ -51,7 +51,7 @@ def columns():
 		{"fieldname": "uom", "label": _("UOM"), "fieldtype": "Link", "options": "UOM", "width": 70},
 		{"fieldname": "schedule_date", "label": _("Required By"), "fieldtype": "Date", "width": 105},
 		{"fieldname": "days_overdue", "label": _("Days Overdue"), "fieldtype": "Int", "width": 95},
-		{"fieldname": "approval_status", "label": _("Approval Status"), "fieldtype": "Data", "width": 170},
+		{"fieldname": "approval_status", "label": _("Approval Status"), "fieldtype": "Data", "width": 190},
 		{"fieldname": "status", "label": _("PO Status"), "fieldtype": "Data", "width": 160},
 	]
 

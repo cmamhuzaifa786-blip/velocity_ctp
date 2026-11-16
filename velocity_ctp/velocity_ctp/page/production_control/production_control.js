@@ -30,17 +30,19 @@ class ControlTower {
 		const esc = frappe.utils.escape_html;
 		const pct = (v) => (v === null || v === undefined ? '<span class="vt-muted">–</span>' : `${format_number(v, null, 1)}%`);
 		const wip = (data.wip || [])
-			.map(
-				(c) => `<button type="button" class="vt-kpi vt-kpi--${c.repair ? "warn" : "info"}" data-process="${esc(c.process)}">
-					<span class="vt-kpi__label">${esc(c.process)}</span>
-					<span class="vt-kpi__value">${format_number(c.pieces, null, 0)}</span>
-					<span class="vt-kpi__sub">${__("{0} bundles", [c.bundles])} · ${
+			.map((c) => {
+				const sub = `${__("{0} bundles", [c.bundles])} · ${
 					c.process === "Cutting"
 						? __("cut, not issued")
 						: __("{0} out · {1} back", [format_number(c.issued, null, 0), format_number(c.received, null, 0)])
-				}${c.repair ? " · " + __("{0} in repair", [c.repair]) : ""}</span>
-				</button>`
-			)
+				}${c.repair ? " · " + __("{0} in repair", [c.repair]) : ""}`;
+				// the line can be cut off on narrow screens; the tooltip shows all of it
+				return `<button type="button" class="vt-kpi vt-kpi--${c.repair ? "warn" : "info"}" data-process="${esc(c.process)}" title="${esc(sub)}">
+					<span class="vt-kpi__label">${esc(c.process)}</span>
+					<span class="vt-kpi__value">${format_number(c.pieces, null, 0)}</span>
+					<span class="vt-kpi__sub">${esc(sub)}</span>
+				</button>`;
+			})
 			.join("");
 		const contractors = (data.contractors || []).filter((c) => c.bundles);
 		const contractorCards = contractors.length

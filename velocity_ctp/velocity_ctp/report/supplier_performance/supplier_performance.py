@@ -40,7 +40,7 @@ def columns():
 			"label": _("Supplier"),
 			"fieldtype": "Link",
 			"options": "Supplier",
-			"width": 180,
+			"width": 280,
 		},
 		{"fieldname": "pos", "label": _("POs"), "fieldtype": "Int", "width": 60},
 		{"fieldname": "po_value", "label": _("PO Value"), "fieldtype": "Currency", "width": 130},

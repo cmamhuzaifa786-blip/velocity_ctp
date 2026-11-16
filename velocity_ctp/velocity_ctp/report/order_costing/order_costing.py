@@ -57,9 +57,9 @@ def columns() -> list[dict]:
 			"label": _("Customer"),
 			"fieldtype": "Link",
 			"options": "Customer",
-			"width": 120,
+			"width": 150,
 		},
-		{"fieldname": "style", "label": _("Style"), "fieldtype": "Link", "options": "Style", "width": 115},
+		{"fieldname": "style", "label": _("Style"), "fieldtype": "Link", "options": "Style", "width": 165},
 		{"fieldname": "status", "label": _("Status"), "fieldtype": "Data", "width": 105},
 		{
 			"fieldname": "cost_sheet",

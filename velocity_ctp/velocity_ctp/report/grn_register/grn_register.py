@@ -32,7 +32,7 @@ def columns():
 			"label": _("Supplier"),
 			"fieldtype": "Link",
 			"options": "Supplier",
-			"width": 170,
+			"width": 280,
 		},
 		{"fieldname": "supplier_challan_no", "label": _("Challan No."), "fieldtype": "Data", "width": 115},
 		{
@@ -42,7 +42,7 @@ def columns():
 			"options": "Purchase Order",
 			"width": 205,
 		},
-		{"fieldname": "item_code", "label": _("Item"), "fieldtype": "Link", "options": "Item", "width": 190},
+		{"fieldname": "item_code", "label": _("Item"), "fieldtype": "Link", "options": "Item", "width": 210},
 		{"fieldname": "supplier_lot_no", "label": _("Lot"), "fieldtype": "Data", "width": 110},
 		{"fieldname": "shade", "label": _("Shade"), "fieldtype": "Data", "width": 85},
 		{"fieldname": "batch_no", "label": _("Batch"), "fieldtype": "Link", "options": "Batch", "width": 265},

@@ -45,7 +45,7 @@ def columns():
 			"label": _("Contractor"),
 			"fieldtype": "Link",
 			"options": "Supplier",
-			"width": 200,
+			"width": 280,
 		},
 		{"fieldname": "documents", "label": _("Work Documents"), "fieldtype": "Int", "width": 125},
 		{
