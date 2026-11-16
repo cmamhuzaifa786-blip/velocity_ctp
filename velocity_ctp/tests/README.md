@@ -59,7 +59,12 @@ node velocity_ctp/tests/screenshots/run.js
 ```
 
 Optional environment variables: `SITE` (default `velocity.local`), `BASE_URL` (default `http://<SITE>:8000`),
-`BENCH_DIR`, `CHROMIUM_PATH`, `OUT_DIR`.
+`BENCH_DIR`, `CHROMIUM_PATH`, `OUT_DIR`, `ONLY`. When the host in `BASE_URL` is not the site name, the
+`X-Frappe-Site-Name` header is sent, so a site without a hosts entry works too:
+
+```bash
+SITE=velocity-demo.local BASE_URL=http://127.0.0.1:8000 node velocity_ctp/tests/screenshots/run.js
+```
 
 Screenshots go to `velocity_ctp/tests/screenshots/output/` (git-ignored, replaced on every run).
 

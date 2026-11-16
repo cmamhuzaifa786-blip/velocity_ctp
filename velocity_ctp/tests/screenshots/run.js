@@ -17,6 +17,8 @@ const BENCH = process.env.BENCH_DIR || path.resolve(HERE, "..", "..", "..", ".."
 const SITE = process.env.SITE || "velocity.local";
 const BASE = (process.env.BASE_URL || `http://${SITE}:8000`).replace(/\/$/, "");
 const OUT = process.env.OUT_DIR || path.join(HERE, "output");
+// A site served without its own host name (for example BASE_URL=http://127.0.0.1:8000) is picked by this header.
+const SITE_HEADERS = new URL(BASE).hostname === SITE ? {} : { "X-Frappe-Site-Name": SITE };
 const LIBS = path.join(HERE, ".browser-libs", "usr", "lib", "x86_64-linux-gnu");
 const WIDTHS = [1920, 1366, 820];
 // ONLY=key1,key2 limits the run to pages whose key contains one of the given parts (for example ONLY=purchase,po-).
@@ -144,7 +146,11 @@ async function main() {
 	const results = [];
 	try {
 		// Headless Chromium can report no locale, which breaks Frappe's keyboard shortcut setup.
-		const context = await browser.newContext({ viewport: { width: 1920, height: 1080 }, locale: "en-US" });
+		const context = await browser.newContext({
+			viewport: { width: 1920, height: 1080 },
+			locale: "en-US",
+			extraHTTPHeaders: SITE_HEADERS,
+		});
 		const page = await context.newPage();
 		let errors = [];
 		page.on("pageerror", (e) => errors.push(String(e).split("\n")[0]));
