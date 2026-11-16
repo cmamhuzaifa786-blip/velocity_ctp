@@ -59,7 +59,9 @@ node velocity_ctp/tests/screenshots/run.js
 ```
 
 Optional environment variables: `SITE` (default `velocity.local`), `BASE_URL` (default `http://<SITE>:8000`),
-`BENCH_DIR`, `CHROMIUM_PATH`, `OUT_DIR`, `ONLY`. When the host in `BASE_URL` is not the site name, the
+`BENCH_DIR`, `CHROMIUM_PATH`, `OUT_DIR`, `ONLY`, `LETTER_HEAD` (letter head on the print screenshots, default
+"Velocity Textiles"; empty for none). The login page (logged out) and the desktop are included; failed requests are
+reported with their URL. When the host in `BASE_URL` is not the site name, the
 `X-Frappe-Site-Name` header is sent, so a site without a hosts entry works too:
 
 ```bash

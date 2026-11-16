@@ -22,6 +22,9 @@ const SITE_HEADERS = new URL(BASE).hostname === SITE ? {} : { "X-Frappe-Site-Nam
 const LIBS = path.join(HERE, ".browser-libs", "usr", "lib", "x86_64-linux-gnu");
 const WIDTHS = [1920, 1366, 820];
 // ONLY=key1,key2 limits the run to pages whose key contains one of the given parts (for example ONLY=purchase,po-).
+// Prints are shown with this letter head (LETTER_HEAD= for none).
+const LETTER_HEAD = process.env.LETTER_HEAD ?? "Velocity Textiles";
+const LH = LETTER_HEAD ? { letterhead: LETTER_HEAD } : { ...LH };
 const ONLY = (process.env.ONLY || "").split(",").map((k) => k.trim()).filter(Boolean);
 const THEMES = ["light", "dark"];
 
@@ -154,11 +157,31 @@ async function main() {
 		const page = await context.newPage();
 		let errors = [];
 		page.on("pageerror", (e) => errors.push(String(e).split("\n")[0]));
+		// Name the failing URL ("Failed to load resource" in the console does not say which one).
+		page.on("response", (r) => {
+			if (r.status() >= 400 && !/socket\.io|favicon/i.test(r.url())) errors.push(`HTTP ${r.status()} ${r.url().replace(BASE, "")}`);
+		});
 		page.on("console", (m) => {
 			if (m.type() === "error" && !/socket\.io|favicon|ERR_CONNECTION_REFUSED/i.test(m.text())) {
 				errors.push(m.text().split("\n")[0]);
 			}
 		});
+
+		// The login page (logged out) shows the app logo.
+		if (!ONLY.length || ONLY.some((k) => "login".includes(k))) {
+			for (const theme of THEMES) {
+				await page.setViewportSize({ width: 1366, height: 1000 });
+				await page.goto(`${BASE}/login`, { waitUntil: "domcontentloaded", timeout: 60000 });
+				await page.evaluate((t) => document.documentElement.setAttribute("data-theme", t), theme);
+				await page.waitForSelector(".app-logo", { timeout: 30000 });
+				await page.waitForTimeout(600);
+				const file = `login-${theme}-1366.png`;
+				await page.screenshot({ path: path.join(OUT, file), fullPage: true });
+				const favicon = await page.evaluate(() => document.querySelector("link[rel~='icon']")?.getAttribute("href"));
+				console.log(`Login page logo: ${await page.getAttribute(".app-logo", "src")}; favicon: ${favicon}`);
+				results.push({ file, errors: [], truncated: [], horizontalOverflow: 0 });
+			}
+		}
 
 		const login = await page.request.post(`${BASE}/api/method/login`, {
 			form: { usr: info.email, pwd: info.password },
@@ -167,6 +190,7 @@ async function main() {
 
 		const route = (doctype, name) => `/desk/${doctype}/${encodeURIComponent(name)}`;
 		const pages = [
+			{ key: "desktop", url: "/desk", ready: "#brand-logo", settle: 1200 },
 			{ key: "velocity-home", url: "/desk/velocity-home", ready: ".vt-kpi" },
 			{ key: "order-tracker", url: "/desk/order-tracker", ready: ".vt-tracker, .vt-empty" },
 		];
@@ -233,14 +257,14 @@ async function main() {
 			pages.push({ key: slug, url: route(slug, info[field]), ready });
 			if (format) {
 				const doctype = slug.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
-				const params = new URLSearchParams({ doctype, name: info[field], format, no_letterhead: 1 });
+				const params = new URLSearchParams({ doctype, name: info[field], format, ...LH });
 				pages.push({ key: `print-${slug}`, url: `/printview?${params}`, ready: ".vt-doc", print: true });
 			}
 		}
 		pages.push({ key: "cutting-report", url: "/desk/query-report/Cutting Report", ready: ".dt-row, .no-result, .report-wrapper", settle: 1500 });
 		if (info.cut_receive) {
 			for (const size of ["a4", "thermal"]) {
-				const params = new URLSearchParams({ doctype: "Cut Receive", name: info.cut_receive, format: "Bundle Ticket", no_letterhead: 1, ticket_size: size });
+				const params = new URLSearchParams({ doctype: "Cut Receive", name: info.cut_receive, format: "Bundle Ticket", ...LH, ticket_size: size });
 				pages.push({ key: `bundle-ticket-${size}`, url: `/printview?${params}`, ready: ".vt-ticket, .vt-empty-tickets", print: true });
 			}
 		}
@@ -266,7 +290,7 @@ async function main() {
 		}
 		for (const [field, key] of [["purchase_order", "print-purchase-order"], ["pending_purchase_order", "print-purchase-order-unapproved"]]) {
 			if (!info[field]) continue;
-			const params = new URLSearchParams({ doctype: "Purchase Order", name: info[field], format: "Velocity Purchase Order", no_letterhead: 1 });
+			const params = new URLSearchParams({ doctype: "Purchase Order", name: info[field], format: "Velocity Purchase Order", ...LH });
 			pages.push({ key, url: `/printview?${params}`, ready: ".vt-doc", print: true });
 		}
 		pages.push({ key: "material-request-list", url: "/desk/material-request", ready: ".list-row-container, .no-result" });
@@ -282,7 +306,7 @@ async function main() {
 		// Services and costing (Phase 7)
 		if (info.contractor_bill_run) {
 			pages.push({ key: "contractor-bill-run", url: route("contractor-bill-run", info.contractor_bill_run), ready: '[data-fieldname="items"] .grid-body' });
-			const params = new URLSearchParams({ doctype: "Contractor Bill Run", name: info.contractor_bill_run, format: "Contractor Statement", no_letterhead: 1 });
+			const params = new URLSearchParams({ doctype: "Contractor Bill Run", name: info.contractor_bill_run, format: "Contractor Statement", ...LH });
 			pages.push({ key: "print-contractor-statement", url: `/printview?${params}`, ready: ".vt-doc", print: true });
 		}
 		if (info.service_order) {
@@ -306,7 +330,7 @@ async function main() {
 			}
 			pages.push({ key: slug, url: route(slug, info[field]), ready });
 			if (format) {
-				const params = new URLSearchParams({ doctype, name: info[field], format, no_letterhead: 1 });
+				const params = new URLSearchParams({ doctype, name: info[field], format, ...LH });
 				pages.push({ key: `print-${slug}`, url: `/printview?${params}`, ready: ".vt-doc", print: true });
 			}
 		}
