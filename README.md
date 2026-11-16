@@ -73,6 +73,11 @@ bench --site velocity-demo.local execute velocity_ctp.demo.setup_site.run
 bench --site velocity-demo.local execute velocity_ctp.demo.seed.run
 ```
 
+The seed only runs on a site whose name contains "demo". It posts everything through the normal documents as the
+demo users, with dates relative to the day it runs, and records each finished step, so running it again creates
+nothing new. `--kwargs "{'dry_run': True}"` runs it and rolls everything back. It writes the logins, the
+order numbers and the best record for each feature to `velocity_ctp/demo/DEMO_DATA.md`.
+
 Add `127.0.0.1 velocity-demo.local` to `/etc/hosts` (and to the Windows hosts file when browsing from Windows) to
 open it at `http://velocity-demo.local:8000`. The letter head "Velocity Textiles" has a placeholder for the logo:
 upload the logo and replace the `vt-lh-logo` block in the Letter Head with an `<img>` of it.
